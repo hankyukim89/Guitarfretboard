@@ -1,0 +1,42 @@
+.fretboard-container {
+    flex: 1;
+    background-color: var(--bg-primary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+    position: relative;
+    /* subtle grid pattern for workspace bg */
+    background-image: radial-gradient(var(--bg-tertiary) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+.fretboard-scroll-area {
+    position: relative;
+    padding: 2rem;
+    /* Allow scrolling if diagram is huge */
+    /* center vertically */
+}
+
+.fretboard-svg {
+    background-color: transparent;
+    /* No white paper, keeping it dark */
+    /* Or maybe we want a "diagram area" bg? 
+     Let's keep it transparent on the dark grid */
+    border-radius: var(--radius-lg);
+    /* slight shadow for the "board" area? No, the board is the drawing. */
+    cursor: crosshair;
+}
+
+.mark-text-input {
+    width: 60px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid var(--accent-primary);
+    color: white;
+    text-align: center;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 4px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
