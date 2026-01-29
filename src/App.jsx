@@ -11,6 +11,8 @@ function App() {
     startFret: 1
   });
 
+  const [chordName, setChordName] = useState('');
+
   const [activeTool, setActiveTool] = useState({
     shape: 'circle',
     color: '#ef4444' // Red default
@@ -52,20 +54,21 @@ function App() {
     );
   };
 
-  const handleReset = () => {
+  const handleClear = () => {
     if (window.confirm("Are you sure you want to clear all marks?")) {
       setMarks([]);
     }
   };
 
   const handleDownload = async () => {
-    const node = document.querySelector('.fretboard-svg');
+    // Find the container for the diagram (including title)
+    const node = document.querySelector('.fretboard-download-area');
     if (!node) return;
 
     try {
-      const dataUrl = await toPng(node, { backgroundColor: '#0f172a' });
+      const dataUrl = await toPng(node, { backgroundColor: '#ffffff' }); // White background for download
       const link = document.createElement('a');
-      link.download = 'guitar-diagram.png';
+      link.download = `${chordName || 'guitar-diagram'}.png`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -81,7 +84,7 @@ function App() {
         setConfig={setConfig}
         activeTool={activeTool}
         setActiveTool={setActiveTool}
-        onReset={handleReset}
+        onClear={handleClear}
         onDownload={handleDownload}
       />
       <Fretboard
@@ -89,6 +92,8 @@ function App() {
         marks={marks}
         onToggleMark={handleToggleMark}
         onUpdateMarkText={handleUpdateMarkText}
+        chordName={chordName}
+        setChordName={setChordName}
       />
     </div>
   );

@@ -1,17 +1,16 @@
 :root {
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-tertiary: #334155;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
   --accent-primary: #3b82f6;
   --accent-hover: #2563eb;
-  --border-color: #334155;
-  --fretboard-wood: #2a2a2a;
-  /* Keeping it modern/dark gray instead of wood texture for now */
+  --border-color: #e2e8f0;
+  --fretboard-wood: #ffffff;
   --fret-wire: #9ca3af;
-  --string-color: #64748b;
-  --nut-color: #cbd5e1;
+  --string-color: #94a3b8;
+  --nut-color: #000000;
 
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
