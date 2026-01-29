@@ -184,7 +184,7 @@ const Fretboard = ({ config, marks, onToggleMark, onUpdateMarkText, chordName, s
                                 fontSize="16"
                                 fontWeight="bold"
                                 fontFamily="inherit"
-                                style={{ pointerEvents: 'none' }}
+                                style={{ pointerEvents: 'none', userSelect: 'none' }}
                             >
                                 {config.startFret + i}
                             </text>
@@ -231,6 +231,7 @@ const Fretboard = ({ config, marks, onToggleMark, onUpdateMarkText, chordName, s
                                             <polygon
                                                 points={`${x - 5},${y - 16} ${x + 5},${y - 16} ${x + 5},${y - 5} ${x + 16},${y - 5} ${x + 16},${y + 5} ${x + 5},${y + 5} ${x + 5},${y + 16} ${x - 5},${y + 16} ${x - 5},${y + 5} ${x - 16},${y + 5} ${x - 16},${y - 5} ${x - 5},${y - 5}`}
                                                 fill={mark.color}
+                                                transform={`rotate(45, ${x}, ${y})`}
                                             />
                                         )}
 

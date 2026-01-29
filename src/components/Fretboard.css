@@ -29,7 +29,9 @@
 }
 
 .mark-text-input {
-    width: 60px;
+    width: 80px;
+    height: 32px;
+    line-height: normal;
     background: rgba(0, 0, 0, 0.8);
     border: 1px solid var(--accent-primary);
     color: white;
@@ -38,5 +40,6 @@
     font-size: 14px;
     font-weight: bold;
     padding: 4px;
+    box-sizing: border-box;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }

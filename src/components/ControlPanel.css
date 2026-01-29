@@ -1,7 +1,7 @@
 /* Wrapper acts as the sidebar container */
 .control-panel-wrapper {
     width: 320px;
-    background-color: var(--bg-secondary);
+    background-color: #f1f5f9;
     border-right: 1px solid var(--border-color);
     flex-shrink: 0;
     position: relative;
