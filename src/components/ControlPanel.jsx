@@ -15,7 +15,14 @@ const COLORS = [
 
 const SHAPES = ['circle', 'square', 'triangle', 'star', 'pentagon', 'cross'];
 
-const ControlPanel = ({ config, setConfig, activeTool, setActiveTool, onClear, onDownload }) => {
+const ControlPanel = ({ 
+    config, 
+    setConfig, 
+    activeTool, 
+    setActiveTool, 
+    onClear, 
+    onDownload
+}) => {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     const handleChange = (e) => {
@@ -120,9 +127,9 @@ const ControlPanel = ({ config, setConfig, activeTool, setActiveTool, onClear, o
                             <Trash2 size={20} />
                             Clear Board
                         </button>
-                        <button className="reset-btn primary" onClick={onDownload}>
+                        <button className="reset-btn primary download-full-btn" onClick={onDownload}>
                             <Download size={20} />
-                            Save Image
+                            Save as Image
                         </button>
                     </div>
                 </div>

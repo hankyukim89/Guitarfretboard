@@ -1,21 +1,30 @@
 .fretboard-container {
     flex: 1;
     background-color: var(--bg-primary);
-    display: flex;
-    justify-content: center;
-    align-items: center;
     overflow: auto;
     position: relative;
-    /* subtle grid pattern for workspace bg */
-    /* background-image: radial-gradient(var(--bg-tertiary) 1px, transparent 1px); */
-    /* background-size: 20px 20px; */
+    display: block; /* Standard block layout for stability */
 }
 
 .fretboard-scroll-area {
     position: relative;
     padding: 2rem;
-    /* Allow scrolling if diagram is huge */
-    /* center vertically */
+    box-sizing: border-box;
+    
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    /* Stability fix: Use margin-left to center. 
+       When var(--fretboard-width) + padding is < 100%, it centers.
+       When it exceeds 100%, it clamps to 0 (the left edge).
+    */
+    width: max-content;
+    height: max-content;
+    min-height: 100%;
+    margin: 0 auto; /* Horizontal centering that handles overflow correctly */
+    
+    background-color: var(--bg-primary);
 }
 
 .fretboard-svg {
@@ -42,4 +51,163 @@
     padding: 4px;
     box-sizing: border-box;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Diagram Action Buttons (Top Left) */
+.diagram-actions {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    display: flex;
+    gap: 0.75rem;
+    z-index: 100;
+}
+
+.action-btn {
+    padding: 0.5rem 1rem;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.action-btn:hover {
+    background-color: var(--bg-tertiary);
+    border-color: var(--accent-primary);
+}
+
+.action-btn.primary {
+    background-color: var(--accent-primary);
+    color: white;
+    border-color: var(--accent-primary);
+}
+
+.action-btn.primary:hover {
+    background-color: var(--accent-hover);
+}
+
+/* Load Sidebar Styles */
+.load-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 350px;
+    height: 100vh;
+    background: var(--bg-secondary);
+    border-left: 1px solid var(--border-color);
+    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.close-sidebar-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    display: flex;
+    transition: background 0.2s;
+}
+
+.close-sidebar-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.sidebar-body {
+    padding: 1rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.saved-diagrams-list-v2 {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.diagram-item-v2 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    transition: all 0.2s;
+}
+
+.diagram-item-v2:hover {
+    border-color: var(--accent-primary);
+    background: var(--bg-tertiary);
+    transform: translateX(-4px);
+}
+
+.diagram-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    min-width: 0;
+}
+
+.diagram-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.diagram-date {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.delete-btn {
+    color: #ef4444;
+    background: transparent;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    display: flex;
+    transition: all 0.2s;
+}
+
+.delete-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    transform: scale(1.1);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    font-size: 0.95rem;
 }

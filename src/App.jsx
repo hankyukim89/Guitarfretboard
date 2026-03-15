@@ -19,6 +19,10 @@ function App() {
   });
 
   const [marks, setMarks] = useState([]);
+  const [savedDiagrams, setSavedDiagrams] = useState(() => {
+    const saved = localStorage.getItem('guitar-diagrams');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   const handleToggleMark = (stringIndex, fretIndex) => {
     setMarks(prevMarks => {
@@ -57,6 +61,7 @@ function App() {
   const handleClear = () => {
     if (window.confirm("Are you sure you want to clear all marks?")) {
       setMarks([]);
+      setChordName('');
     }
   };
 
@@ -77,6 +82,51 @@ function App() {
     }
   };
 
+  const handleSaveDiagram = () => {
+    let name = chordName || prompt("Enter a name for this diagram:");
+    if (!name) return;
+
+    const existingIndex = savedDiagrams.findIndex(d => d.name === name);
+    
+    const newDiagram = {
+      id: existingIndex >= 0 ? savedDiagrams[existingIndex].id : Date.now(),
+      name: name,
+      config: { ...config },
+      chordName: name,
+      marks: [...marks],
+      timestamp: new Date().toISOString()
+    };
+
+    let updated;
+    if (existingIndex >= 0) {
+      if (!window.confirm(`A diagram named "${name}" already exists. Overwrite it?`)) {
+        return;
+      }
+      updated = [...savedDiagrams];
+      updated[existingIndex] = newDiagram;
+    } else {
+      updated = [...savedDiagrams, newDiagram];
+    }
+
+    setSavedDiagrams(updated);
+    localStorage.setItem('guitar-diagrams', JSON.stringify(updated));
+    setChordName(name);
+  };
+
+  const handleLoadDiagram = (diagram) => {
+    setConfig(diagram.config);
+    setMarks(diagram.marks || []);
+    setChordName(diagram.chordName || diagram.name || '');
+  };
+
+  const handleDeleteDiagram = (id) => {
+    if (window.confirm("Delete this saved diagram?")) {
+      const updated = savedDiagrams.filter(d => d.id !== id);
+      setSavedDiagrams(updated);
+      localStorage.setItem('guitar-diagrams', JSON.stringify(updated));
+    }
+  };
+
   return (
     <div className="app-container">
       <ControlPanel
@@ -94,6 +144,10 @@ function App() {
         onUpdateMarkText={handleUpdateMarkText}
         chordName={chordName}
         setChordName={setChordName}
+        onSave={handleSaveDiagram}
+        onLoad={handleLoadDiagram}
+        onDelete={handleDeleteDiagram}
+        savedDiagrams={savedDiagrams}
       />
     </div>
   );
