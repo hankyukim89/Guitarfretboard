@@ -170,6 +170,27 @@
     box-shadow: 0 0 0 2px var(--text-primary);
 }
 
+.color-btn.custom-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed var(--text-secondary);
+    background-color: transparent;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.color-btn.custom-btn:hover {
+    border-color: var(--accent-primary);
+    background-color: var(--bg-secondary);
+    transform: rotate(90deg) scale(1.1);
+}
+
+.color-btn.custom-btn.active {
+    border: 2px solid var(--accent-primary);
+    box-shadow: 0 0 0 2px var(--accent-primary);
+    transform: none;
+}
+
 /* Shape Previews with Clip Paths */
 .preview-shape.star {
     border: none;

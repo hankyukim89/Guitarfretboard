@@ -1,16 +1,19 @@
-import React, { useState } from 'react';
-import { Settings, MousePointer2, Type, Trash2, RotateCcw, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Settings, MousePointer2, Type, Trash2, RotateCcw, Download, ChevronLeft, ChevronRight, Plus, Palette as PaletteIcon } from 'lucide-react';
 import './ControlPanel.css';
+import CustomColorPicker from './CustomColorPicker';
 
 const COLORS = [
     '#ef4444', // Red
+    '#ec4899', // Pink
     '#f97316', // Orange
     '#eab308', // Yellow
-    '#22c55e', // Green
+    '#15803d', // Dark Green
     '#3b82f6', // Blue
-    '#8b5cf6', // Indigo
-    '#a855f7', // Violet
+    '#a855f7', // Purple
+    '#713f12', // Brown
     '#000000', // Black
+    '#64748b', // Grey
 ];
 
 const SHAPES = ['circle', 'square', 'triangle', 'star', 'pentagon', 'cross'];
@@ -24,6 +27,25 @@ const ControlPanel = ({
     onDownload
 }) => {
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [showColorPicker, setShowColorPicker] = useState(false);
+    const [customPalette, setCustomPalette] = useState(() => {
+        const saved = localStorage.getItem('custom_guitar_palette');
+        return saved ? JSON.parse(saved) : [];
+    });
+
+    // Listen for custom palette changes (e.g. from the modal)
+    useEffect(() => {
+        const handleStorageChange = () => {
+            const saved = localStorage.getItem('custom_guitar_palette');
+            if (saved) setCustomPalette(JSON.parse(saved));
+        };
+        window.addEventListener('storage', handleStorageChange);
+        // Also update when modal closes as it might have changed
+        if (!showColorPicker) {
+            handleStorageChange();
+        }
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, [showColorPicker]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -119,8 +141,43 @@ const ControlPanel = ({
                                     title={color}
                                 />
                             ))}
+                            <button
+                                className={`color-btn custom-btn ${!COLORS.includes(activeTool.color) && !customPalette.includes(activeTool.color) ? 'active' : ''}`}
+                                style={{ 
+                                    backgroundColor: (!COLORS.includes(activeTool.color) && !customPalette.includes(activeTool.color)) ? activeTool.color : 'transparent'
+                                }}
+                                onClick={() => setShowColorPicker(true)}
+                                title="Custom Color Wheel"
+                            >
+                                {(!COLORS.includes(activeTool.color) && !customPalette.includes(activeTool.color)) ? null : <Plus size={16} color="var(--text-secondary)" />}
+                            </button>
                         </div>
+
+                        {customPalette.length > 0 && (
+                            <>
+                                <div className="tool-label" style={{ marginTop: '0.75rem' }}>Custom Palette</div>
+                                <div className="palette color-palette">
+                                    {customPalette.map((color, index) => (
+                                        <button
+                                            key={`custom-${index}`}
+                                            className={`color-btn ${activeTool.color === color ? 'active' : ''}`}
+                                            style={{ backgroundColor: color }}
+                                            onClick={() => setActiveTool({ ...activeTool, color })}
+                                            title={color}
+                                        />
+                                    ))}
+                                </div>
+                            </>
+                        )}
                     </div>
+
+                    {showColorPicker && (
+                        <CustomColorPicker 
+                            activeColor={activeTool.color}
+                            onSelectColor={(color) => setActiveTool({ ...activeTool, color })}
+                            onClose={() => setShowColorPicker(false)}
+                        />
+                    )}
 
                     <div className="panel-footer">
                         <button className="reset-btn" onClick={onClear}>
