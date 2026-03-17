@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, MousePointer2, Type, Trash2, RotateCcw, Download, ChevronLeft, ChevronRight, Plus, Palette as PaletteIcon } from 'lucide-react';
+import { Settings, MousePointer2, Type, Trash2, RotateCcw, Download, ChevronLeft, ChevronRight, Plus, HelpCircle, Palette as PaletteIcon, MousePointer2 as ClickIcon, Info } from 'lucide-react';
 import './ControlPanel.css';
 import CustomColorPicker from './CustomColorPicker';
 
@@ -26,9 +26,15 @@ const ControlPanel = ({
     onClear, 
     onDownload,
     isCollapsed,
-    setIsCollapsed
+    setIsCollapsed,
+    onModalToggle
 }) => {
     const [showColorPicker, setShowColorPicker] = useState(false);
+    const [showHelp, setShowHelp] = useState(false);
+
+    useEffect(() => {
+        if (onModalToggle) onModalToggle(showColorPicker || showHelp);
+    }, [showColorPicker, showHelp, onModalToggle]);
     const [customPalette, setCustomPalette] = useState(() => {
         const saved = localStorage.getItem('custom_guitar_palette');
         return saved ? JSON.parse(saved) : [];
@@ -57,7 +63,7 @@ const ControlPanel = ({
     };
 
     return (
-        <div className={`control-panel-wrapper ${isCollapsed ? 'collapsed' : ''} ${showColorPicker ? 'modal-open' : ''}`}>
+        <div className={`control-panel-wrapper ${isCollapsed ? 'collapsed' : ''} ${showColorPicker || showHelp ? 'modal-open' : ''}`}>
             <button
                 className="sidebar-toggle-popout"
                 onClick={() => setIsCollapsed(!isCollapsed)}
@@ -68,8 +74,15 @@ const ControlPanel = ({
 
             {!isCollapsed && (
                 <div className="control-panel-content">
-                    <div className="panel-header">
+                    <div className="panel-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <h2>Diagram Settings</h2>
+                        <button 
+                            className="help-toggle-btn" 
+                            onClick={() => setShowHelp(true)}
+                            title="How to use"
+                        >
+                            <HelpCircle size={18} />
+                        </button>
                     </div>
 
                     <div className="control-group">
@@ -175,6 +188,43 @@ const ControlPanel = ({
                             onSelectColor={(color) => setActiveTool({ ...activeTool, color })}
                             onClose={() => setShowColorPicker(false)}
                         />
+                    )}
+
+                    {showHelp && (
+                        <div className="help-modal-overlay" onClick={() => setShowHelp(false)}>
+                            <div className="help-modal-content" onClick={e => e.stopPropagation()}>
+                                <div className="help-header">
+                                    <div className="header-title">
+                                        <Info size={20} />
+                                        <h3>Controls & Shortcuts</h3>
+                                    </div>
+                                    <button className="close-help-btn" onClick={() => setShowHelp(false)}>
+                                        <Plus size={20} style={{ transform: 'rotate(45deg)' }} />
+                                    </button>
+                                </div>
+                                <div className="help-body">
+                                    <div className="help-section">
+                                        <h4>Basics</h4>
+                                        <ul>
+                                            <li><span>Left Click</span> to place a dot or remove it.</li>
+                                            <li><span>Right Click</span> on a dot to label/name it.</li>
+                                            <li><span>Right Click</span> on empty fret to place an <b>'X'</b>.</li>
+                                        </ul>
+                                    </div>
+                                    <div className="help-section">
+                                        <h4>Advanced</h4>
+                                        <ul>
+                                            <li><span>Smart Swap</span> (Change color/shape and click an existing dot to replace its style).</li>
+                                            <li><span>Auto-Save</span> (Labels save automatically when you click away).</li>
+                                            <li><span>Custom Palette</span> (Use the '+' button to build your own colors).</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div className="help-footer">
+                                    <button className="help-close-action-btn" onClick={() => setShowHelp(false)}>Got it!</button>
+                                </div>
+                            </div>
+                        </div>
                     )}
 
                     <div className="panel-footer">

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { toPng } from 'html-to-image';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Trash2 } from 'lucide-react';
 import ControlPanel from './components/ControlPanel';
 import Fretboard from './components/Fretboard';
 import './index.css'; // Ensure global styles are applied
@@ -25,24 +27,50 @@ function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [isLoadSidebarOpen, setIsLoadSidebarOpen] = useState(false);
+  const [isMainModalOpen, setIsMainModalOpen] = useState(false);
+
   const handleToggleMark = (stringIndex, fretIndex, shapeOverride = null) => {
     setMarks(prevMarks => {
       const existingIndex = prevMarks.findIndex(
         m => m.stringIndex === stringIndex && m.fretIndex === fretIndex
       );
 
+      const targetShape = shapeOverride || activeTool.shape;
+      const targetColor = activeTool.color;
+
       if (existingIndex >= 0) {
-        // Remove
+        const existingMark = prevMarks[existingIndex];
+        
+        // Exception for 'X' shape: Always delete it on click, don't swap it
+        if (existingMark.shape === 'cross') {
+            const newMarks = [...prevMarks];
+            newMarks.splice(existingIndex, 1);
+            return newMarks;
+        }
+
+        // If the color OR shape is different, REPLACE it instead of deleting
+        if (existingMark.color !== targetColor || existingMark.shape !== targetShape) {
+          const newMarks = [...prevMarks];
+          newMarks[existingIndex] = {
+            ...existingMark,
+            color: targetColor,
+            shape: targetShape
+          };
+          return newMarks;
+        }
+
+        // Only delete if it's the EXACT same color and shape
         const newMarks = [...prevMarks];
         newMarks.splice(existingIndex, 1);
         return newMarks;
       } else {
-        // Add
+        // Add new
         return [...prevMarks, {
           stringIndex,
           fretIndex,
-          shape: shapeOverride || activeTool.shape,
-          color: activeTool.color,
+          shape: targetShape,
+          color: targetColor,
           text: ''
         }];
       }
@@ -118,6 +146,7 @@ function App() {
     setConfig(diagram.config);
     setMarks(diagram.marks || []);
     setChordName(diagram.chordName || diagram.name || '');
+    setIsLoadSidebarOpen(false); // Close on load
   };
 
   const handleDeleteDiagram = (id) => {
@@ -139,7 +168,9 @@ function App() {
         onDownload={handleDownload}
         isCollapsed={isCollapsed}
         setIsCollapsed={setIsCollapsed}
+        onModalToggle={setIsMainModalOpen}
       />
+      
       <Fretboard
         config={config}
         marks={marks}
@@ -152,7 +183,62 @@ function App() {
         onDelete={handleDeleteDiagram}
         savedDiagrams={savedDiagrams}
         isCollapsed={isCollapsed}
+        isLoadSidebarOpen={isLoadSidebarOpen}
+        setIsLoadSidebarOpen={setIsLoadSidebarOpen}
+        isMainModalOpen={isMainModalOpen}
       />
+
+      <AnimatePresence>
+        {isLoadSidebarOpen && (
+          <motion.div
+            className="load-sidebar"
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+          >
+            <div className="sidebar-header">
+              <h3>Saved Diagrams</h3>
+              <button 
+                className="close-sidebar-btn" 
+                onClick={() => setIsLoadSidebarOpen(false)}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="sidebar-body">
+              <div className="saved-diagrams-list-v2">
+                {savedDiagrams.length === 0 ? (
+                  <div className="empty-state">No diagrams saved yet.</div>
+                ) : (
+                  savedDiagrams.map((diagram) => (
+                    <div key={diagram.id} className="diagram-item-v2">
+                      <div className="diagram-info" onClick={() => handleLoadDiagram(diagram)}>
+                        <span className="diagram-name">{diagram.name}</span>
+                        <span className="diagram-date">
+                          {new Date(diagram.timestamp).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="diagram-actions-row">
+                        <button
+                          className="delete-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteDiagram(diagram.id);
+                          }}
+                          title="Delete"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

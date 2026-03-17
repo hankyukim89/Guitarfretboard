@@ -20,15 +20,15 @@ const Fretboard = ({
     chordName,
     setChordName,
     onSave,
-    onLoad,
-    onDelete,
-    savedDiagrams,
-    isCollapsed // New prop from App.jsx
+    isCollapsed,
+    isLoadSidebarOpen,
+    setIsLoadSidebarOpen,
+    isMainModalOpen
 }) => {
     const svgRef = useRef(null);
     const containerRef = useRef(null);
+    const wasEditing = useRef(false);
     const [editingMark, setEditingMark] = useState(null); // { string, fret }
-    const [isLoadSidebarOpen, setIsLoadSidebarOpen] = useState(false);
     const [scale, setScale] = useState(1);
 
     // Calculate dimensions
@@ -60,7 +60,7 @@ const Fretboard = ({
         updateScale(); // Initial call
         
         return () => observer.disconnect();
-    }, [width, height, isCollapsed]);
+    }, [width, height, isCollapsed, isLoadSidebarOpen]); // re-run on load sidebar change too
 
     const getCoordinates = (stringIdx, fretIdx) => {
         // stringIdx: 0 is top (High E), config.strings-1 is bottom (Low E)
@@ -76,8 +76,10 @@ const Fretboard = ({
     };
 
     const handleClick = (e) => {
-        if (editingMark) {
+        // If we were just editing, or are currently editing, the first click only saves/names
+        if (editingMark || wasEditing.current) {
             setEditingMark(null);
+            wasEditing.current = false;
             return;
         }
 
@@ -125,26 +127,21 @@ const Fretboard = ({
         }
     };
 
-    const handleLoadItem = (diagram) => {
-        onLoad(diagram);
-        setIsLoadSidebarOpen(false);
-    };
-
     return (
         <div className="fretboard-container" ref={containerRef}>
             {/* Top Left Actions */}
-            <div className="diagram-actions">
+            <div className={`diagram-actions ${isMainModalOpen ? 'blurred' : ''}`}>
                 <button className="action-btn primary" onClick={onSave}>
                     <Save size={18} />
                     Save
                 </button>
-                <button className="action-btn" onClick={() => setIsLoadSidebarOpen(!isLoadSidebarOpen)}>
+                <button className={`action-btn ${isLoadSidebarOpen ? 'active' : ''}`} onClick={() => setIsLoadSidebarOpen(!isLoadSidebarOpen)}>
                     <FolderOpen size={18} />
                     Load
                 </button>
             </div>
 
-            <div className="fretboard-scroll-area fretboard-download-area">
+            <div className={`fretboard-scroll-area fretboard-download-area ${isLoadSidebarOpen ? 'shifted' : ''}`}>
                 <div 
                     style={{ 
                         display: 'flex', 
@@ -359,13 +356,22 @@ const Fretboard = ({
                                         autoFocus
                                         className="mark-text-input"
                                         defaultValue={editingMark.initialText}
-                                        onBlur={() => setEditingMark(null)}
+                                        onBlur={(e) => {
+                                            onUpdateMarkText(editingMark.stringIndex, editingMark.fretIndex, e.target.value);
+                                            setEditingMark(null);
+                                            // Set flag to prevent immediate click actions on the same spot
+                                            wasEditing.current = true;
+                                            setTimeout(() => {
+                                                wasEditing.current = false;
+                                            }, 200);
+                                        }}
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter') {
-                                                onUpdateMarkText(editingMark.stringIndex, editingMark.fretIndex, e.target.value);
+                                                e.target.blur();
+                                            }
+                                            if (e.key === 'Escape') {
                                                 setEditingMark(null);
                                             }
-                                            if (e.key === 'Escape') setEditingMark(null);
                                         }}
                                     />
                                 </div>
@@ -374,56 +380,6 @@ const Fretboard = ({
                     </div>
                 </div>
             </div>
-
-            {/* Load Sidebar */}
-            <AnimatePresence>
-                {isLoadSidebarOpen && (
-                    <motion.div
-                        className="load-sidebar"
-                        initial={{ x: '100%' }}
-                        animate={{ x: 0 }}
-                        exit={{ x: '100%' }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                    >
-                        <div className="sidebar-header">
-                            <h3>Saved Diagrams</h3>
-                            <button className="close-sidebar-btn" onClick={() => setIsLoadSidebarOpen(false)}>
-                                <X size={20} />
-                            </button>
-                        </div>
-                        <div className="sidebar-body">
-                            <div className="saved-diagrams-list-v2">
-                                {savedDiagrams.length === 0 ? (
-                                    <div className="empty-state">No diagrams saved yet.</div>
-                                ) : (
-                                    savedDiagrams.map((diagram) => (
-                                        <div key={diagram.id} className="diagram-item-v2">
-                                            <div className="diagram-info" onClick={() => handleLoadItem(diagram)}>
-                                                <span className="diagram-name">{diagram.name}</span>
-                                                <span className="diagram-date">
-                                                    {new Date(diagram.timestamp).toLocaleDateString()}
-                                                </span>
-                                            </div>
-                                            <div className="diagram-actions-row">
-                                                <button
-                                                    className="delete-btn"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        onDelete(diagram.id);
-                                                    }}
-                                                    title="Delete"
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </div>
     );
 };
