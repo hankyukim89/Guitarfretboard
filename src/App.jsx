@@ -25,7 +25,7 @@ function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  const handleToggleMark = (stringIndex, fretIndex) => {
+  const handleToggleMark = (stringIndex, fretIndex, shapeOverride = null) => {
     setMarks(prevMarks => {
       const existingIndex = prevMarks.findIndex(
         m => m.stringIndex === stringIndex && m.fretIndex === fretIndex
@@ -41,7 +41,7 @@ function App() {
         return [...prevMarks, {
           stringIndex,
           fretIndex,
-          shape: activeTool.shape,
+          shape: shapeOverride || activeTool.shape,
           color: activeTool.color,
           text: ''
         }];

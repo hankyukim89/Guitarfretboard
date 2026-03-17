@@ -110,9 +110,18 @@ const Fretboard = ({
         let stringIdx = Math.round((clickY - PADDING_Y) / STRING_SPACING);
         let visualFretIdx = Math.floor((clickX - PADDING_X) / FRET_SPACING);
 
+        // Clamp
+        if (stringIdx < 0) stringIdx = 0;
+        if (stringIdx >= config.strings) stringIdx = config.strings - 1;
+        const minFretIdx = config.startFret === 1 ? -1 : 0;
+        if (visualFretIdx < minFretIdx) visualFretIdx = minFretIdx;
+        if (visualFretIdx >= config.frets) visualFretIdx = config.frets - 1;
+
         const mark = marks.find(m => m.stringIndex === stringIdx && m.fretIndex === visualFretIdx);
         if (mark) {
             setEditingMark({ stringIndex: stringIdx, fretIndex: visualFretIdx, initialText: mark.text });
+        } else {
+            onToggleMark(stringIdx, visualFretIdx, 'cross');
         }
     };
 

@@ -57,7 +57,7 @@ const ControlPanel = ({
     };
 
     return (
-        <div className={`control-panel-wrapper ${isCollapsed ? 'collapsed' : ''}`}>
+        <div className={`control-panel-wrapper ${isCollapsed ? 'collapsed' : ''} ${showColorPicker ? 'modal-open' : ''}`}>
             <button
                 className="sidebar-toggle-popout"
                 onClick={() => setIsCollapsed(!isCollapsed)}
