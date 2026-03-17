@@ -24,9 +24,10 @@ const ControlPanel = ({
     activeTool, 
     setActiveTool, 
     onClear, 
-    onDownload
+    onDownload,
+    isCollapsed,
+    setIsCollapsed
 }) => {
-    const [isCollapsed, setIsCollapsed] = useState(false);
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [customPalette, setCustomPalette] = useState(() => {
         const saved = localStorage.getItem('custom_guitar_palette');

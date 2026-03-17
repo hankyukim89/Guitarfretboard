@@ -19,6 +19,7 @@ function App() {
   });
 
   const [marks, setMarks] = useState([]);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [savedDiagrams, setSavedDiagrams] = useState(() => {
     const saved = localStorage.getItem('guitar-diagrams');
     return saved ? JSON.parse(saved) : [];
@@ -136,6 +137,8 @@ function App() {
         setActiveTool={setActiveTool}
         onClear={handleClear}
         onDownload={handleDownload}
+        isCollapsed={isCollapsed}
+        setIsCollapsed={setIsCollapsed}
       />
       <Fretboard
         config={config}
@@ -148,6 +151,7 @@ function App() {
         onLoad={handleLoadDiagram}
         onDelete={handleDeleteDiagram}
         savedDiagrams={savedDiagrams}
+        isCollapsed={isCollapsed}
       />
     </div>
   );

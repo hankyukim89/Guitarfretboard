@@ -5,8 +5,8 @@ import './Fretboard.css';
 
 const STRING_SPACING = 50;
 const FRET_SPACING = 120;
-const PADDING_X = 60; // Left padding for nut/start
-const PADDING_Y = 40; // Top/bottom padding
+const PADDING_X = 100; // Increased left padding to prevent dots/nut from cutting off
+const PADDING_Y = 50; // Increased padding to accommodate lower fret numbers
 
 // Standard single/double dot positions (0-indexed frets from nut)
 const INLAYS = [3, 5, 7, 9, 12, 15, 17, 19, 21, 24];
@@ -22,20 +22,50 @@ const Fretboard = ({
     onSave,
     onLoad,
     onDelete,
-    savedDiagrams
+    savedDiagrams,
+    isCollapsed // New prop from App.jsx
 }) => {
     const svgRef = useRef(null);
+    const containerRef = useRef(null);
     const [editingMark, setEditingMark] = useState(null); // { string, fret }
     const [isLoadSidebarOpen, setIsLoadSidebarOpen] = useState(false);
+    const [scale, setScale] = useState(1);
 
     // Calculate dimensions
     const width = config.frets * FRET_SPACING + PADDING_X * 2;
     const height = (config.strings - 1) * STRING_SPACING + PADDING_Y * 2;
 
+    // Handle auto-scaling
+    React.useLayoutEffect(() => {
+        const updateScale = () => {
+            if (!containerRef.current) return;
+            
+            // Available area is the parent of the scroll area (the main view)
+            const availableWidth = containerRef.current.clientWidth - 80; // Margin
+            const availableHeight = containerRef.current.clientHeight - 120; // Margin + chord name space
+
+            const scaleX = availableWidth / width;
+            const scaleY = availableHeight / height;
+            
+            // Zoom out only if it doesn't fit, otherwise stay at 1
+            const newScale = Math.min(scaleX, scaleY, 1);
+            setScale(newScale);
+        };
+
+        const observer = new ResizeObserver(updateScale);
+        if (containerRef.current) {
+            observer.observe(containerRef.current);
+        }
+        
+        updateScale(); // Initial call
+        
+        return () => observer.disconnect();
+    }, [width, height, isCollapsed]);
+
     const getCoordinates = (stringIdx, fretIdx) => {
         // stringIdx: 0 is top (High E), config.strings-1 is bottom (Low E)
         if (fretIdx < 0) {
-            const x = PADDING_X - 25; // 25px to the left of the nut
+            const x = PADDING_X - 40; // 25px to the left of the nut
             const y = PADDING_Y + stringIdx * STRING_SPACING;
             return { x, y };
         }
@@ -52,8 +82,8 @@ const Fretboard = ({
         }
 
         const rect = svgRef.current.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
-        const clickY = e.clientY - rect.top;
+        const clickX = (e.clientX - rect.left) / scale;
+        const clickY = (e.clientY - rect.top) / scale;
 
         let stringIdx = Math.round((clickY - PADDING_Y) / STRING_SPACING);
         let visualFretIdx = Math.floor((clickX - PADDING_X) / FRET_SPACING);
@@ -74,8 +104,8 @@ const Fretboard = ({
     const handleContextMenu = (e) => {
         e.preventDefault();
         const rect = svgRef.current.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
-        const clickY = e.clientY - rect.top;
+        const clickX = (e.clientX - rect.left) / scale;
+        const clickY = (e.clientY - rect.top) / scale;
 
         let stringIdx = Math.round((clickY - PADDING_Y) / STRING_SPACING);
         let visualFretIdx = Math.floor((clickX - PADDING_X) / FRET_SPACING);
@@ -92,7 +122,7 @@ const Fretboard = ({
     };
 
     return (
-        <div className="fretboard-container">
+        <div className="fretboard-container" ref={containerRef}>
             {/* Top Left Actions */}
             <div className="diagram-actions">
                 <button className="action-btn primary" onClick={onSave}>
@@ -106,29 +136,41 @@ const Fretboard = ({
             </div>
 
             <div className="fretboard-scroll-area fretboard-download-area">
-                <div style={{ minHeight: 'calc(100vh - 4rem)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                <div 
+                    style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        justifyContent: 'center', 
+                        alignItems: 'center',
+                        transform: `scale(${scale})`,
+                        transformOrigin: 'center center',
+                        transition: 'transform 0.2s ease-out'
+                    }}
+                >
                     {/* Chord Name Input */}
-                    <input
-                        value={chordName}
-                        onChange={(e) => setChordName(e.target.value)}
-                        placeholder="Click to Edit"
-                        style={{
-                            fontSize: '2rem',
-                            fontWeight: 'bold',
-                            textAlign: 'center',
-                            border: '2px solid #000',
-                            borderRadius: '4px',
-                            background: 'transparent',
-                            color: 'var(--text-primary)',
-                            marginBottom: '1rem',
-                            width: '100%',
-                            maxWidth: '400px',
-                            outline: 'none',
-                            padding: '0.25rem'
-                        }}
-                    />
+                            <input
+                                value={chordName}
+                                onChange={(e) => setChordName(e.target.value)}
+                                placeholder="Click to Edit"
+                                style={{
+                                    fontSize: `${2 / Math.pow(scale, 0.5)}rem`, // Grows as scale decreases
+                                    fontWeight: 'bold',
+                                    textAlign: 'center',
+                                    border: '2px solid #000',
+                                    borderRadius: '4px',
+                                    background: 'transparent',
+                                    color: 'var(--text-primary)',
+                                    marginBottom: '1rem', // Constant gap
+                                    width: '100%',
+                                    maxWidth: '600px',
+                                    outline: 'none',
+                                    padding: '0.25rem',
+                                    userSelect: 'none',
+                                    transition: 'all 0.2s ease-out'
+                                }}
+                            />
 
-                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                            <div style={{ position: 'relative', display: 'inline-block' }}>
                         <svg
                             ref={svgRef}
                             width={width}
@@ -148,32 +190,32 @@ const Fretboard = ({
                                 stroke="none"
                             />
 
+                            {/* Strings (Horizontal Lines) */}
+                            {Array.from({ length: config.strings }).map((_, i) => (
+                                <line
+                                    key={`line-h-${i}`}
+                                    x1={PADDING_X - (config.startFret === 1 ? 0 : 0)}
+                                    y1={PADDING_Y + i * STRING_SPACING}
+                                    x2={width - PADDING_X}
+                                    y2={PADDING_Y + i * STRING_SPACING}
+                                    stroke="var(--string-color)"
+                                    strokeWidth={3}
+                                />
+                            ))}
+
                             {/* Frets (Vertical Lines) */}
                             {Array.from({ length: config.frets + 1 }).map((_, i) => (
                                 <line
                                     key={`line-v-${i}`}
                                     x1={PADDING_X + i * FRET_SPACING}
-                                    y1={PADDING_Y}
+                                    y1={PADDING_Y - 1.5}
                                     x2={PADDING_X + i * FRET_SPACING}
-                                    y2={height - PADDING_Y}
+                                    y2={height - PADDING_Y + 1.5}
                                     stroke={i === 0 && config.startFret === 1 ? "var(--nut-color)" : "var(--fret-wire)"}
                                     strokeWidth={
-                                        (i === 0 && config.startFret === 1) ? 8 : 2
+                                        (i === 0 && config.startFret === 1) ? 14 : 2
                                     }
-                                    strokeLinecap="square"
-                                />
-                            ))}
-
-                            {/* Strings (Horizontal Lines) */}
-                            {Array.from({ length: config.strings }).map((_, i) => (
-                                <line
-                                    key={`line-h-${i}`}
-                                    x1={PADDING_X - (config.startFret === 1 ? 20 : 0)}
-                                    y1={PADDING_Y + i * STRING_SPACING}
-                                    x2={width - PADDING_X}
-                                    y2={PADDING_Y + i * STRING_SPACING}
-                                    stroke="var(--string-color)"
-                                    strokeWidth={1 + i * 0.6}
+                                    strokeLinecap="butt"
                                 />
                             ))}
 
@@ -209,13 +251,13 @@ const Fretboard = ({
                                 <text
                                     key={`fret-num-${i}`}
                                     x={PADDING_X + i * FRET_SPACING + FRET_SPACING / 2}
-                                    y={height - PADDING_Y + 30}
+                                    y={height - PADDING_Y + 30} // Constant Y offset
                                     textAnchor="middle"
                                     fill="var(--text-secondary)"
-                                    fontSize="16"
+                                    fontSize={16 / Math.pow(scale, 0.5)} // Dynamic font size
                                     fontWeight="bold"
                                     fontFamily="inherit"
-                                    style={{ pointerEvents: 'none', userSelect: 'none' }}
+                                    style={{ pointerEvents: 'none', userSelect: 'none', transition: 'all 0.2s ease-out' }}
                                 >
                                     {config.startFret + i}
                                 </text>
@@ -275,8 +317,12 @@ const Fretboard = ({
                                                     textAnchor="middle"
                                                     fill="white"
                                                     fontSize="14"
-                                                    fontWeight="bold"
-                                                    style={{ textShadow: '0px 1px 2px rgba(0,0,0,0.8)', pointerEvents: 'none' }}
+                                                    style={{
+                                                        fontWeight: "bold",
+                                                        textShadow: "0px 1px 2px rgba(0,0,0,0.8)",
+                                                        pointerEvents: "none",
+                                                        userSelect: "none"
+                                                    }}
                                                 >
                                                     {mark.text}
                                                 </text>
