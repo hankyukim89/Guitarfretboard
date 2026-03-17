@@ -143,14 +143,11 @@ const ControlPanel = ({
                                 />
                             ))}
                             <button
-                                className={`color-btn custom-btn ${!COLORS.includes(activeTool.color) && !customPalette.includes(activeTool.color) ? 'active' : ''}`}
-                                style={{ 
-                                    backgroundColor: (!COLORS.includes(activeTool.color) && !customPalette.includes(activeTool.color)) ? activeTool.color : 'transparent'
-                                }}
+                                className="color-btn custom-btn"
                                 onClick={() => setShowColorPicker(true)}
                                 title="Custom Color Wheel"
                             >
-                                {(!COLORS.includes(activeTool.color) && !customPalette.includes(activeTool.color)) ? null : <Plus size={16} color="var(--text-secondary)" />}
+                                <Plus size={16} color="var(--text-secondary)" />
                             </button>
                         </div>
 

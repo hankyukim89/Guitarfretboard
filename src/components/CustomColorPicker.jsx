@@ -32,9 +32,10 @@ const CustomColorPicker = ({ onSelectColor, activeColor, onClose }) => {
 
     const rgbaString = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
 
-    const addToPalette = () => {
+     const addToPalette = () => {
         if (!customPalette.includes(rgbaString)) {
             setCustomPalette([...customPalette, rgbaString]);
+            onSelectColor(rgbaString);
         }
     };
 
@@ -57,12 +58,9 @@ const CustomColorPicker = ({ onSelectColor, activeColor, onClose }) => {
 
                 <div className="modal-body">
                     <div className="picker-section">
-                        <RgbaColorPicker 
+                         <RgbaColorPicker 
                             color={color} 
-                            onChange={(newColor) => {
-                                setColor(newColor);
-                                onSelectColor(`rgba(${newColor.r}, ${newColor.g}, ${newColor.b}, ${newColor.a})`);
-                            }} 
+                            onChange={setColor} 
                         />
                         <div className="color-preview-container">
                             <div 
