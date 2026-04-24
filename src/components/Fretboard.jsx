@@ -269,10 +269,36 @@ const Fretboard = ({
                                 </text>
                             ))}
 
+                            {/* Split-Color ClipPath Defs */}
+                            <defs>
+                                {marks.filter(m => m.color2).map((mark) => {
+                                    const { x } = getCoordinates(mark.stringIndex, mark.fretIndex);
+                                    const clipId = `split-clip-${mark.stringIndex}-${mark.fretIndex}`;
+                                    return (
+                                        <clipPath key={clipId} id={clipId}>
+                                            <rect x={x - 30} y={-9999} width={30} height={99999} />
+                                        </clipPath>
+                                    );
+                                })}
+                            </defs>
+
                             {/* Marks */}
                             <AnimatePresence>
                                 {marks.map((mark) => {
                                     const { x, y } = getCoordinates(mark.stringIndex, mark.fretIndex);
+                                    const hasSplit = !!mark.color2;
+                                    const clipId = `split-clip-${mark.stringIndex}-${mark.fretIndex}`;
+
+                                    const renderShape = (color, clipPath = null) => {
+                                        const props = clipPath ? { clipPath: `url(#${clipPath})` } : {};
+                                        if (mark.shape === 'circle') return <circle cx={x} cy={y} r={21} fill={color} {...props} />;
+                                        if (mark.shape === 'square') return <rect x={x - 14} y={y - 14} width={28} height={28} rx={4} fill={color} {...props} />;
+                                        if (mark.shape === 'triangle') return <polygon points={`${x},${y - 16} ${x - 14},${y + 12} ${x + 14},${y + 12}`} fill={color} {...props} />;
+                                        if (mark.shape === 'star') return <polygon points={`${x},${y - 18} ${x + 5},${y - 5} ${x + 18},${y - 5} ${x + 8},${y + 5} ${x + 12},${y + 18} ${x},${y + 10} ${x - 12},${y + 18} ${x - 8},${y + 5} ${x - 18},${y - 5} ${x - 5},${y - 5}`} fill={color} {...props} />;
+                                        if (mark.shape === 'pentagon') return <polygon points={`${x},${y - 16} ${x + 15},${y - 5} ${x + 10},${y + 16} ${x - 10},${y + 16} ${x - 15},${y - 5}`} fill={color} {...props} />;
+                                        if (mark.shape === 'cross') return <polygon points={`${x - 5},${y - 16} ${x + 5},${y - 16} ${x + 5},${y - 5} ${x + 16},${y - 5} ${x + 16},${y + 5} ${x + 5},${y + 5} ${x + 5},${y + 16} ${x - 5},${y + 16} ${x - 5},${y + 5} ${x - 16},${y + 5} ${x - 16},${y - 5} ${x - 5},${y - 5}`} fill={color} transform={`rotate(45, ${x}, ${y})`} {...props} />;
+                                        return null;
+                                    };
 
                                     return (
                                         <motion.g
@@ -282,36 +308,15 @@ const Fretboard = ({
                                             exit={{ scale: 0, opacity: 0 }}
                                             transition={{ type: "spring", stiffness: 300, damping: 20 }}
                                         >
-                                            {mark.shape === 'circle' && (
-                                                <circle cx={x} cy={y} r={21} fill={mark.color} />
-                                            )}
-                                            {mark.shape === 'square' && (
-                                                <rect x={x - 14} y={y - 14} width={28} height={28} rx={4} fill={mark.color} />
-                                            )}
-                                            {mark.shape === 'triangle' && (
-                                                <polygon
-                                                    points={`${x},${y - 16} ${x - 14},${y + 12} ${x + 14},${y + 12}`}
-                                                    fill={mark.color}
-                                                />
-                                            )}
-                                            {mark.shape === 'star' && (
-                                                <polygon
-                                                    points={`${x},${y - 18} ${x + 5},${y - 5} ${x + 18},${y - 5} ${x + 8},${y + 5} ${x + 12},${y + 18} ${x},${y + 10} ${x - 12},${y + 18} ${x - 8},${y + 5} ${x - 18},${y - 5} ${x - 5},${y - 5}`}
-                                                    fill={mark.color}
-                                                />
-                                            )}
-                                            {mark.shape === 'pentagon' && (
-                                                <polygon
-                                                    points={`${x},${y - 16} ${x + 15},${y - 5} ${x + 10},${y + 16} ${x - 10},${y + 16} ${x - 15},${y - 5}`}
-                                                    fill={mark.color}
-                                                />
-                                            )}
-                                            {mark.shape === 'cross' && (
-                                                <polygon
-                                                    points={`${x - 5},${y - 16} ${x + 5},${y - 16} ${x + 5},${y - 5} ${x + 16},${y - 5} ${x + 16},${y + 5} ${x + 5},${y + 5} ${x + 5},${y + 16} ${x - 5},${y + 16} ${x - 5},${y + 5} ${x - 16},${y + 5} ${x - 16},${y - 5} ${x - 5},${y - 5}`}
-                                                    fill={mark.color}
-                                                    transform={`rotate(45, ${x}, ${y})`}
-                                                />
+                                            {hasSplit ? (
+                                                <>
+                                                    {/* Full shape in color2 (right half) */}
+                                                    {renderShape(mark.color2)}
+                                                    {/* Left half clipped to color1 */}
+                                                    {renderShape(mark.color, clipId)}
+                                                </>
+                                            ) : (
+                                                renderShape(mark.color)
                                             )}
 
                                             {/* Text Overlay */}

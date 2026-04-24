@@ -137,7 +137,13 @@ const ControlPanel = ({
                                     onClick={() => setActiveTool({ ...activeTool, shape })}
                                     title={shape}
                                 >
-                                    <div className={`preview-shape ${shape}`} style={{ backgroundColor: activeTool.color }} />
+                                    <div
+                                        className={`preview-shape ${shape}`}
+                                        style={activeTool.color2
+                                            ? { background: `linear-gradient(to right, ${activeTool.color} 50%, ${activeTool.color2} 50%)` }
+                                            : { backgroundColor: activeTool.color }
+                                        }
+                                    />
                                 </button>
                             ))}
                         </div>
@@ -180,12 +186,79 @@ const ControlPanel = ({
                                 </div>
                             </>
                         )}
+
+                        {/* Split Color Toggle */}
+                        <div className="split-color-toggle-row">
+                            <label className="split-color-label">
+                                <span>Split Color</span>
+                                <div
+                                    className={`split-toggle-switch ${activeTool.color2 ? 'on' : 'off'}`}
+                                    onClick={() => setActiveTool({
+                                        ...activeTool,
+                                        color2: activeTool.color2 ? null : COLORS[5] // Toggle on with blue default
+                                    })}
+                                    title="Toggle split half-color mode"
+                                >
+                                    <div className="split-toggle-knob" />
+                                </div>
+                            </label>
+                        </div>
+
+                        {/* Color 2 Row */}
+                        {activeTool.color2 && (
+                            <>
+                                <div className="tool-label split-color-label-2">
+                                    <span className="split-color-swatch" style={{ background: `linear-gradient(to right, ${activeTool.color} 50%, ${activeTool.color2} 50%)` }} />
+                                    Right Half Color
+                                </div>
+                                <div className="palette color-palette">
+                                    {COLORS.map(color => (
+                                        <button
+                                            key={`c2-${color}`}
+                                            className={`color-btn ${activeTool.color2 === color ? 'active' : ''}`}
+                                            style={{ backgroundColor: color }}
+                                            onClick={() => setActiveTool({ ...activeTool, color2: color })}
+                                            title={color}
+                                        />
+                                    ))}
+                                    <button
+                                        className="color-btn custom-btn"
+                                        onClick={() => setShowColorPicker('color2')}
+                                        title="Custom Color 2"
+                                    >
+                                        <Plus size={16} color="var(--text-secondary)" />
+                                    </button>
+                                </div>
+                                {customPalette.length > 0 && (
+                                    <>
+                                        <div className="tool-label" style={{ marginTop: '0.75rem' }}>Custom Palette</div>
+                                        <div className="palette color-palette">
+                                            {customPalette.map((color, index) => (
+                                                <button
+                                                    key={`c2-custom-${index}`}
+                                                    className={`color-btn ${activeTool.color2 === color ? 'active' : ''}`}
+                                                    style={{ backgroundColor: color }}
+                                                    onClick={() => setActiveTool({ ...activeTool, color2: color })}
+                                                    title={color}
+                                                />
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </>
+                        )}
                     </div>
 
                     {showColorPicker && (
                         <CustomColorPicker 
-                            activeColor={activeTool.color}
-                            onSelectColor={(color) => setActiveTool({ ...activeTool, color })}
+                            activeColor={showColorPicker === 'color2' ? (activeTool.color2 || activeTool.color) : activeTool.color}
+                            onSelectColor={(color) => {
+                                if (showColorPicker === 'color2') {
+                                    setActiveTool({ ...activeTool, color2: color });
+                                } else {
+                                    setActiveTool({ ...activeTool, color });
+                                }
+                            }}
                             onClose={() => setShowColorPicker(false)}
                         />
                     )}

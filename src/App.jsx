@@ -17,7 +17,8 @@ function App() {
 
   const [activeTool, setActiveTool] = useState({
     shape: 'circle',
-    color: '#ef4444' // Red default
+    color: '#ef4444', // Red default
+    color2: null // null = solid, set to string for split-half coloring
   });
 
   const [marks, setMarks] = useState([]);
@@ -50,11 +51,13 @@ function App() {
         }
 
         // If the color OR shape is different, REPLACE it instead of deleting
-        if (existingMark.color !== targetColor || existingMark.shape !== targetShape) {
+        const targetColor2 = activeTool.color2 || null;
+        if (existingMark.color !== targetColor || existingMark.shape !== targetShape || existingMark.color2 !== targetColor2) {
           const newMarks = [...prevMarks];
           newMarks[existingIndex] = {
             ...existingMark,
             color: targetColor,
+            color2: targetColor2,
             shape: targetShape
           };
           return newMarks;
@@ -71,6 +74,7 @@ function App() {
           fretIndex,
           shape: targetShape,
           color: targetColor,
+          color2: activeTool.color2 || null,
           text: ''
         }];
       }
