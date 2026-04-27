@@ -92,7 +92,7 @@ const Piano = ({
 
     const getMark = (keyId) => pianoMarks.find(m => m.keyId === keyId);
 
-    const WHITE_KEY_WIDTH = 56;
+    const WHITE_KEY_WIDTH = 70;
     const totalWidth = whiteKeys.length * WHITE_KEY_WIDTH;
 
     return (
@@ -161,7 +161,7 @@ const Piano = ({
                     {/* Black Keys */}
                     {blackKeys.map((key) => {
                         const whitePos = getBlackKeyPosition(key);
-                        const left = whitePos * WHITE_KEY_WIDTH - 18;
+                        const left = whitePos * WHITE_KEY_WIDTH - 23;
                         const mark = getMark(key.id);
 
                         return (
