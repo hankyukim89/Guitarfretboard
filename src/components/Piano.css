@@ -165,9 +165,9 @@
 .piano-dot.white-dot {
     width: 30px;
     height: 30px;
-    /* Center in the lower visible portion of white key (below black keys) */
+    /* Centered in the lower visible portion of white key */
     position: absolute;
-    top: 73%;
+    top: 80%;
     left: 50%;
     transform: translate(-50%, -50%);
 }
