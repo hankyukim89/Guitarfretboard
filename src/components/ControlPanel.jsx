@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, MousePointer2, Type, Trash2, RotateCcw, Download, ChevronLeft, ChevronRight, Plus, HelpCircle, Palette as PaletteIcon, MousePointer2 as ClickIcon, Info } from 'lucide-react';
+import { Settings, MousePointer2, Type, Trash2, RotateCcw, Download, ChevronLeft, ChevronRight, Plus, HelpCircle, Palette as PaletteIcon, MousePointer2 as ClickIcon, Info, Guitar, Music } from 'lucide-react';
 import './ControlPanel.css';
 import CustomColorPicker from './CustomColorPicker';
 
@@ -27,7 +27,15 @@ const ControlPanel = ({
     onDownload,
     isCollapsed,
     setIsCollapsed,
-    onModalToggle
+    onModalToggle,
+    showFretboard,
+    setShowFretboard,
+    showPiano,
+    setShowPiano,
+    showWhiteNames,
+    setShowWhiteNames,
+    showBlackNames,
+    setShowBlackNames,
 }) => {
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
@@ -85,41 +93,115 @@ const ControlPanel = ({
                         </button>
                     </div>
 
+                    {/* Instrument Toggles */}
                     <div className="control-group">
-                        <label>
-                            <span>Strings</span>
-                            <input
-                                type="number"
-                                name="strings"
-                                value={config.strings}
-                                onChange={handleChange}
-                                min="1"
-                                max="12"
-                            />
-                        </label>
-                        <label>
-                            <span>Frets</span>
-                            <input
-                                type="number"
-                                name="frets"
-                                value={config.frets}
-                                onChange={handleChange}
-                                min="1"
-                                max="24"
-                            />
-                        </label>
-                        <label>
-                            <span>Start Fret</span>
-                            <input
-                                type="number"
-                                name="startFret"
-                                value={config.startFret}
-                                onChange={handleChange}
-                                min="1"
-                                max="24"
-                            />
-                        </label>
+                        <div className="tool-label">Instruments</div>
+                        <div className="instrument-toggles">
+                            <label className="instrument-toggle-label">
+                                <div className="instrument-toggle-info">
+                                    <Guitar size={16} />
+                                    <span>Fretboard</span>
+                                </div>
+                                <div
+                                    className={`split-toggle-switch ${showFretboard ? 'on' : 'off'}`}
+                                    onClick={() => setShowFretboard(!showFretboard)}
+                                    title="Toggle guitar fretboard"
+                                >
+                                    <div className="split-toggle-knob" />
+                                </div>
+                            </label>
+                            <label className="instrument-toggle-label">
+                                <div className="instrument-toggle-info">
+                                    <Music size={16} />
+                                    <span>Piano</span>
+                                </div>
+                                <div
+                                    className={`split-toggle-switch ${showPiano ? 'on' : 'off'}`}
+                                    onClick={() => setShowPiano(!showPiano)}
+                                    title="Toggle piano keyboard"
+                                >
+                                    <div className="split-toggle-knob" />
+                                </div>
+                            </label>
+                        </div>
                     </div>
+
+                    {/* Guitar Fretboard Settings - only show when fretboard is visible */}
+                    {showFretboard && (
+                        <>
+                            <div className="panel-divider" />
+                            <div className="panel-header">
+                                <h2>Fretboard</h2>
+                            </div>
+                            <div className="control-group">
+                                <label>
+                                    <span>Strings</span>
+                                    <input
+                                        type="number"
+                                        name="strings"
+                                        value={config.strings}
+                                        onChange={handleChange}
+                                        min="1"
+                                        max="12"
+                                    />
+                                </label>
+                                <label>
+                                    <span>Frets</span>
+                                    <input
+                                        type="number"
+                                        name="frets"
+                                        value={config.frets}
+                                        onChange={handleChange}
+                                        min="1"
+                                        max="24"
+                                    />
+                                </label>
+                                <label>
+                                    <span>Start Fret</span>
+                                    <input
+                                        type="number"
+                                        name="startFret"
+                                        value={config.startFret}
+                                        onChange={handleChange}
+                                        min="1"
+                                        max="24"
+                                    />
+                                </label>
+                            </div>
+                        </>
+                    )}
+
+                    {/* Piano Settings - only show when piano is visible */}
+                    {showPiano && (
+                        <>
+                            <div className="panel-divider" />
+                            <div className="panel-header">
+                                <h2>Piano</h2>
+                            </div>
+                            <div className="control-group">
+                                <label className="instrument-toggle-label">
+                                    <span>White Key Names</span>
+                                    <div
+                                        className={`split-toggle-switch ${showWhiteNames ? 'on' : 'off'}`}
+                                        onClick={() => setShowWhiteNames(!showWhiteNames)}
+                                        title="Toggle white key note names"
+                                    >
+                                        <div className="split-toggle-knob" />
+                                    </div>
+                                </label>
+                                <label className="instrument-toggle-label">
+                                    <span>Black Key Names</span>
+                                    <div
+                                        className={`split-toggle-switch ${showBlackNames ? 'on' : 'off'}`}
+                                        onClick={() => setShowBlackNames(!showBlackNames)}
+                                        title="Toggle black key note names"
+                                    >
+                                        <div className="split-toggle-knob" />
+                                    </div>
+                                </label>
+                            </div>
+                        </>
+                    )}
 
                     <div className="panel-divider" />
 
@@ -127,27 +209,29 @@ const ControlPanel = ({
                         <h2>Tools</h2>
                     </div>
 
-                    <div className="control-group">
-                        <div className="tool-label">Shape</div>
-                        <div className="palette shape-palette">
-                            {SHAPES.map(shape => (
-                                <button
-                                    key={shape}
-                                    className={`shape-btn ${activeTool.shape === shape ? 'active' : ''}`}
-                                    onClick={() => setActiveTool({ ...activeTool, shape })}
-                                    title={shape}
-                                >
-                                    <div
-                                        className={`preview-shape ${shape}`}
-                                        style={activeTool.color2
-                                            ? { background: `linear-gradient(to right, ${activeTool.color} 50%, ${activeTool.color2} 50%)` }
-                                            : { backgroundColor: activeTool.color }
-                                        }
-                                    />
-                                </button>
-                            ))}
+                    {showFretboard && (
+                        <div className="control-group">
+                            <div className="tool-label">Shape</div>
+                            <div className="palette shape-palette">
+                                {SHAPES.map(shape => (
+                                    <button
+                                        key={shape}
+                                        className={`shape-btn ${activeTool.shape === shape ? 'active' : ''}`}
+                                        onClick={() => setActiveTool({ ...activeTool, shape })}
+                                        title={shape}
+                                    >
+                                        <div
+                                            className={`preview-shape ${shape}`}
+                                            style={activeTool.color2
+                                                ? { background: `linear-gradient(to right, ${activeTool.color} 50%, ${activeTool.color2} 50%)` }
+                                                : { backgroundColor: activeTool.color }
+                                            }
+                                        />
+                                    </button>
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     <div className="control-group">
                         <div className="tool-label">Color</div>
@@ -277,11 +361,19 @@ const ControlPanel = ({
                                 </div>
                                 <div className="help-body">
                                     <div className="help-section">
-                                        <h4>Basics</h4>
+                                        <h4>Fretboard</h4>
                                         <ul>
                                             <li><span>Left Click</span> to place a dot or remove it.</li>
                                             <li><span>Right Click</span> on a dot to label/name it.</li>
                                             <li><span>Right Click</span> on empty fret to place an <b>'X'</b>.</li>
+                                        </ul>
+                                    </div>
+                                    <div className="help-section">
+                                        <h4>Piano</h4>
+                                        <ul>
+                                            <li><span>Click</span> a key to place/remove a colored dot.</li>
+                                            <li>Use <span>+/−</span> buttons to add/remove octaves.</li>
+                                            <li>Toggle <span>note names</span> in the Piano settings.</li>
                                         </ul>
                                     </div>
                                     <div className="help-section">

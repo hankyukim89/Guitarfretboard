@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trash2 } from 'lucide-react';
 import ControlPanel from './components/ControlPanel';
 import Fretboard from './components/Fretboard';
+import Piano from './components/Piano';
 import './index.css'; // Ensure global styles are applied
 
 function App() {
@@ -30,6 +31,19 @@ function App() {
 
   const [isLoadSidebarOpen, setIsLoadSidebarOpen] = useState(false);
   const [isMainModalOpen, setIsMainModalOpen] = useState(false);
+
+  // Instrument visibility toggles
+  const [showFretboard, setShowFretboard] = useState(true);
+  const [showPiano, setShowPiano] = useState(false);
+
+  // Piano-specific state
+  const [pianoMarks, setPianoMarks] = useState([]);
+  const [pianoConfig, setPianoConfig] = useState({
+    startOctave: 4,
+    endOctave: 4,
+  });
+  const [showWhiteNames, setShowWhiteNames] = useState(false);
+  const [showBlackNames, setShowBlackNames] = useState(false);
 
   const handleToggleMark = (stringIndex, fretIndex, shapeOverride = null) => {
     setMarks(prevMarks => {
@@ -91,9 +105,43 @@ function App() {
     );
   };
 
+  // Piano mark toggle
+  const handleTogglePianoMark = (keyId) => {
+    setPianoMarks(prevMarks => {
+      const existingIndex = prevMarks.findIndex(m => m.keyId === keyId);
+      const targetColor = activeTool.color;
+      const targetColor2 = activeTool.color2 || null;
+
+      if (existingIndex >= 0) {
+        const existingMark = prevMarks[existingIndex];
+        // If different color, replace
+        if (existingMark.color !== targetColor || existingMark.color2 !== targetColor2) {
+          const newMarks = [...prevMarks];
+          newMarks[existingIndex] = {
+            ...existingMark,
+            color: targetColor,
+            color2: targetColor2,
+          };
+          return newMarks;
+        }
+        // Same color, remove
+        const newMarks = [...prevMarks];
+        newMarks.splice(existingIndex, 1);
+        return newMarks;
+      } else {
+        return [...prevMarks, {
+          keyId,
+          color: targetColor,
+          color2: targetColor2,
+        }];
+      }
+    });
+  };
+
   const handleClear = () => {
     if (window.confirm("Are you sure you want to clear all marks?")) {
       setMarks([]);
+      setPianoMarks([]);
       setChordName('');
     }
   };
@@ -127,6 +175,10 @@ function App() {
       config: { ...config },
       chordName: name,
       marks: [...marks],
+      pianoMarks: [...pianoMarks],
+      pianoConfig: { ...pianoConfig },
+      showFretboard,
+      showPiano,
       timestamp: new Date().toISOString()
     };
 
@@ -149,6 +201,10 @@ function App() {
   const handleLoadDiagram = (diagram) => {
     setConfig(diagram.config);
     setMarks(diagram.marks || []);
+    setPianoMarks(diagram.pianoMarks || []);
+    if (diagram.pianoConfig) setPianoConfig(diagram.pianoConfig);
+    if (diagram.showFretboard !== undefined) setShowFretboard(diagram.showFretboard);
+    if (diagram.showPiano !== undefined) setShowPiano(diagram.showPiano);
     setChordName(diagram.chordName || diagram.name || '');
     setIsLoadSidebarOpen(false); // Close on load
   };
@@ -173,24 +229,56 @@ function App() {
         isCollapsed={isCollapsed}
         setIsCollapsed={setIsCollapsed}
         onModalToggle={setIsMainModalOpen}
+        showFretboard={showFretboard}
+        setShowFretboard={setShowFretboard}
+        showPiano={showPiano}
+        setShowPiano={setShowPiano}
+        showWhiteNames={showWhiteNames}
+        setShowWhiteNames={setShowWhiteNames}
+        showBlackNames={showBlackNames}
+        setShowBlackNames={setShowBlackNames}
       />
       
-      <Fretboard
-        config={config}
-        marks={marks}
-        onToggleMark={handleToggleMark}
-        onUpdateMarkText={handleUpdateMarkText}
-        chordName={chordName}
-        setChordName={setChordName}
-        onSave={handleSaveDiagram}
-        onLoad={handleLoadDiagram}
-        onDelete={handleDeleteDiagram}
-        savedDiagrams={savedDiagrams}
-        isCollapsed={isCollapsed}
-        isLoadSidebarOpen={isLoadSidebarOpen}
-        setIsLoadSidebarOpen={setIsLoadSidebarOpen}
-        isMainModalOpen={isMainModalOpen}
-      />
+      <div className="main-content-area">
+        {showFretboard && (
+          <Fretboard
+            config={config}
+            marks={marks}
+            onToggleMark={handleToggleMark}
+            onUpdateMarkText={handleUpdateMarkText}
+            chordName={chordName}
+            setChordName={setChordName}
+            onSave={handleSaveDiagram}
+            onLoad={handleLoadDiagram}
+            onDelete={handleDeleteDiagram}
+            savedDiagrams={savedDiagrams}
+            isCollapsed={isCollapsed}
+            isLoadSidebarOpen={isLoadSidebarOpen}
+            setIsLoadSidebarOpen={setIsLoadSidebarOpen}
+            isMainModalOpen={isMainModalOpen}
+          />
+        )}
+
+        {showPiano && (
+          <div className="piano-section">
+            <Piano
+              pianoMarks={pianoMarks}
+              onTogglePianoMark={handleTogglePianoMark}
+              activeTool={activeTool}
+              pianoConfig={pianoConfig}
+              setPianoConfig={setPianoConfig}
+              showWhiteNames={showWhiteNames}
+              showBlackNames={showBlackNames}
+            />
+          </div>
+        )}
+
+        {!showFretboard && !showPiano && (
+          <div className="empty-instruments-state">
+            <p>Enable an instrument from the control panel to get started.</p>
+          </div>
+        )}
+      </div>
 
       <AnimatePresence>
         {isLoadSidebarOpen && (
