@@ -20,7 +20,6 @@ const Fretboard = ({
     chordName,
     setChordName,
     onSave,
-    isCollapsed,
     isLoadSidebarOpen,
     setIsLoadSidebarOpen,
     isMainModalOpen
@@ -65,7 +64,7 @@ const Fretboard = ({
         updateScale(); // Initial call
         
         return () => observer.disconnect();
-    }, [width, height, isCollapsed, isLoadSidebarOpen]); // re-run on load sidebar change too
+    }, [width, height, isLoadSidebarOpen]); // re-run on load sidebar change too
 
     const getCoordinates = (stringIdx, fretIdx) => {
         // stringIdx: 0 is top (High E), config.strings-1 is bottom (Low E)

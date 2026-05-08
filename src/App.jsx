@@ -24,7 +24,6 @@ function App() {
   });
 
   const [marks, setMarks] = useState([]);
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [savedDiagrams, setSavedDiagrams] = useState(() => {
     const saved = localStorage.getItem('guitar-diagrams');
     return saved ? JSON.parse(saved) : [];
@@ -226,8 +225,6 @@ function App() {
         setActiveTool={setActiveTool}
         onClear={handleClear}
         onDownload={handleDownload}
-        isCollapsed={isCollapsed}
-        setIsCollapsed={setIsCollapsed}
         onModalToggle={setIsMainModalOpen}
         showFretboard={showFretboard}
         setShowFretboard={setShowFretboard}
@@ -240,97 +237,98 @@ function App() {
       />
       
       <div className="main-content-area">
-        {showFretboard && (
-          <Fretboard
-            config={config}
-            marks={marks}
-            onToggleMark={handleToggleMark}
-            onUpdateMarkText={handleUpdateMarkText}
-            chordName={chordName}
-            setChordName={setChordName}
-            onSave={handleSaveDiagram}
-            onLoad={handleLoadDiagram}
-            onDelete={handleDeleteDiagram}
-            savedDiagrams={savedDiagrams}
-            isCollapsed={isCollapsed}
-            isLoadSidebarOpen={isLoadSidebarOpen}
-            setIsLoadSidebarOpen={setIsLoadSidebarOpen}
-            isMainModalOpen={isMainModalOpen}
-          />
-        )}
-
-        {showPiano && (
-          <div className="piano-section">
-            <Piano
-              pianoMarks={pianoMarks}
-              onTogglePianoMark={handleTogglePianoMark}
-              activeTool={activeTool}
-              pianoConfig={pianoConfig}
-              setPianoConfig={setPianoConfig}
-              showWhiteNames={showWhiteNames}
-              showBlackNames={showBlackNames}
+        <div className="instruments-area">
+          {showFretboard && (
+            <Fretboard
+              config={config}
+              marks={marks}
+              onToggleMark={handleToggleMark}
+              onUpdateMarkText={handleUpdateMarkText}
+              chordName={chordName}
+              setChordName={setChordName}
+              onSave={handleSaveDiagram}
+              onLoad={handleLoadDiagram}
+              onDelete={handleDeleteDiagram}
+              savedDiagrams={savedDiagrams}
+              isLoadSidebarOpen={isLoadSidebarOpen}
+              setIsLoadSidebarOpen={setIsLoadSidebarOpen}
+              isMainModalOpen={isMainModalOpen}
             />
-          </div>
-        )}
+          )}
 
-        {!showFretboard && !showPiano && (
-          <div className="empty-instruments-state">
-            <p>Enable an instrument from the control panel to get started.</p>
-          </div>
-        )}
-      </div>
-
-      <AnimatePresence>
-        {isLoadSidebarOpen && (
-          <motion.div
-            className="load-sidebar"
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          >
-            <div className="sidebar-header">
-              <h3>Saved Diagrams</h3>
-              <button 
-                className="close-sidebar-btn" 
-                onClick={() => setIsLoadSidebarOpen(false)}
-              >
-                <X size={20} />
-              </button>
+          {showPiano && (
+            <div className="piano-section">
+              <Piano
+                pianoMarks={pianoMarks}
+                onTogglePianoMark={handleTogglePianoMark}
+                activeTool={activeTool}
+                pianoConfig={pianoConfig}
+                setPianoConfig={setPianoConfig}
+                showWhiteNames={showWhiteNames}
+                showBlackNames={showBlackNames}
+              />
             </div>
-            <div className="sidebar-body">
-              <div className="saved-diagrams-list-v2">
-                {savedDiagrams.length === 0 ? (
-                  <div className="empty-state">No diagrams saved yet.</div>
-                ) : (
-                  savedDiagrams.map((diagram) => (
-                    <div key={diagram.id} className="diagram-item-v2">
-                      <div className="diagram-info" onClick={() => handleLoadDiagram(diagram)}>
-                        <span className="diagram-name">{diagram.name}</span>
-                        <span className="diagram-date">
-                          {new Date(diagram.timestamp).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div className="diagram-actions-row">
-                        <button
-                          className="delete-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteDiagram(diagram.id);
-                          }}
-                          title="Delete"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
+          )}
+
+          {!showFretboard && !showPiano && (
+            <div className="empty-instruments-state">
+              <p>Enable an instrument from the control panel to get started.</p>
+            </div>
+          )}
+        </div>
+
+        <AnimatePresence>
+          {isLoadSidebarOpen && (
+            <motion.div
+              className="load-sidebar"
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            >
+              <div className="sidebar-header">
+                <h3>Saved Diagrams</h3>
+                <button 
+                  className="close-sidebar-btn" 
+                  onClick={() => setIsLoadSidebarOpen(false)}
+                >
+                  <X size={20} />
+                </button>
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <div className="sidebar-body">
+                <div className="saved-diagrams-list-v2">
+                  {savedDiagrams.length === 0 ? (
+                    <div className="empty-state">No diagrams saved yet.</div>
+                  ) : (
+                    savedDiagrams.map((diagram) => (
+                      <div key={diagram.id} className="diagram-item-v2">
+                        <div className="diagram-info" onClick={() => handleLoadDiagram(diagram)}>
+                          <span className="diagram-name">{diagram.name}</span>
+                          <span className="diagram-date">
+                            {new Date(diagram.timestamp).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="diagram-actions-row">
+                          <button
+                            className="delete-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteDiagram(diagram.id);
+                            }}
+                            title="Delete"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Settings, MousePointer2, Type, Trash2, RotateCcw, Download, ChevronLeft, ChevronRight, Plus, HelpCircle, Palette as PaletteIcon, MousePointer2 as ClickIcon, Info, Guitar, Music } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Settings, Trash2, Download, Plus, HelpCircle, Palette as PaletteIcon, Info, Guitar, Music, ChevronDown } from 'lucide-react';
 import './ControlPanel.css';
 import CustomColorPicker from './CustomColorPicker';
 
@@ -18,15 +18,50 @@ const COLORS = [
 
 const SHAPES = ['circle', 'square', 'triangle', 'star', 'pentagon', 'cross'];
 
-const ControlPanel = ({ 
-    config, 
-    setConfig, 
-    activeTool, 
-    setActiveTool, 
-    onClear, 
+// A popover section that opens below the toolbar
+function ToolbarPopover({ label, icon, children, isOpen, onToggle, badge }) {
+    const ref = useRef(null);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleClick = (e) => {
+            if (ref.current && !ref.current.contains(e.target)) {
+                onToggle(false);
+            }
+        };
+        // Delay so the triggering click doesn't immediately close
+        setTimeout(() => document.addEventListener('mousedown', handleClick), 0);
+        return () => document.removeEventListener('mousedown', handleClick);
+    }, [isOpen, onToggle]);
+
+    return (
+        <div className="toolbar-popover-wrapper" ref={ref}>
+            <button
+                className={`toolbar-btn ${isOpen ? 'active' : ''}`}
+                onClick={() => onToggle(!isOpen)}
+                title={label}
+            >
+                {icon}
+                <span>{label}</span>
+                {badge && <span className="toolbar-btn-badge" style={{ background: badge }} />}
+                <ChevronDown size={12} className={`toolbar-chevron ${isOpen ? 'open' : ''}`} />
+            </button>
+            {isOpen && (
+                <div className="toolbar-dropdown">
+                    {children}
+                </div>
+            )}
+        </div>
+    );
+}
+
+const ControlPanel = ({
+    config,
+    setConfig,
+    activeTool,
+    setActiveTool,
+    onClear,
     onDownload,
-    isCollapsed,
-    setIsCollapsed,
     onModalToggle,
     showFretboard,
     setShowFretboard,
@@ -39,26 +74,24 @@ const ControlPanel = ({
 }) => {
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
+    const [openPanel, setOpenPanel] = useState(null); // which toolbar popover is open
 
-    useEffect(() => {
-        if (onModalToggle) onModalToggle(showColorPicker || showHelp);
-    }, [showColorPicker, showHelp, onModalToggle]);
     const [customPalette, setCustomPalette] = useState(() => {
         const saved = localStorage.getItem('custom_guitar_palette');
         return saved ? JSON.parse(saved) : [];
     });
 
-    // Listen for custom palette changes (e.g. from the modal)
+    useEffect(() => {
+        if (onModalToggle) onModalToggle(showColorPicker || showHelp);
+    }, [showColorPicker, showHelp, onModalToggle]);
+
     useEffect(() => {
         const handleStorageChange = () => {
             const saved = localStorage.getItem('custom_guitar_palette');
             if (saved) setCustomPalette(JSON.parse(saved));
         };
         window.addEventListener('storage', handleStorageChange);
-        // Also update when modal closes as it might have changed
-        if (!showColorPicker) {
-            handleStorageChange();
-        }
+        if (!showColorPicker) handleStorageChange();
         return () => window.removeEventListener('storage', handleStorageChange);
     }, [showColorPicker]);
 
@@ -70,370 +103,390 @@ const ControlPanel = ({
         }));
     };
 
+    const togglePanel = (name) => (open) => {
+        setOpenPanel(open ? name : null);
+    };
+
+    const allColors = [...COLORS, ...customPalette];
+
     return (
-        <div className={`control-panel-wrapper ${isCollapsed ? 'collapsed' : ''} ${showColorPicker || showHelp ? 'modal-open' : ''}`}>
-            <button
-                className="sidebar-toggle-popout"
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                title={isCollapsed ? "Expand" : "Collapse"}
+        <div className="top-toolbar">
+            {/* ── App Title ── */}
+            <div className="toolbar-title">
+                <Guitar size={18} />
+                <span>FretDiagram</span>
+            </div>
+
+            <div className="toolbar-divider-v" />
+
+            {/* ── Instruments ── */}
+            <ToolbarPopover
+                label="Instruments"
+                icon={<Music size={15} />}
+                isOpen={openPanel === 'instruments'}
+                onToggle={togglePanel('instruments')}
             >
-                {isCollapsed ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
-            </button>
-
-            {!isCollapsed && (
-                <div className="control-panel-content">
-                    <div className="panel-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <h2>Diagram Settings</h2>
-                        <button 
-                            className="help-toggle-btn" 
-                            onClick={() => setShowHelp(true)}
-                            title="How to use"
+                <div className="dropdown-section">
+                    <div className="dropdown-label">Visible Instruments</div>
+                    <label className="dropdown-toggle-row">
+                        <div className="dropdown-toggle-info">
+                            <Guitar size={14} />
+                            <span>Fretboard</span>
+                        </div>
+                        <div
+                            className={`split-toggle-switch ${showFretboard ? 'on' : 'off'}`}
+                            onClick={() => setShowFretboard(!showFretboard)}
                         >
-                            <HelpCircle size={18} />
-                        </button>
-                    </div>
-
-                    {/* Instrument Toggles */}
-                    <div className="control-group">
-                        <div className="tool-label">Instruments</div>
-                        <div className="instrument-toggles">
-                            <label className="instrument-toggle-label">
-                                <div className="instrument-toggle-info">
-                                    <Guitar size={16} />
-                                    <span>Fretboard</span>
-                                </div>
-                                <div
-                                    className={`split-toggle-switch ${showFretboard ? 'on' : 'off'}`}
-                                    onClick={() => setShowFretboard(!showFretboard)}
-                                    title="Toggle guitar fretboard"
-                                >
-                                    <div className="split-toggle-knob" />
-                                </div>
-                            </label>
-                            <label className="instrument-toggle-label">
-                                <div className="instrument-toggle-info">
-                                    <Music size={16} />
-                                    <span>Piano</span>
-                                </div>
-                                <div
-                                    className={`split-toggle-switch ${showPiano ? 'on' : 'off'}`}
-                                    onClick={() => setShowPiano(!showPiano)}
-                                    title="Toggle piano keyboard"
-                                >
-                                    <div className="split-toggle-knob" />
-                                </div>
-                            </label>
+                            <div className="split-toggle-knob" />
                         </div>
-                    </div>
-
-                    {/* Guitar Fretboard Settings - only show when fretboard is visible */}
-                    {showFretboard && (
-                        <>
-                            <div className="panel-divider" />
-                            <div className="panel-header">
-                                <h2>Fretboard</h2>
-                            </div>
-                            <div className="control-group">
-                                <label className="instrument-toggle-label" style={{ marginBottom: '0.5rem' }}>
-                                    <span>Orientation</span>
-                                    <div className="orientation-toggle" style={{ display: 'flex', gap: '0', border: '1px solid var(--border-color)', borderRadius: '4px', overflow: 'hidden' }}>
-                                        <button
-                                            className={`orientation-btn ${config.orientation === 'horizontal' ? 'active' : ''}`}
-                                            onClick={() => setConfig({ ...config, orientation: 'horizontal' })}
-                                            style={{ flex: 1, padding: '4px 12px', background: config.orientation === 'horizontal' ? 'var(--accent-primary)' : 'var(--bg-secondary)', color: config.orientation === 'horizontal' ? 'white' : 'var(--text-secondary)', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center' }}
-                                            title="Horizontal"
-                                        >
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <rect x="3" y="4" width="18" height="16" rx="2" />
-                                                <line x1="3" y1="8" x2="21" y2="8" />
-                                                <line x1="3" y1="12" x2="21" y2="12" />
-                                                <line x1="3" y1="16" x2="21" y2="16" />
-                                                <line x1="8" y1="4" x2="8" y2="20" />
-                                            </svg>
-                                        </button>
-                                        <button
-                                            className={`orientation-btn ${config.orientation === 'vertical' ? 'active' : ''}`}
-                                            onClick={() => setConfig({ ...config, orientation: 'vertical' })}
-                                            style={{ flex: 1, padding: '4px 12px', background: config.orientation === 'vertical' ? 'var(--accent-primary)' : 'var(--bg-secondary)', color: config.orientation === 'vertical' ? 'white' : 'var(--text-secondary)', border: 'none', borderLeft: '1px solid var(--border-color)', cursor: 'pointer', display: 'flex', justifyContent: 'center' }}
-                                            title="Vertical"
-                                        >
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <rect x="4" y="3" width="16" height="18" rx="2" />
-                                                <line x1="8" y1="3" x2="8" y2="21" />
-                                                <line x1="12" y1="3" x2="12" y2="21" />
-                                                <line x1="16" y1="3" x2="16" y2="21" />
-                                                <line x1="4" y1="8" x2="20" y2="8" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </label>
-                                <label>
-                                    <span>Strings</span>
-                                    <input
-                                        type="number"
-                                        name="strings"
-                                        value={config.strings}
-                                        onChange={handleChange}
-                                        min="1"
-                                        max="12"
-                                    />
-                                </label>
-                                <label>
-                                    <span>Frets</span>
-                                    <input
-                                        type="number"
-                                        name="frets"
-                                        value={config.frets}
-                                        onChange={handleChange}
-                                        min="1"
-                                        max="24"
-                                    />
-                                </label>
-                                <label>
-                                    <span>Start Fret</span>
-                                    <input
-                                        type="number"
-                                        name="startFret"
-                                        value={config.startFret}
-                                        onChange={handleChange}
-                                        min="1"
-                                        max="24"
-                                    />
-                                </label>
-                            </div>
-                        </>
-                    )}
-
-                    {/* Piano Settings - only show when piano is visible */}
-                    {showPiano && (
-                        <>
-                            <div className="panel-divider" />
-                            <div className="panel-header">
-                                <h2>Piano</h2>
-                            </div>
-                            <div className="control-group">
-                                <label className="instrument-toggle-label">
-                                    <span>White Key Names</span>
-                                    <div
-                                        className={`split-toggle-switch ${showWhiteNames ? 'on' : 'off'}`}
-                                        onClick={() => setShowWhiteNames(!showWhiteNames)}
-                                        title="Toggle white key note names"
-                                    >
-                                        <div className="split-toggle-knob" />
-                                    </div>
-                                </label>
-                                <label className="instrument-toggle-label">
-                                    <span>Black Key Names</span>
-                                    <div
-                                        className={`split-toggle-switch ${showBlackNames ? 'on' : 'off'}`}
-                                        onClick={() => setShowBlackNames(!showBlackNames)}
-                                        title="Toggle black key note names"
-                                    >
-                                        <div className="split-toggle-knob" />
-                                    </div>
-                                </label>
-                            </div>
-                        </>
-                    )}
-
-                    <div className="panel-divider" />
-
-                    <div className="panel-header">
-                        <h2>Tools</h2>
-                    </div>
-
-                    {showFretboard && (
-                        <div className="control-group">
-                            <div className="tool-label">Shape</div>
-                            <div className="palette shape-palette">
-                                {SHAPES.map(shape => (
-                                    <button
-                                        key={shape}
-                                        className={`shape-btn ${activeTool.shape === shape ? 'active' : ''}`}
-                                        onClick={() => setActiveTool({ ...activeTool, shape })}
-                                        title={shape}
-                                    >
-                                        <div
-                                            className={`preview-shape ${shape}`}
-                                            style={activeTool.color2
-                                                ? { background: `linear-gradient(to right, ${activeTool.color} 50%, ${activeTool.color2} 50%)` }
-                                                : { backgroundColor: activeTool.color }
-                                            }
-                                        />
-                                    </button>
-                                ))}
-                            </div>
+                    </label>
+                    <label className="dropdown-toggle-row">
+                        <div className="dropdown-toggle-info">
+                            <Music size={14} />
+                            <span>Piano</span>
                         </div>
-                    )}
+                        <div
+                            className={`split-toggle-switch ${showPiano ? 'on' : 'off'}`}
+                            onClick={() => setShowPiano(!showPiano)}
+                        >
+                            <div className="split-toggle-knob" />
+                        </div>
+                    </label>
+                </div>
+            </ToolbarPopover>
 
-                    <div className="control-group">
-                        <div className="tool-label">Color</div>
-                        <div className="palette color-palette">
-                            {COLORS.map(color => (
-                                <button
-                                    key={color}
-                                    className={`color-btn ${activeTool.color === color ? 'active' : ''}`}
-                                    style={{ backgroundColor: color }}
-                                    onClick={() => setActiveTool({ ...activeTool, color })}
-                                    title={color}
-                                />
-                            ))}
+            {/* ── Fretboard Settings ── */}
+            {showFretboard && (
+                <ToolbarPopover
+                    label="Fretboard"
+                    icon={<Settings size={15} />}
+                    isOpen={openPanel === 'fretboard'}
+                    onToggle={togglePanel('fretboard')}
+                >
+                    <div className="dropdown-section">
+                        <div className="dropdown-label">Orientation</div>
+                        <div className="orientation-toggle">
                             <button
-                                className="color-btn custom-btn"
-                                onClick={() => setShowColorPicker(true)}
-                                title="Custom Color Wheel"
+                                className={`orientation-btn ${config.orientation === 'horizontal' ? 'active' : ''}`}
+                                onClick={() => setConfig({ ...config, orientation: 'horizontal' })}
+                                title="Horizontal"
                             >
-                                <Plus size={16} color="var(--text-secondary)" />
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="3" y="4" width="18" height="16" rx="2" />
+                                    <line x1="3" y1="8" x2="21" y2="8" />
+                                    <line x1="3" y1="12" x2="21" y2="12" />
+                                    <line x1="3" y1="16" x2="21" y2="16" />
+                                    <line x1="8" y1="4" x2="8" y2="20" />
+                                </svg>
+                                Horizontal
+                            </button>
+                            <button
+                                className={`orientation-btn ${config.orientation === 'vertical' ? 'active' : ''}`}
+                                onClick={() => setConfig({ ...config, orientation: 'vertical' })}
+                                title="Vertical"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="4" y="3" width="16" height="18" rx="2" />
+                                    <line x1="8" y1="3" x2="8" y2="21" />
+                                    <line x1="12" y1="3" x2="12" y2="21" />
+                                    <line x1="16" y1="3" x2="16" y2="21" />
+                                    <line x1="4" y1="8" x2="20" y2="8" />
+                                </svg>
+                                Vertical
                             </button>
                         </div>
-
-                        {customPalette.length > 0 && (
-                            <>
-                                <div className="tool-label" style={{ marginTop: '0.75rem' }}>Custom Palette</div>
-                                <div className="palette color-palette">
-                                    {customPalette.map((color, index) => (
-                                        <button
-                                            key={`custom-${index}`}
-                                            className={`color-btn ${activeTool.color === color ? 'active' : ''}`}
-                                            style={{ backgroundColor: color }}
-                                            onClick={() => setActiveTool({ ...activeTool, color })}
-                                            title={color}
-                                        />
-                                    ))}
-                                </div>
-                            </>
-                        )}
-
-                        {/* Split Color Toggle */}
-                        <div className="split-color-toggle-row">
-                            <label className="split-color-label">
-                                <span>Split Color</span>
-                                <div
-                                    className={`split-toggle-switch ${activeTool.color2 ? 'on' : 'off'}`}
-                                    onClick={() => setActiveTool({
-                                        ...activeTool,
-                                        color2: activeTool.color2 ? null : COLORS[5] // Toggle on with blue default
-                                    })}
-                                    title="Toggle split half-color mode"
-                                >
-                                    <div className="split-toggle-knob" />
-                                </div>
+                    </div>
+                    <div className="dropdown-divider" />
+                    <div className="dropdown-section">
+                        <div className="dropdown-label">Settings</div>
+                        <div className="dropdown-number-row">
+                            <label>
+                                <span>Strings</span>
+                                <input type="number" name="strings" value={config.strings} onChange={handleChange} min="1" max="12" />
+                            </label>
+                            <label>
+                                <span>Frets</span>
+                                <input type="number" name="frets" value={config.frets} onChange={handleChange} min="1" max="24" />
+                            </label>
+                            <label>
+                                <span>Start Fret</span>
+                                <input type="number" name="startFret" value={config.startFret} onChange={handleChange} min="1" max="24" />
                             </label>
                         </div>
+                    </div>
+                </ToolbarPopover>
+            )}
 
-                        {/* Color 2 Row */}
-                        {activeTool.color2 && (
-                            <>
-                                <div className="tool-label split-color-label-2">
-                                    <span className="split-color-swatch" style={{ background: `linear-gradient(to right, ${activeTool.color} 50%, ${activeTool.color2} 50%)` }} />
-                                    Right Half Color
-                                </div>
-                                <div className="palette color-palette">
-                                    {COLORS.map(color => (
-                                        <button
-                                            key={`c2-${color}`}
-                                            className={`color-btn ${activeTool.color2 === color ? 'active' : ''}`}
-                                            style={{ backgroundColor: color }}
-                                            onClick={() => setActiveTool({ ...activeTool, color2: color })}
-                                            title={color}
-                                        />
-                                    ))}
-                                    <button
-                                        className="color-btn custom-btn"
-                                        onClick={() => setShowColorPicker('color2')}
-                                        title="Custom Color 2"
-                                    >
-                                        <Plus size={16} color="var(--text-secondary)" />
-                                    </button>
-                                </div>
-                                {customPalette.length > 0 && (
-                                    <>
-                                        <div className="tool-label" style={{ marginTop: '0.75rem' }}>Custom Palette</div>
-                                        <div className="palette color-palette">
-                                            {customPalette.map((color, index) => (
-                                                <button
-                                                    key={`c2-custom-${index}`}
-                                                    className={`color-btn ${activeTool.color2 === color ? 'active' : ''}`}
-                                                    style={{ backgroundColor: color }}
-                                                    onClick={() => setActiveTool({ ...activeTool, color2: color })}
-                                                    title={color}
-                                                />
-                                            ))}
-                                        </div>
-                                    </>
-                                )}
-                            </>
-                        )}
+            {/* ── Piano Settings ── */}
+            {showPiano && (
+                <ToolbarPopover
+                    label="Piano"
+                    icon={<Music size={15} />}
+                    isOpen={openPanel === 'piano'}
+                    onToggle={togglePanel('piano')}
+                >
+                    <div className="dropdown-section">
+                        <div className="dropdown-label">Note Names</div>
+                        <label className="dropdown-toggle-row">
+                            <span>White Key Names</span>
+                            <div
+                                className={`split-toggle-switch ${showWhiteNames ? 'on' : 'off'}`}
+                                onClick={() => setShowWhiteNames(!showWhiteNames)}
+                            >
+                                <div className="split-toggle-knob" />
+                            </div>
+                        </label>
+                        <label className="dropdown-toggle-row">
+                            <span>Black Key Names</span>
+                            <div
+                                className={`split-toggle-switch ${showBlackNames ? 'on' : 'off'}`}
+                                onClick={() => setShowBlackNames(!showBlackNames)}
+                            >
+                                <div className="split-toggle-knob" />
+                            </div>
+                        </label>
+                    </div>
+                </ToolbarPopover>
+            )}
+
+            <div className="toolbar-divider-v" />
+
+            {/* ── Shape Picker ── */}
+            {showFretboard && (
+                <ToolbarPopover
+                    label="Shape"
+                    icon={
+                        <div className={`preview-shape ${activeTool.shape}`} style={activeTool.color2
+                            ? { background: `linear-gradient(to right, ${activeTool.color} 50%, ${activeTool.color2} 50%)`, width: 16, height: 16 }
+                            : { backgroundColor: activeTool.color, width: 16, height: 16 }
+                        } />
+                    }
+                    isOpen={openPanel === 'shape'}
+                    onToggle={togglePanel('shape')}
+                >
+                    <div className="dropdown-section">
+                        <div className="dropdown-label">Shape</div>
+                        <div className="palette shape-palette">
+                            {SHAPES.map(shape => (
+                                <button
+                                    key={shape}
+                                    className={`shape-btn ${activeTool.shape === shape ? 'active' : ''}`}
+                                    onClick={() => setActiveTool({ ...activeTool, shape })}
+                                    title={shape}
+                                >
+                                    <div
+                                        className={`preview-shape ${shape}`}
+                                        style={activeTool.color2
+                                            ? { background: `linear-gradient(to right, ${activeTool.color} 50%, ${activeTool.color2} 50%)` }
+                                            : { backgroundColor: activeTool.color }
+                                        }
+                                    />
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </ToolbarPopover>
+            )}
+
+            {/* ── Color Picker ── */}
+            <ToolbarPopover
+                label="Color"
+                badge={activeTool.color}
+                icon={<PaletteIcon size={15} />}
+                isOpen={openPanel === 'color'}
+                onToggle={togglePanel('color')}
+            >
+                <div className="dropdown-section">
+                    <div className="dropdown-label">Primary Color</div>
+                    <div className="palette color-palette">
+                        {COLORS.map(color => (
+                            <button
+                                key={color}
+                                className={`color-btn ${activeTool.color === color ? 'active' : ''}`}
+                                style={{ backgroundColor: color }}
+                                onClick={() => setActiveTool({ ...activeTool, color })}
+                                title={color}
+                            />
+                        ))}
+                        <button
+                            className="color-btn custom-btn"
+                            onClick={() => { setShowColorPicker(true); setOpenPanel(null); }}
+                            title="Custom Color"
+                        >
+                            <Plus size={16} color="var(--text-secondary)" />
+                        </button>
                     </div>
 
-                    {showColorPicker && (
-                        <CustomColorPicker 
-                            activeColor={showColorPicker === 'color2' ? (activeTool.color2 || activeTool.color) : activeTool.color}
-                            onSelectColor={(color) => {
-                                if (showColorPicker === 'color2') {
-                                    setActiveTool({ ...activeTool, color2: color });
-                                } else {
-                                    setActiveTool({ ...activeTool, color });
-                                }
-                            }}
-                            onClose={() => setShowColorPicker(false)}
-                        />
+                    {customPalette.length > 0 && (
+                        <>
+                            <div className="dropdown-label" style={{ marginTop: '0.75rem' }}>Custom Palette</div>
+                            <div className="palette color-palette">
+                                {customPalette.map((color, index) => (
+                                    <button
+                                        key={`custom-${index}`}
+                                        className={`color-btn ${activeTool.color === color ? 'active' : ''}`}
+                                        style={{ backgroundColor: color }}
+                                        onClick={() => setActiveTool({ ...activeTool, color })}
+                                        title={color}
+                                    />
+                                ))}
+                            </div>
+                        </>
                     )}
 
-                    {showHelp && (
-                        <div className="help-modal-overlay" onClick={() => setShowHelp(false)}>
-                            <div className="help-modal-content" onClick={e => e.stopPropagation()}>
-                                <div className="help-header">
-                                    <div className="header-title">
-                                        <Info size={20} />
-                                        <h3>Controls & Shortcuts</h3>
+                    <div className="dropdown-divider" style={{ margin: '0.75rem 0' }} />
+
+                    {/* Split Color Toggle */}
+                    <label className="dropdown-toggle-row">
+                        <span style={{ fontWeight: 600 }}>Split Color</span>
+                        <div
+                            className={`split-toggle-switch ${activeTool.color2 ? 'on' : 'off'}`}
+                            onClick={() => setActiveTool({
+                                ...activeTool,
+                                color2: activeTool.color2 ? null : COLORS[5]
+                            })}
+                        >
+                            <div className="split-toggle-knob" />
+                        </div>
+                    </label>
+
+                    {activeTool.color2 && (
+                        <>
+                            <div className="dropdown-label" style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                <span className="split-color-swatch" style={{ background: `linear-gradient(to right, ${activeTool.color} 50%, ${activeTool.color2} 50%)` }} />
+                                Right Half Color
+                            </div>
+                            <div className="palette color-palette">
+                                {COLORS.map(color => (
+                                    <button
+                                        key={`c2-${color}`}
+                                        className={`color-btn ${activeTool.color2 === color ? 'active' : ''}`}
+                                        style={{ backgroundColor: color }}
+                                        onClick={() => setActiveTool({ ...activeTool, color2: color })}
+                                        title={color}
+                                    />
+                                ))}
+                                <button
+                                    className="color-btn custom-btn"
+                                    onClick={() => { setShowColorPicker('color2'); setOpenPanel(null); }}
+                                    title="Custom Color 2"
+                                >
+                                    <Plus size={16} color="var(--text-secondary)" />
+                                </button>
+                            </div>
+                            {customPalette.length > 0 && (
+                                <>
+                                    <div className="dropdown-label" style={{ marginTop: '0.75rem' }}>Custom Palette</div>
+                                    <div className="palette color-palette">
+                                        {customPalette.map((color, index) => (
+                                            <button
+                                                key={`c2-custom-${index}`}
+                                                className={`color-btn ${activeTool.color2 === color ? 'active' : ''}`}
+                                                style={{ backgroundColor: color }}
+                                                onClick={() => setActiveTool({ ...activeTool, color2: color })}
+                                                title={color}
+                                            />
+                                        ))}
                                     </div>
-                                    <button className="close-help-btn" onClick={() => setShowHelp(false)}>
-                                        <Plus size={20} style={{ transform: 'rotate(45deg)' }} />
-                                    </button>
-                                </div>
-                                <div className="help-body">
-                                    <div className="help-section">
-                                        <h4>Fretboard</h4>
-                                        <ul>
-                                            <li><span>Left Click</span> to place a dot or remove it.</li>
-                                            <li><span>Right Click</span> on a dot to label/name it.</li>
-                                            <li><span>Right Click</span> on empty fret to place an <b>'X'</b>.</li>
-                                        </ul>
-                                    </div>
-                                    <div className="help-section">
-                                        <h4>Piano</h4>
-                                        <ul>
-                                            <li><span>Click</span> a key to place/remove a colored dot.</li>
-                                            <li>Use <span>+/−</span> buttons to add/remove octaves.</li>
-                                            <li>Toggle <span>note names</span> in the Piano settings.</li>
-                                        </ul>
-                                    </div>
-                                    <div className="help-section">
-                                        <h4>Advanced</h4>
-                                        <ul>
-                                            <li><span>Smart Swap</span> (Change color/shape and click an existing dot to replace its style).</li>
-                                            <li><span>Auto-Save</span> (Labels save automatically when you click away).</li>
-                                            <li><span>Custom Palette</span> (Use the '+' button to build your own colors).</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                                <div className="help-footer">
-                                    <button className="help-close-action-btn" onClick={() => setShowHelp(false)}>Got it!</button>
-                                </div>
+                                </>
+                            )}
+                        </>
+                    )}
+                </div>
+            </ToolbarPopover>
+
+            {/* Spacer */}
+            <div style={{ flex: 1 }} />
+
+            {/* ── Right Side Actions ── */}
+            <div className="toolbar-divider-v" />
+
+            <button
+                className="toolbar-btn toolbar-action-btn"
+                onClick={onClear}
+                title="Clear Board"
+            >
+                <Trash2 size={15} />
+                <span>Clear</span>
+            </button>
+
+            <button
+                className="toolbar-btn toolbar-action-btn primary"
+                onClick={onDownload}
+                title="Save as Image"
+            >
+                <Download size={15} />
+                <span>Save Image</span>
+            </button>
+
+            <div className="toolbar-divider-v" />
+
+            <button
+                className="toolbar-btn"
+                onClick={() => setShowHelp(true)}
+                title="Help"
+            >
+                <HelpCircle size={15} />
+                <span>Help</span>
+            </button>
+
+            {/* ── Custom Color Picker Modal ── */}
+            {showColorPicker && (
+                <CustomColorPicker
+                    activeColor={showColorPicker === 'color2' ? (activeTool.color2 || activeTool.color) : activeTool.color}
+                    onSelectColor={(color) => {
+                        if (showColorPicker === 'color2') {
+                            setActiveTool({ ...activeTool, color2: color });
+                        } else {
+                            setActiveTool({ ...activeTool, color });
+                        }
+                    }}
+                    onClose={() => setShowColorPicker(false)}
+                />
+            )}
+
+            {/* ── Help Modal ── */}
+            {showHelp && (
+                <div className="help-modal-overlay" onClick={() => setShowHelp(false)}>
+                    <div className="help-modal-content" onClick={e => e.stopPropagation()}>
+                        <div className="help-header">
+                            <div className="header-title">
+                                <Info size={20} />
+                                <h3>Controls &amp; Shortcuts</h3>
+                            </div>
+                            <button className="close-help-btn" onClick={() => setShowHelp(false)}>
+                                <Plus size={20} style={{ transform: 'rotate(45deg)' }} />
+                            </button>
+                        </div>
+                        <div className="help-body">
+                            <div className="help-section">
+                                <h4>Fretboard</h4>
+                                <ul>
+                                    <li><span>Left Click</span> to place a dot or remove it.</li>
+                                    <li><span>Right Click</span> on a dot to label/name it.</li>
+                                    <li><span>Right Click</span> on empty fret to place an <b>'X'</b>.</li>
+                                </ul>
+                            </div>
+                            <div className="help-section">
+                                <h4>Piano</h4>
+                                <ul>
+                                    <li><span>Click</span> a key to place/remove a colored dot.</li>
+                                    <li>Use <span>+/−</span> buttons to add/remove octaves.</li>
+                                    <li>Toggle <span>note names</span> in the Piano settings.</li>
+                                </ul>
+                            </div>
+                            <div className="help-section">
+                                <h4>Advanced</h4>
+                                <ul>
+                                    <li><span>Smart Swap</span> (Change color/shape and click an existing dot to replace its style).</li>
+                                    <li><span>Auto-Save</span> (Labels save automatically when you click away).</li>
+                                    <li><span>Custom Palette</span> (Use the '+' button to build your own colors).</li>
+                                </ul>
                             </div>
                         </div>
-                    )}
-
-                    <div className="panel-footer">
-                        <button className="reset-btn" onClick={onClear}>
-                            <Trash2 size={20} />
-                            Clear Board
-                        </button>
-                        <button className="reset-btn primary download-full-btn" onClick={onDownload}>
-                            <Download size={20} />
-                            Save as Image
-                        </button>
+                        <div className="help-footer">
+                            <button className="help-close-action-btn" onClick={() => setShowHelp(false)}>Got it!</button>
+                        </div>
                     </div>
                 </div>
             )}
