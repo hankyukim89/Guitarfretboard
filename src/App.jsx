@@ -225,6 +225,7 @@ function App() {
         setActiveTool={setActiveTool}
         onClear={handleClear}
         onDownload={handleDownload}
+        onSave={handleSaveDiagram}
         onModalToggle={setIsMainModalOpen}
         showFretboard={showFretboard}
         setShowFretboard={setShowFretboard}
@@ -234,6 +235,8 @@ function App() {
         setShowWhiteNames={setShowWhiteNames}
         showBlackNames={showBlackNames}
         setShowBlackNames={setShowBlackNames}
+        isLoadSidebarOpen={isLoadSidebarOpen}
+        setIsLoadSidebarOpen={setIsLoadSidebarOpen}
       />
       
       <div className="main-content-area">

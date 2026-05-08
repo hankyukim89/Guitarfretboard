@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Trash2, FolderOpen, Save } from 'lucide-react';
+import { X, Trash2 } from 'lucide-react';
 import './Fretboard.css';
 
 const STRING_SPACING = 50;
@@ -154,19 +154,8 @@ const Fretboard = ({
 
     return (
         <div className="fretboard-container" ref={containerRef}>
-            {/* Top Left Actions */}
-            <div className={`diagram-actions ${isMainModalOpen ? 'blurred' : ''}`}>
-                <button className="action-btn primary" onClick={onSave}>
-                    <Save size={18} />
-                    Save
-                </button>
-                <button className={`action-btn ${isLoadSidebarOpen ? 'active' : ''}`} onClick={() => setIsLoadSidebarOpen(!isLoadSidebarOpen)}>
-                    <FolderOpen size={18} />
-                    Load
-                </button>
-            </div>
 
-            <div className={`fretboard-scroll-area fretboard-download-area ${isLoadSidebarOpen ? 'shifted' : ''}`}>
+            <div className={`fretboard-scroll-area fretboard-download-area`}>
                 <div 
                     style={{ 
                         display: 'flex', 
