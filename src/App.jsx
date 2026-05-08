@@ -11,7 +11,8 @@ function App() {
   const [config, setConfig] = useState({
     strings: 6,
     frets: 5,
-    startFret: 1
+    startFret: 1,
+    orientation: 'horizontal'
   });
 
   const [chordName, setChordName] = useState('');
@@ -148,7 +149,7 @@ function App() {
 
   const handleDownload = async () => {
     // Find the container for the diagram (including title)
-    const node = document.querySelector('.fretboard-download-area');
+    const node = document.querySelector('.actual-download-target');
     if (!node) return;
 
     try {
@@ -206,7 +207,6 @@ function App() {
     if (diagram.showFretboard !== undefined) setShowFretboard(diagram.showFretboard);
     if (diagram.showPiano !== undefined) setShowPiano(diagram.showPiano);
     setChordName(diagram.chordName || diagram.name || '');
-    setIsLoadSidebarOpen(false); // Close on load
   };
 
   const handleDeleteDiagram = (id) => {
