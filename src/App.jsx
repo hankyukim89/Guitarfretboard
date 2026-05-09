@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { toPng } from 'html-to-image';
+import { toPng, toBlob } from 'html-to-image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trash2 } from 'lucide-react';
 import ControlPanel from './components/ControlPanel';
 import Fretboard from './components/Fretboard';
-import Piano from './components/Piano';
-import './index.css'; // Ensure global styles are applied
+import './index.css';
 
 function App() {
   const [config, setConfig] = useState({
@@ -19,11 +18,12 @@ function App() {
 
   const [activeTool, setActiveTool] = useState({
     shape: 'circle',
-    color: '#ef4444', // Red default
-    color2: null // null = solid, set to string for split-half coloring
+    color: '#ef4444',
+    color2: null
   });
 
   const [marks, setMarks] = useState([]);
+
   const [savedDiagrams, setSavedDiagrams] = useState(() => {
     const saved = localStorage.getItem('guitar-diagrams');
     return saved ? JSON.parse(saved) : [];
@@ -31,19 +31,6 @@ function App() {
 
   const [isLoadSidebarOpen, setIsLoadSidebarOpen] = useState(false);
   const [isMainModalOpen, setIsMainModalOpen] = useState(false);
-
-  // Instrument visibility toggles
-  const [showFretboard, setShowFretboard] = useState(true);
-  const [showPiano, setShowPiano] = useState(false);
-
-  // Piano-specific state
-  const [pianoMarks, setPianoMarks] = useState([]);
-  const [pianoConfig, setPianoConfig] = useState({
-    startOctave: 4,
-    endOctave: 4,
-  });
-  const [showWhiteNames, setShowWhiteNames] = useState(false);
-  const [showBlackNames, setShowBlackNames] = useState(false);
 
   const handleToggleMark = (stringIndex, fretIndex, shapeOverride = null) => {
     setMarks(prevMarks => {
@@ -56,15 +43,13 @@ function App() {
 
       if (existingIndex >= 0) {
         const existingMark = prevMarks[existingIndex];
-        
-        // Exception for 'X' shape: Always delete it on click, don't swap it
+
         if (existingMark.shape === 'cross') {
-            const newMarks = [...prevMarks];
-            newMarks.splice(existingIndex, 1);
-            return newMarks;
+          const newMarks = [...prevMarks];
+          newMarks.splice(existingIndex, 1);
+          return newMarks;
         }
 
-        // If the color OR shape is different, REPLACE it instead of deleting
         const targetColor2 = activeTool.color2 || null;
         if (existingMark.color !== targetColor || existingMark.shape !== targetShape || existingMark.color2 !== targetColor2) {
           const newMarks = [...prevMarks];
@@ -77,12 +62,10 @@ function App() {
           return newMarks;
         }
 
-        // Only delete if it's the EXACT same color and shape
         const newMarks = [...prevMarks];
         newMarks.splice(existingIndex, 1);
         return newMarks;
       } else {
-        // Add new
         return [...prevMarks, {
           stringIndex,
           fretIndex,
@@ -105,58 +88,62 @@ function App() {
     );
   };
 
-  // Piano mark toggle
-  const handleTogglePianoMark = (keyId) => {
-    setPianoMarks(prevMarks => {
-      const existingIndex = prevMarks.findIndex(m => m.keyId === keyId);
-      const targetColor = activeTool.color;
-      const targetColor2 = activeTool.color2 || null;
-
-      if (existingIndex >= 0) {
-        const existingMark = prevMarks[existingIndex];
-        // If different color, replace
-        if (existingMark.color !== targetColor || existingMark.color2 !== targetColor2) {
-          const newMarks = [...prevMarks];
-          newMarks[existingIndex] = {
-            ...existingMark,
-            color: targetColor,
-            color2: targetColor2,
-          };
-          return newMarks;
-        }
-        // Same color, remove
-        const newMarks = [...prevMarks];
-        newMarks.splice(existingIndex, 1);
-        return newMarks;
-      } else {
-        return [...prevMarks, {
-          keyId,
-          color: targetColor,
-          color2: targetColor2,
-        }];
-      }
-    });
-  };
-
   const handleClear = () => {
-    if (window.confirm("Are you sure you want to clear all marks?")) {
+    if (window.confirm('Are you sure you want to clear all marks?')) {
       setMarks([]);
-      setPianoMarks([]);
       setChordName('');
     }
   };
 
   const handleDownload = async () => {
-    // Find the container for the diagram (including title)
     const node = document.querySelector('.actual-download-target');
     if (!node) return;
-
     try {
-      const dataUrl = await toPng(node, { backgroundColor: '#ffffff' }); // White background for download
+      const blob = await toBlob(node, { backgroundColor: '#ffffff' });
+      if (!blob) {
+        throw new Error('Failed to generate image blob');
+      }
+
+      const fileName = `${chordName || 'guitar-diagram'}.png`;
+
+      // 1. Try modern File System Access API first (Safari 16.4+, Chrome, Edge)
+      if (window.showSaveFilePicker) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: fileName,
+            types: [{
+              description: 'PNG Image',
+              accept: { 'image/png': ['.png'] },
+            }],
+          });
+          const writable = await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+          return; // Successfully saved
+        } catch (err) {
+          // If user cancelled the picker, abort silently
+          if (err.name === 'AbortError') return;
+          console.error('File picker failed, falling back...', err);
+        }
+      }
+
+      // 2. Fallback to anchor tag download
+      // Wrap blob in a File object to help Safari understand the intended filename
+      const file = new File([blob], fileName, { type: 'image/png' });
+      const url = URL.createObjectURL(file);
       const link = document.createElement('a');
-      link.download = `${chordName || 'guitar-diagram'}.png`;
-      link.href = dataUrl;
+      link.download = fileName;
+      link.href = url;
+      
+      // Must append to body for Safari to respect the click
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+      
+      // Delay revocation to ensure Safari has time to start the download
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 1000);
     } catch (err) {
       console.error('Failed to download image', err);
       alert('Failed to download image');
@@ -164,29 +151,23 @@ function App() {
   };
 
   const handleSaveDiagram = () => {
-    let name = chordName || prompt("Enter a name for this diagram:");
+    let name = chordName || prompt('Enter a name for this diagram:');
     if (!name) return;
 
     const existingIndex = savedDiagrams.findIndex(d => d.name === name);
-    
+
     const newDiagram = {
       id: existingIndex >= 0 ? savedDiagrams[existingIndex].id : Date.now(),
-      name: name,
+      name,
       config: { ...config },
       chordName: name,
       marks: [...marks],
-      pianoMarks: [...pianoMarks],
-      pianoConfig: { ...pianoConfig },
-      showFretboard,
-      showPiano,
       timestamp: new Date().toISOString()
     };
 
     let updated;
     if (existingIndex >= 0) {
-      if (!window.confirm(`A diagram named "${name}" already exists. Overwrite it?`)) {
-        return;
-      }
+      if (!window.confirm(`A diagram named "${name}" already exists. Overwrite it?`)) return;
       updated = [...savedDiagrams];
       updated[existingIndex] = newDiagram;
     } else {
@@ -201,15 +182,11 @@ function App() {
   const handleLoadDiagram = (diagram) => {
     setConfig(diagram.config);
     setMarks(diagram.marks || []);
-    setPianoMarks(diagram.pianoMarks || []);
-    if (diagram.pianoConfig) setPianoConfig(diagram.pianoConfig);
-    if (diagram.showFretboard !== undefined) setShowFretboard(diagram.showFretboard);
-    if (diagram.showPiano !== undefined) setShowPiano(diagram.showPiano);
     setChordName(diagram.chordName || diagram.name || '');
   };
 
   const handleDeleteDiagram = (id) => {
-    if (window.confirm("Delete this saved diagram?")) {
+    if (window.confirm('Delete this saved diagram?')) {
       const updated = savedDiagrams.filter(d => d.id !== id);
       setSavedDiagrams(updated);
       localStorage.setItem('guitar-diagrams', JSON.stringify(updated));
@@ -227,57 +204,22 @@ function App() {
         onDownload={handleDownload}
         onSave={handleSaveDiagram}
         onModalToggle={setIsMainModalOpen}
-        showFretboard={showFretboard}
-        setShowFretboard={setShowFretboard}
-        showPiano={showPiano}
-        setShowPiano={setShowPiano}
-        showWhiteNames={showWhiteNames}
-        setShowWhiteNames={setShowWhiteNames}
-        showBlackNames={showBlackNames}
-        setShowBlackNames={setShowBlackNames}
         isLoadSidebarOpen={isLoadSidebarOpen}
         setIsLoadSidebarOpen={setIsLoadSidebarOpen}
       />
-      
+
       <div className="main-content-area">
         <div className="instruments-area">
-          {showFretboard && (
-            <Fretboard
-              config={config}
-              marks={marks}
-              onToggleMark={handleToggleMark}
-              onUpdateMarkText={handleUpdateMarkText}
-              chordName={chordName}
-              setChordName={setChordName}
-              onSave={handleSaveDiagram}
-              onLoad={handleLoadDiagram}
-              onDelete={handleDeleteDiagram}
-              savedDiagrams={savedDiagrams}
-              isLoadSidebarOpen={isLoadSidebarOpen}
-              setIsLoadSidebarOpen={setIsLoadSidebarOpen}
-              isMainModalOpen={isMainModalOpen}
-            />
-          )}
-
-          {showPiano && (
-            <div className="piano-section">
-              <Piano
-                pianoMarks={pianoMarks}
-                onTogglePianoMark={handleTogglePianoMark}
-                activeTool={activeTool}
-                pianoConfig={pianoConfig}
-                setPianoConfig={setPianoConfig}
-                showWhiteNames={showWhiteNames}
-                showBlackNames={showBlackNames}
-              />
-            </div>
-          )}
-
-          {!showFretboard && !showPiano && (
-            <div className="empty-instruments-state">
-              <p>Enable an instrument from the control panel to get started.</p>
-            </div>
-          )}
+          <Fretboard
+            config={config}
+            marks={marks}
+            onToggleMark={handleToggleMark}
+            onUpdateMarkText={handleUpdateMarkText}
+            chordName={chordName}
+            setChordName={setChordName}
+            isLoadSidebarOpen={isLoadSidebarOpen}
+            isMainModalOpen={isMainModalOpen}
+          />
         </div>
 
         <AnimatePresence>
@@ -291,10 +233,7 @@ function App() {
             >
               <div className="sidebar-header">
                 <h3>Saved Diagrams</h3>
-                <button 
-                  className="close-sidebar-btn" 
-                  onClick={() => setIsLoadSidebarOpen(false)}
-                >
+                <button className="close-sidebar-btn" onClick={() => setIsLoadSidebarOpen(false)}>
                   <X size={20} />
                 </button>
               </div>
@@ -314,10 +253,7 @@ function App() {
                         <div className="diagram-actions-row">
                           <button
                             className="delete-btn"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteDiagram(diagram.id);
-                            }}
+                            onClick={(e) => { e.stopPropagation(); handleDeleteDiagram(diagram.id); }}
                             title="Delete"
                           >
                             <Trash2 size={18} />
