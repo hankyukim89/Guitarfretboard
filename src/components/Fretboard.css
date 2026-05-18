@@ -53,6 +53,7 @@
     align-items: center;
     gap: 6px;
     flex-shrink: 0;
+    width: 48px;
 }
 
 .scroll-nav-btn {
@@ -82,37 +83,25 @@
     cursor: default;
 }
 
-.scroll-row-indicator {
+.scroll-top-row {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 2px;
-    flex-shrink: 0;
-    user-select: none;
-    padding: 8px 12px;
-    background: var(--bg-secondary, #f1f5f9);
-    border-radius: 10px;
-    border: 1.5px solid var(--border-color, #e2e8f0);
-    min-width: 48px;
+    gap: 10px;
+    margin-bottom: 0;
 }
 
-.scroll-row-current {
-    font-size: 1.6rem;
-    font-weight: 800;
-    color: var(--text-primary, #0f172a);
-    line-height: 1;
-}
-
-.scroll-row-sep {
-    font-size: 0.7rem;
-    color: var(--text-secondary, #94a3b8);
-    font-weight: 600;
-}
-
-.scroll-row-total {
-    font-size: 0.85rem;
+.scroll-row-indicator {
+    font-size: 0.9rem;
     font-weight: 700;
-    color: var(--text-secondary, #94a3b8);
+    color: var(--text-primary, #0f172a);
+    user-select: none;
+    white-space: nowrap;
+    padding: 4px 0;
+    width: 100%;
+    text-align: center;
+    background: var(--bg-secondary, #f1f5f9);
+    border-radius: 6px;
+    border: 1.5px solid var(--border-color, #e2e8f0);
 }
 
 .scroll-hint {

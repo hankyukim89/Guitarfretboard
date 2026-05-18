@@ -354,8 +354,9 @@ const Fretboard = ({
 
                 {/* Visible editing view — one row at a time */}
                 <div className="scroll-mode-view" ref={scrollViewRef}>
-                    <div className="scroll-mode-stage">
-                        {/* Row number + nav buttons — NOT inside actual-download-target */}
+
+                    {/* Top row: nav + title, side by side */}
+                    <div className="scroll-top-row">
                         {diagrams.length > 1 && (
                             <div className="scroll-nav-column">
                                 <button
@@ -365,9 +366,7 @@ const Fretboard = ({
                                     title="Previous row"
                                 >▲</button>
                                 <div className="scroll-row-indicator">
-                                    <span className="scroll-row-current">{currentPage + 1}</span>
-                                    <span className="scroll-row-sep">/</span>
-                                    <span className="scroll-row-total">{diagrams.length}</span>
+                                    {currentPage + 1} / {diagrams.length}
                                 </div>
                                 <button
                                     className="scroll-nav-btn"
@@ -377,19 +376,17 @@ const Fretboard = ({
                                 >▼</button>
                             </div>
                         )}
+                        <input
+                            value={chordName}
+                            onChange={e => setChordName(e.target.value)}
+                            placeholder="Click to Edit"
+                            style={{ ...chordInputStyle, fontSize: '2rem', width: svgWidth, marginBottom: 0 }}
+                        />
+                    </div>
 
-                        {/* Column: title + fretboard, so title centers over the fretboard only */}
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <input
-                                value={chordName}
-                                onChange={e => setChordName(e.target.value)}
-                                placeholder="Click to Edit"
-                                style={{ ...chordInputStyle, fontSize: '2rem', width: svgWidth }}
-                            />
-                            <div style={{ position: 'relative' }}>
-                                {renderSVG(diagrams[currentPage], currentPage, true, false)}
-                            </div>
-                        </div>
+                    {/* Fretboard below */}
+                    <div style={{ position: 'relative', marginTop: '1rem' }}>
+                        {renderSVG(diagrams[currentPage], currentPage, true, false)}
                     </div>
 
                 </div>
