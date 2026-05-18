@@ -6,6 +6,8 @@ import ControlPanel from './components/ControlPanel';
 import Fretboard from './components/Fretboard';
 import './index.css';
 
+const makeEmptyDiagram = () => ({ id: Date.now() + Math.random(), marks: [] });
+
 function App() {
   const [config, setConfig] = useState({
     strings: 6,
@@ -15,11 +17,11 @@ function App() {
     showFretNumbers: true,
     showInlays: true,
     showNut: true,
+    numDiagrams: 1,
   });
 
-  const [transpose, setTranspose] = useState(0);
-
   const [chordName, setChordName] = useState('');
+  const [transpose, setTranspose] = useState(0);
 
   const [activeTool, setActiveTool] = useState({
     shape: 'circle',
@@ -27,51 +29,78 @@ function App() {
     color2: null
   });
 
-  const [marks, setMarks] = useState([]);
+  // Each diagram has { id, marks }
+  const [diagrams, setDiagrams] = useState([makeEmptyDiagram()]);
 
   const [savedDiagrams, setSavedDiagrams] = useState(() => {
     const saved = localStorage.getItem('guitar-diagrams');
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [zoomMode, setZoomMode] = useState('fit'); // 'fit' | 'scroll'
+
   const [isLoadSidebarOpen, setIsLoadSidebarOpen] = useState(false);
   const [isMainModalOpen, setIsMainModalOpen] = useState(false);
 
-  const handleToggleMark = (stringIndex, fretIndex, shapeOverride = null) => {
-    setMarks(prevMarks => {
+  // ── Num diagrams (rows) ──────────────────────────────────────────────────
+  const handleNumDiagramsChange = (newNum) => {
+    const n = Math.max(1, Math.min(6, isNaN(newNum) ? 1 : newNum));
+    setConfig(prev => ({ ...prev, numDiagrams: n }));
+    setDiagrams(prev => {
+      if (n > prev.length) {
+        const extras = Array.from({ length: n - prev.length }, makeEmptyDiagram);
+        return [...prev, ...extras];
+      }
+      return prev.slice(0, n);
+    });
+  };
+
+  // ── Transpose ────────────────────────────────────────────────────────────
+  const handleTransposeChange = (newValue) => {
+    const val = isNaN(newValue) ? 0 : newValue;
+    const delta = val - transpose;
+    setTranspose(val);
+    if (delta !== 0) {
+      setDiagrams(prev => prev.map(d => ({
+        ...d,
+        marks: d.marks.map(m => ({ ...m, fretIndex: m.fretIndex + delta }))
+      })));
+    }
+  };
+
+  // ── Mark toggling ────────────────────────────────────────────────────────
+  const handleToggleMark = (diagramIndex, stringIndex, fretIndex, shapeOverride = null) => {
+    setDiagrams(prev => {
+      const newDiagrams = [...prev];
+      const prevMarks = newDiagrams[diagramIndex].marks;
+
       const existingIndex = prevMarks.findIndex(
         m => m.stringIndex === stringIndex && m.fretIndex === fretIndex
       );
 
       const targetShape = shapeOverride || activeTool.shape;
       const targetColor = activeTool.color;
+      let newMarks;
 
       if (existingIndex >= 0) {
         const existingMark = prevMarks[existingIndex];
-
         if (existingMark.shape === 'cross') {
-          const newMarks = [...prevMarks];
-          newMarks.splice(existingIndex, 1);
-          return newMarks;
+          newMarks = prevMarks.filter((_, i) => i !== existingIndex);
+        } else {
+          const targetColor2 = activeTool.color2 || null;
+          if (
+            existingMark.color !== targetColor ||
+            existingMark.shape !== targetShape ||
+            existingMark.color2 !== targetColor2
+          ) {
+            newMarks = [...prevMarks];
+            newMarks[existingIndex] = { ...existingMark, color: targetColor, color2: targetColor2, shape: targetShape };
+          } else {
+            newMarks = prevMarks.filter((_, i) => i !== existingIndex);
+          }
         }
-
-        const targetColor2 = activeTool.color2 || null;
-        if (existingMark.color !== targetColor || existingMark.shape !== targetShape || existingMark.color2 !== targetColor2) {
-          const newMarks = [...prevMarks];
-          newMarks[existingIndex] = {
-            ...existingMark,
-            color: targetColor,
-            color2: targetColor2,
-            shape: targetShape
-          };
-          return newMarks;
-        }
-
-        const newMarks = [...prevMarks];
-        newMarks.splice(existingIndex, 1);
-        return newMarks;
       } else {
-        return [...prevMarks, {
+        newMarks = [...prevMarks, {
           stringIndex,
           fretIndex,
           shape: targetShape,
@@ -80,105 +109,85 @@ function App() {
           text: ''
         }];
       }
+
+      newDiagrams[diagramIndex] = { ...newDiagrams[diagramIndex], marks: newMarks };
+      return newDiagrams;
     });
   };
 
-  const handleUpdateMarkText = (stringIndex, fretIndex, text) => {
-    setMarks(prevMarks =>
-      prevMarks.map(m =>
-        (m.stringIndex === stringIndex && m.fretIndex === fretIndex)
-          ? { ...m, text }
-          : m
-      )
-    );
+  const handleUpdateMarkText = (diagramIndex, stringIndex, fretIndex, text) => {
+    setDiagrams(prev => {
+      const newDiagrams = [...prev];
+      newDiagrams[diagramIndex] = {
+        ...newDiagrams[diagramIndex],
+        marks: newDiagrams[diagramIndex].marks.map(m =>
+          m.stringIndex === stringIndex && m.fretIndex === fretIndex ? { ...m, text } : m
+        )
+      };
+      return newDiagrams;
+    });
   };
 
-  const handleTransposeChange = (newValue) => {
-    const val = isNaN(newValue) ? 0 : newValue;
-    const delta = val - transpose;
-    setTranspose(val);
-    if (delta !== 0) {
-      setMarks(prevMarks => prevMarks.map(m => ({
-        ...m,
-        fretIndex: m.fretIndex + delta
-      })));
-    }
-  };
-
+  // ── Clear ────────────────────────────────────────────────────────────────
   const handleClear = () => {
     if (window.confirm('Are you sure you want to clear all marks?')) {
-      setMarks([]);
+      setDiagrams(prev => prev.map(d => ({ ...d, marks: [] })));
       setChordName('');
     }
   };
 
+  // ── Export ───────────────────────────────────────────────────────────────
   const handleDownload = async () => {
     const node = document.querySelector('.actual-download-target');
     if (!node) return;
     try {
       const blob = await toBlob(node, { backgroundColor: '#ffffff' });
-      if (!blob) {
-        throw new Error('Failed to generate image blob');
-      }
+      if (!blob) throw new Error('Failed to generate image blob');
 
       const fileName = `${chordName || 'guitar-diagram'}.png`;
 
-      // 1. Try modern File System Access API first (Safari 16.4+, Chrome, Edge)
       if (window.showSaveFilePicker) {
         try {
           const handle = await window.showSaveFilePicker({
             suggestedName: fileName,
-            types: [{
-              description: 'PNG Image',
-              accept: { 'image/png': ['.png'] },
-            }],
+            types: [{ description: 'PNG Image', accept: { 'image/png': ['.png'] } }],
           });
           const writable = await handle.createWritable();
           await writable.write(blob);
           await writable.close();
-          return; // Successfully saved
+          return;
         } catch (err) {
-          // If user cancelled the picker, abort silently
           if (err.name === 'AbortError') return;
-          console.error('File picker failed, falling back...', err);
         }
       }
 
-      // 2. Fallback to anchor tag download
-      // Wrap blob in a File object to help Safari understand the intended filename
       const file = new File([blob], fileName, { type: 'image/png' });
       const url = URL.createObjectURL(file);
       const link = document.createElement('a');
       link.download = fileName;
       link.href = url;
-      
-      // Must append to body for Safari to respect the click
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
-      // Delay revocation to ensure Safari has time to start the download
-      setTimeout(() => {
-        URL.revokeObjectURL(url);
-      }, 1000);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (err) {
       console.error('Failed to download image', err);
       alert('Failed to download image');
     }
   };
 
+  // ── Save / Load ──────────────────────────────────────────────────────────
   const handleSaveDiagram = () => {
     let name = chordName || prompt('Enter a name for this diagram:');
     if (!name) return;
 
     const existingIndex = savedDiagrams.findIndex(d => d.name === name);
-
     const newDiagram = {
       id: existingIndex >= 0 ? savedDiagrams[existingIndex].id : Date.now(),
       name,
       config: { ...config },
       chordName: name,
-      marks: [...marks],
+      diagrams: [...diagrams],
       timestamp: new Date().toISOString()
     };
 
@@ -198,8 +207,13 @@ function App() {
 
   const handleLoadDiagram = (diagram) => {
     setConfig(diagram.config);
-    setMarks(diagram.marks || []);
     setChordName(diagram.chordName || diagram.name || '');
+    // Support both new (diagrams array) and old (marks array) saved format
+    if (diagram.diagrams) {
+      setDiagrams(diagram.diagrams);
+    } else {
+      setDiagrams([{ id: Date.now(), marks: diagram.marks || [] }]);
+    }
   };
 
   const handleDeleteDiagram = (id) => {
@@ -219,6 +233,9 @@ function App() {
         setActiveTool={setActiveTool}
         transpose={transpose}
         onTransposeChange={handleTransposeChange}
+        onNumDiagramsChange={handleNumDiagramsChange}
+        zoomMode={zoomMode}
+        onZoomModeChange={setZoomMode}
         onClear={handleClear}
         onDownload={handleDownload}
         onSave={handleSaveDiagram}
@@ -231,11 +248,12 @@ function App() {
         <div className="instruments-area">
           <Fretboard
             config={config}
-            marks={marks}
+            diagrams={diagrams}
             onToggleMark={handleToggleMark}
             onUpdateMarkText={handleUpdateMarkText}
             chordName={chordName}
             setChordName={setChordName}
+            zoomMode={zoomMode}
             isLoadSidebarOpen={isLoadSidebarOpen}
             isMainModalOpen={isMainModalOpen}
           />

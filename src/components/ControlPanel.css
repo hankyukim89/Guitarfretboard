@@ -188,6 +188,44 @@
     color: #ef4444 !important;
 }
 
+/* ── Zoom toggle (Fit / Scroll) ── */
+.tb-zoom-toggle {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 7px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.tb-zoom-btn {
+    padding: 0.32rem 0.65rem;
+    background: #fff;
+    border: none;
+    border-right: 1.5px solid #e2e8f0;
+    color: #334155;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+    transition: all 0.1s;
+}
+
+.tb-zoom-btn:last-child {
+    border-right: none;
+}
+
+.tb-zoom-btn:hover {
+    background: #f1f5f9;
+    color: #3b82f6;
+}
+
+.tb-zoom-btn.is-active {
+    background: #3b82f6;
+    color: #fff;
+}
+
 /* ── Help button ── */
 .tb-help-btn {
     display: flex;

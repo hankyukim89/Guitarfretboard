@@ -15,6 +15,8 @@ const ControlPanel = ({
     config, setConfig,
     activeTool, setActiveTool,
     transpose, onTransposeChange,
+    onNumDiagramsChange,
+    zoomMode, onZoomModeChange,
     onClear, onDownload, onSave,
     onModalToggle,
     isLoadSidebarOpen, setIsLoadSidebarOpen,
@@ -122,6 +124,28 @@ const ControlPanel = ({
                                 max="24"
                             />
                         </label>
+                        <label className="tb-num">
+                            <span>Rows</span>
+                            <input
+                                type="number"
+                                value={config.numDiagrams || 1}
+                                onChange={(e) => onNumDiagramsChange(parseInt(e.target.value, 10))}
+                                min="1"
+                                max="6"
+                            />
+                        </label>
+                        <div className="tb-zoom-toggle">
+                            <button
+                                className={`tb-zoom-btn ${zoomMode === 'fit' ? 'is-active' : ''}`}
+                                onClick={() => onZoomModeChange('fit')}
+                                title="Fit all rows in view"
+                            >Fit</button>
+                            <button
+                                className={`tb-zoom-btn ${zoomMode === 'scroll' ? 'is-active' : ''}`}
+                                onClick={() => onZoomModeChange('scroll')}
+                                title="1:1 size, scroll to navigate"
+                            >Scroll</button>
+                        </div>
                     </div>
                 </div>
 
