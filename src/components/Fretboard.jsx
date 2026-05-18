@@ -354,13 +354,6 @@ const Fretboard = ({
 
                 {/* Visible editing view — one row at a time */}
                 <div className="scroll-mode-view" ref={scrollViewRef}>
-                    <input
-                        value={chordName}
-                        onChange={e => setChordName(e.target.value)}
-                        placeholder="Click to Edit"
-                        style={{ ...chordInputStyle, fontSize: '2rem' }}
-                    />
-
                     <div className="scroll-mode-stage">
                         {/* Row number indicator — NOT inside actual-download-target */}
                         {diagrams.length > 1 && (
@@ -371,8 +364,17 @@ const Fretboard = ({
                             </div>
                         )}
 
-                        <div style={{ position: 'relative' }}>
-                            {renderSVG(diagrams[currentPage], currentPage, true, false)}
+                        {/* Column: title + fretboard, so title centers over the fretboard only */}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <input
+                                value={chordName}
+                                onChange={e => setChordName(e.target.value)}
+                                placeholder="Click to Edit"
+                                style={{ ...chordInputStyle, fontSize: '2rem', width: svgWidth }}
+                            />
+                            <div style={{ position: 'relative' }}>
+                                {renderSVG(diagrams[currentPage], currentPage, true, false)}
+                            </div>
                         </div>
                     </div>
 
