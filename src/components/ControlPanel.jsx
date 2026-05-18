@@ -14,6 +14,7 @@ const SHAPES = ['circle', 'square', 'triangle', 'star', 'pentagon', 'cross'];
 const ControlPanel = ({
     config, setConfig,
     activeTool, setActiveTool,
+    transpose, onTransposeChange,
     onClear, onDownload, onSave,
     onModalToggle,
     isLoadSidebarOpen, setIsLoadSidebarOpen,
@@ -111,6 +112,46 @@ const ControlPanel = ({
                             <span>Start</span>
                             <input type="number" name="startFret" value={config.startFret} onChange={handleChange} min="1" max="24" />
                         </label>
+                        <label className="tb-num">
+                            <span>Transpose</span>
+                            <input
+                                type="number"
+                                value={transpose}
+                                onChange={(e) => onTransposeChange(parseInt(e.target.value, 10))}
+                                min="-24"
+                                max="24"
+                            />
+                        </label>
+                    </div>
+                </div>
+
+                <div className="tb-sep" />
+
+                {/* View toggles */}
+                <div className="tb-group">
+                    <span className="tb-label">View</span>
+                    <div className="tb-row-items">
+                        <button
+                            className={`tb-btn ${config.showFretNumbers ? 'is-active' : ''}`}
+                            onClick={() => setConfig({ ...config, showFretNumbers: !config.showFretNumbers })}
+                            title="Toggle fret numbers"
+                        >
+                            Fret #s
+                        </button>
+                        <button
+                            className={`tb-btn ${config.showInlays ? 'is-active' : ''}`}
+                            onClick={() => setConfig({ ...config, showInlays: !config.showInlays })}
+                            title="Toggle fret inlays"
+                        >
+                            Inlays
+                        </button>
+                        <button
+                            className={`tb-btn ${config.showNut ? 'is-active' : ''}`}
+                            onClick={() => setConfig({ ...config, showNut: !config.showNut })}
+                            title="Toggle nut"
+                        >
+                            Nut
+                        </button>
                     </div>
                 </div>
 
@@ -180,9 +221,9 @@ const ControlPanel = ({
                         {allColors.map((color, i) => (
                             <button
                                 key={i}
-                                className={`tb-color ${activeTool.color === color && !activeTool.color2 ? 'is-active' : ''}`}
+                                className={`tb-color ${activeTool.color === color ? 'is-active' : ''}`}
                                 style={{ backgroundColor: color }}
-                                onClick={() => setActiveTool({ ...activeTool, color, color2: null })}
+                                onClick={() => setActiveTool({ ...activeTool, color })}
                                 title={color}
                             />
                         ))}
@@ -229,8 +270,8 @@ const ControlPanel = ({
                 <CustomColorPicker
                     activeColor={showColorPicker === 'color2' ? (activeTool.color2 || activeTool.color) : activeTool.color}
                     onSelectColor={(color) => {
-                        if (showColorPicker === 'color2') setActiveTool({ ...activeTool, color2: color });
-                        else setActiveTool({ ...activeTool, color });
+                        if (showColorPicker === 'color2') setActiveTool(prev => ({ ...prev, color2: color }));
+                        else setActiveTool(prev => ({ ...prev, color }));
                     }}
                     onClose={() => setShowColorPicker(false)}
                 />

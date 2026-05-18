@@ -242,6 +242,7 @@ const Fretboard = ({
 
                                 {/* Frets (Lines) */}
                                 {Array.from({ length: config.frets + 1 }).map((_, i) => {
+                                    const isNut = i === 0 && config.startFret === 1 && config.showNut !== false;
                                     if (isVertical) {
                                         const lineY = PADDING_X + i * FRET_SPACING;
                                         return (
@@ -251,8 +252,8 @@ const Fretboard = ({
                                                 y1={lineY}
                                                 x2={width - PADDING_Y + 1.5}
                                                 y2={lineY}
-                                                stroke={i === 0 && config.startFret === 1 ? "var(--nut-color)" : "var(--fret-wire)"}
-                                                strokeWidth={(i === 0 && config.startFret === 1) ? 14 : 2}
+                                                stroke={isNut ? "var(--nut-color)" : "var(--fret-wire)"}
+                                                strokeWidth={isNut ? 14 : 2}
                                                 strokeLinecap="butt"
                                             />
                                         );
@@ -264,15 +265,15 @@ const Fretboard = ({
                                             y1={PADDING_Y - 1.5}
                                             x2={PADDING_X + i * FRET_SPACING}
                                             y2={height - PADDING_Y + 1.5}
-                                            stroke={i === 0 && config.startFret === 1 ? "var(--nut-color)" : "var(--fret-wire)"}
-                                            strokeWidth={(i === 0 && config.startFret === 1) ? 14 : 2}
+                                            stroke={isNut ? "var(--nut-color)" : "var(--fret-wire)"}
+                                            strokeWidth={isNut ? 14 : 2}
                                             strokeLinecap="butt"
                                         />
                                     );
                                 })}
 
                                 {/* Inlays (Dots) */}
-                                {Array.from({ length: config.frets }).map((_, i) => {
+                                {config.showInlays !== false && Array.from({ length: config.frets }).map((_, i) => {
                                     const fretNum = config.startFret + i;
                                     if (!INLAYS.includes(fretNum)) return null;
                                     const isDouble = DOUBLE_INLAYS.includes(fretNum);
@@ -309,7 +310,7 @@ const Fretboard = ({
                                 })}
 
                                 {/* Fret Numbers */}
-                                {Array.from({ length: config.frets }).map((_, i) => {
+                                {config.showFretNumbers !== false && Array.from({ length: config.frets }).map((_, i) => {
                                     if (isVertical) {
                                         return (
                                             <text
@@ -436,6 +437,7 @@ const Fretboard = ({
                                             autoFocus
                                             className="mark-text-input"
                                             defaultValue={editingMark.initialText}
+                                            onFocus={(e) => e.target.select()}
                                             onBlur={(e) => {
                                                 onUpdateMarkText(editingMark.stringIndex, editingMark.fretIndex, e.target.value);
                                                 setEditingMark(null);

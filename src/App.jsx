@@ -11,8 +11,13 @@ function App() {
     strings: 6,
     frets: 5,
     startFret: 1,
-    orientation: 'horizontal'
+    orientation: 'horizontal',
+    showFretNumbers: true,
+    showInlays: true,
+    showNut: true,
   });
+
+  const [transpose, setTranspose] = useState(0);
 
   const [chordName, setChordName] = useState('');
 
@@ -86,6 +91,18 @@ function App() {
           : m
       )
     );
+  };
+
+  const handleTransposeChange = (newValue) => {
+    const val = isNaN(newValue) ? 0 : newValue;
+    const delta = val - transpose;
+    setTranspose(val);
+    if (delta !== 0) {
+      setMarks(prevMarks => prevMarks.map(m => ({
+        ...m,
+        fretIndex: m.fretIndex + delta
+      })));
+    }
   };
 
   const handleClear = () => {
@@ -200,6 +217,8 @@ function App() {
         setConfig={setConfig}
         activeTool={activeTool}
         setActiveTool={setActiveTool}
+        transpose={transpose}
+        onTransposeChange={handleTransposeChange}
         onClear={handleClear}
         onDownload={handleDownload}
         onSave={handleSaveDiagram}
