@@ -355,12 +355,26 @@ const Fretboard = ({
                 {/* Visible editing view — one row at a time */}
                 <div className="scroll-mode-view" ref={scrollViewRef}>
                     <div className="scroll-mode-stage">
-                        {/* Row number indicator — NOT inside actual-download-target */}
+                        {/* Row number + nav buttons — NOT inside actual-download-target */}
                         {diagrams.length > 1 && (
-                            <div className="scroll-row-indicator">
-                                <span className="scroll-row-current">{currentPage + 1}</span>
-                                <span className="scroll-row-sep">/</span>
-                                <span className="scroll-row-total">{diagrams.length}</span>
+                            <div className="scroll-nav-column">
+                                <button
+                                    className="scroll-nav-btn"
+                                    onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                                    disabled={currentPage === 0}
+                                    title="Previous row"
+                                >▲</button>
+                                <div className="scroll-row-indicator">
+                                    <span className="scroll-row-current">{currentPage + 1}</span>
+                                    <span className="scroll-row-sep">/</span>
+                                    <span className="scroll-row-total">{diagrams.length}</span>
+                                </div>
+                                <button
+                                    className="scroll-nav-btn"
+                                    onClick={() => setCurrentPage(p => Math.min(diagrams.length - 1, p + 1))}
+                                    disabled={currentPage === diagrams.length - 1}
+                                    title="Next row"
+                                >▼</button>
                             </div>
                         )}
 
@@ -378,9 +392,6 @@ const Fretboard = ({
                         </div>
                     </div>
 
-                    {diagrams.length > 1 && (
-                        <div className="scroll-hint">↕ scroll to switch rows</div>
-                    )}
                 </div>
             </div>
         );
