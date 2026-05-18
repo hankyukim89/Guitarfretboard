@@ -37,7 +37,8 @@ function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [zoomMode, setZoomMode] = useState('fit'); // 'fit' | 'scroll'
+  const [zoomMode, setZoomMode] = useState('fit');
+  const [skipMarkAnimation, setSkipMarkAnimation] = useState(false); // 'fit' | 'scroll'
 
   const [isLoadSidebarOpen, setIsLoadSidebarOpen] = useState(false);
   const [isMainModalOpen, setIsMainModalOpen] = useState(false);
@@ -61,10 +62,12 @@ function App() {
     const delta = val - transpose;
     setTranspose(val);
     if (delta !== 0) {
+      setSkipMarkAnimation(true);
       setDiagrams(prev => prev.map(d => ({
         ...d,
         marks: d.marks.map(m => ({ ...m, fretIndex: m.fretIndex + delta }))
       })));
+      setTimeout(() => setSkipMarkAnimation(false), 50);
     }
   };
 
@@ -101,6 +104,7 @@ function App() {
         }
       } else {
         newMarks = [...prevMarks, {
+          id: `m-${Date.now()}-${Math.random()}`,
           stringIndex,
           fretIndex,
           shape: targetShape,
@@ -138,8 +142,16 @@ function App() {
 
   // ── Export ───────────────────────────────────────────────────────────────
   const handleDownload = async () => {
+    // In scroll mode the download target is off-screen and clipped.
+    // Switch to fit mode briefly so the target is in normal flow, then restore.
+    const wasScroll = zoomMode === 'scroll';
+    if (wasScroll) {
+      setZoomMode('fit');
+      await new Promise(r => setTimeout(r, 150));
+    }
+
     const node = document.querySelector('.actual-download-target');
-    if (!node) return;
+    if (!node) { if (wasScroll) setZoomMode('scroll'); return; }
     try {
       const blob = await toBlob(node, { backgroundColor: '#ffffff' });
       if (!blob) throw new Error('Failed to generate image blob');
@@ -173,6 +185,8 @@ function App() {
     } catch (err) {
       console.error('Failed to download image', err);
       alert('Failed to download image');
+    } finally {
+      if (wasScroll) setZoomMode('scroll');
     }
   };
 
@@ -254,6 +268,7 @@ function App() {
             chordName={chordName}
             setChordName={setChordName}
             zoomMode={zoomMode}
+            skipMarkAnimation={skipMarkAnimation}
             isLoadSidebarOpen={isLoadSidebarOpen}
             isMainModalOpen={isMainModalOpen}
           />
