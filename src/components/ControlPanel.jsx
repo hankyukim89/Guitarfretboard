@@ -22,6 +22,8 @@ const ControlPanel = ({
     isLoadSidebarOpen, setIsLoadSidebarOpen,
     soundEnabled, onSoundToggle,
     onPlayHarmonic, onPlayMelodic,
+    rootNoteName, rootSelectorActive, onRootSelectorToggle,
+    autoScaleDegree, onAutoScaleDegreeToggle,
 }) => {
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
@@ -200,6 +202,29 @@ const ControlPanel = ({
                         </button>
                         <button className="tb-btn" onClick={onPlayMelodic} title="Play notes one at a time">
                             Melodic
+                        </button>
+                    </div>
+                </div>
+
+                <div className="tb-sep" />
+
+                {/* Scale */}
+                <div className="tb-group">
+                    <span className="tb-label">Scale</span>
+                    <div className="tb-row-items">
+                        <button
+                            className={`tb-btn ${rootSelectorActive ? 'is-active' : ''}`}
+                            onClick={onRootSelectorToggle}
+                            title="Click to arm, then click a fret to set as root (1)"
+                        >
+                            {rootSelectorActive ? 'Pick Root…' : rootNoteName ? `Root: ${rootNoteName}` : 'Set Root'}
+                        </button>
+                        <button
+                            className={`tb-btn ${autoScaleDegree !== 'off' ? 'is-active' : ''}`}
+                            onClick={onAutoScaleDegreeToggle}
+                            title="Cycle: off → flats → sharps"
+                        >
+                            {autoScaleDegree === 'off' ? 'Scale °' : autoScaleDegree === 'flats' ? 'Scale b' : 'Scale #'}
                         </button>
                     </div>
                 </div>

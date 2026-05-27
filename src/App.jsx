@@ -42,6 +42,11 @@ function App() {
   const [soundEnabled, setSoundEnabled] = useState(false);
   const audioCtxRef = useRef(null);
 
+  // ── Root / Scale Degree ──────────────────────────────────────────────────
+  const [rootNote, setRootNote] = useState(null); // MIDI number of root
+  const [rootSelectorActive, setRootSelectorActive] = useState(false);
+  const [autoScaleDegree, setAutoScaleDegree] = useState('off'); // 'off' | 'flats' | 'sharps'
+
   // ── Sound ────────────────────────────────────────────────────────────────
   // Standard 6-string open-string MIDI notes, top to bottom: E4 B3 G3 D3 A2 E2
   const STANDARD_6 = [64, 59, 55, 50, 45, 40];
@@ -56,6 +61,21 @@ function App() {
     const extra = totalStrings - 6;
     if (stringIdx < extra) return STANDARD_6[0] + (extra - stringIdx) * 5;
     return STANDARD_6[stringIdx - extra];
+  };
+
+  const NOTE_NAMES          = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+  const SCALE_DEGREES_FLATS  = ['1','b2','2','b3','3','4','b5','5','b6','6','b7','7'];
+  const SCALE_DEGREES_SHARPS = ['1','#1','2','#2','3','4','#4','5','#5','6','#6','7'];
+
+  const getMidi = (stringIndex, fretIndex) => {
+    const openMidi = getOpenStringMidi(stringIndex, config.strings);
+    const semitones = fretIndex === -1 ? 0 : config.startFret + fretIndex;
+    return openMidi + semitones;
+  };
+
+  const getScaleDegree = (noteMidi, rootMidi) => {
+    const interval = ((noteMidi - rootMidi) % 12 + 12) % 12;
+    return autoScaleDegree === 'sharps' ? SCALE_DEGREES_SHARPS[interval] : SCALE_DEGREES_FLATS[interval];
   };
 
   const getAudioCtx = () => {
@@ -159,11 +179,22 @@ function App() {
 
   // ── Mark toggling ────────────────────────────────────────────────────────
   const handleToggleMark = (diagramIndex, stringIndex, fretIndex, shapeOverride = null) => {
-    // Play note when placing a new mark
-    const isNew = !diagrams[diagramIndex].marks.find(
+    const existingMark = diagrams[diagramIndex].marks.find(
       m => m.stringIndex === stringIndex && m.fretIndex === fretIndex
     );
-    if (isNew) playNote(stringIndex, fretIndex);
+    if (!existingMark) playNote(stringIndex, fretIndex);
+
+    // Root selector + scale degree logic
+    const clickedMidi = getMidi(stringIndex, fretIndex);
+    let autoText = '';
+
+    if (rootSelectorActive) {
+      setRootNote(clickedMidi);
+      setRootSelectorActive(false);
+      autoText = '1';
+    } else if (autoScaleDegree !== 'off' && rootNote !== null) {
+      autoText = getScaleDegree(clickedMidi, rootNote);
+    }
 
     setDiagrams(prev => {
       const newDiagrams = [...prev];
@@ -202,7 +233,7 @@ function App() {
           shape: targetShape,
           color: targetColor,
           color2: activeTool.color2 || null,
-          text: ''
+          text: autoText,
         }];
       }
 
@@ -352,6 +383,12 @@ function App() {
         onSoundToggle={() => setSoundEnabled(v => !v)}
         onPlayHarmonic={playHarmonic}
         onPlayMelodic={playMelodic}
+        rootNote={rootNote}
+        rootNoteName={rootNote !== null ? ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'][rootNote % 12] : null}
+        rootSelectorActive={rootSelectorActive}
+        onRootSelectorToggle={() => setRootSelectorActive(v => !v)}
+        autoScaleDegree={autoScaleDegree}
+        onAutoScaleDegreeToggle={() => setAutoScaleDegree(v => v === 'off' ? 'flats' : v === 'flats' ? 'sharps' : 'off')}
       />
 
       <div className="main-content-area">
