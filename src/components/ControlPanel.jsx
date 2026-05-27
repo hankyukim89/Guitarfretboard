@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trash2, Download, Plus, HelpCircle, Info, Guitar, FolderOpen, Save } from 'lucide-react';
+import { Trash2, Download, Plus, HelpCircle, Info, Guitar, FolderOpen, Save, Volume2, VolumeX } from 'lucide-react';
 import './ControlPanel.css';
 import CustomColorPicker from './CustomColorPicker';
 
@@ -20,6 +20,7 @@ const ControlPanel = ({
     onClear, onDownload, onSave,
     onModalToggle,
     isLoadSidebarOpen, setIsLoadSidebarOpen,
+    soundEnabled, onSoundToggle,
 }) => {
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
@@ -175,6 +176,14 @@ const ControlPanel = ({
                             title="Toggle nut"
                         >
                             Nut
+                        </button>
+                        <button
+                            className={`tb-btn ${soundEnabled ? 'is-active' : ''}`}
+                            onClick={onSoundToggle}
+                            title={soundEnabled ? 'Sound on' : 'Sound off'}
+                        >
+                            {soundEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
+                            Sound
                         </button>
                     </div>
                 </div>

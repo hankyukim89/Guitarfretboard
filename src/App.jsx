@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { toPng, toBlob } from 'html-to-image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trash2 } from 'lucide-react';
@@ -39,6 +39,57 @@ function App() {
 
   const [zoomMode, setZoomMode] = useState('fit');
   const [skipMarkAnimation, setSkipMarkAnimation] = useState(false); // 'fit' | 'scroll'
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const audioCtxRef = useRef(null);
+
+  // ── Sound ────────────────────────────────────────────────────────────────
+  // Standard 6-string open-string MIDI notes, top to bottom: E4 B3 G3 D3 A2 E2
+  const STANDARD_6 = [64, 59, 55, 50, 45, 40];
+
+  const getOpenStringMidi = (stringIdx, totalStrings) => {
+    if (totalStrings <= 6) {
+      // Use bottom N strings (slice from the low end)
+      const offset = 6 - totalStrings;
+      return STANDARD_6[stringIdx + offset];
+    }
+    // More than 6 strings: add higher strings above
+    const extra = totalStrings - 6;
+    if (stringIdx < extra) return STANDARD_6[0] + (extra - stringIdx) * 5;
+    return STANDARD_6[stringIdx - extra];
+  };
+
+  const playNote = (stringIndex, fretIndex) => {
+    if (!soundEnabled) return;
+    const ctx = audioCtxRef.current || (audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)());
+    if (ctx.state === 'suspended') ctx.resume();
+
+    const openMidi = getOpenStringMidi(stringIndex, config.strings);
+    const semitones = fretIndex === -1 ? 0 : config.startFret + fretIndex;
+    const freq = 440 * Math.pow(2, (openMidi + semitones - 69) / 12);
+
+    // Karplus-Strong plucked string synthesis
+    const sr = ctx.sampleRate;
+    const N = Math.max(2, Math.round(sr / freq));
+    const numSamples = Math.floor(sr * 3);
+    const delay = new Float32Array(N);
+    for (let i = 0; i < N; i++) delay[i] = Math.random() * 2 - 1;
+    const out = new Float32Array(numSamples);
+    for (let i = 0; i < numSamples; i++) {
+      const p = i % N;
+      out[i] = delay[p];
+      delay[p] = 0.996 * 0.5 * (delay[p] + delay[(i + 1) % N]);
+    }
+
+    const buf = ctx.createBuffer(1, numSamples, sr);
+    buf.getChannelData(0).set(out);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.6, ctx.currentTime);
+    src.connect(gain);
+    gain.connect(ctx.destination);
+    src.start();
+  };
 
   const [isLoadSidebarOpen, setIsLoadSidebarOpen] = useState(false);
   const [isMainModalOpen, setIsMainModalOpen] = useState(false);
@@ -73,6 +124,12 @@ function App() {
 
   // ── Mark toggling ────────────────────────────────────────────────────────
   const handleToggleMark = (diagramIndex, stringIndex, fretIndex, shapeOverride = null) => {
+    // Play note when placing a new mark
+    const isNew = !diagrams[diagramIndex].marks.find(
+      m => m.stringIndex === stringIndex && m.fretIndex === fretIndex
+    );
+    if (isNew) playNote(stringIndex, fretIndex);
+
     setDiagrams(prev => {
       const newDiagrams = [...prev];
       const prevMarks = newDiagrams[diagramIndex].marks;
@@ -256,6 +313,8 @@ function App() {
         onModalToggle={setIsMainModalOpen}
         isLoadSidebarOpen={isLoadSidebarOpen}
         setIsLoadSidebarOpen={setIsLoadSidebarOpen}
+        soundEnabled={soundEnabled}
+        onSoundToggle={() => setSoundEnabled(v => !v)}
       />
 
       <div className="main-content-area">
