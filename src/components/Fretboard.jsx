@@ -159,15 +159,20 @@ const Fretboard = ({
     // ── SVG renderer ───────────────────────────────────────────────────────
 
     const renderSVG = (diagram, diagramIndex, interactive = true, showGap = true) => {
-        const marks = diagram.marks;
+        // Filter out marks that are outside the visible fret range
+        const minFret = config.startFret === 1 ? -1 : 0;
+        const marks = diagram.marks.filter(m => m.fretIndex >= minFret && m.fretIndex < config.frets);
 
-        // Animation: use plain <g> when transposing so marks snap instantly
-        const MarkEl = skipMarkAnimation ? 'g' : motion.g;
-        const mProps = skipMarkAnimation ? {} : {
+        // Always use motion.g so element type never changes — switching types causes
+        // React to remount and framer-motion to replay entrance animations.
+        // When skipMarkAnimation is true (transpose), use duration:0 for instant snap.
+        const mProps = {
             initial: { scale: 0, opacity: 0 },
             animate: { scale: 1, opacity: 1 },
             exit: { scale: 0, opacity: 0 },
-            transition: { type: 'spring', stiffness: 300, damping: 20 }
+            transition: skipMarkAnimation
+                ? { duration: 0 }
+                : { type: 'spring', stiffness: 300, damping: 20 }
         };
 
         const renderShape = (color, clipPath = null) => {
@@ -277,7 +282,7 @@ const Fretboard = ({
                             };
 
                             return (
-                                <MarkEl key={mark.id || `${mark.stringIndex}-${mark.fretIndex}`} {...mProps}>
+                                <motion.g key={mark.id || `${mark.stringIndex}-${mark.fretIndex}`} {...mProps}>
                                     {hasSplit ? <>{shape(mark.color2)}{shape(mark.color, clipId)}</> : shape(mark.color)}
                                     {mark.text && (
                                         <text x={x} y={y} dy="0.35em" textAnchor="middle" fill="white" fontSize="14"
@@ -285,7 +290,7 @@ const Fretboard = ({
                                             {mark.text}
                                         </text>
                                     )}
-                                </MarkEl>
+                                </motion.g>
                             );
                         })}
                     </AnimatePresence>
