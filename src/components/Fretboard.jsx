@@ -55,16 +55,24 @@ const Fretboard = ({
         }
     });
 
-    // Auto-scale: fit mode only
+    // Auto-scale: both modes
     React.useLayoutEffect(() => {
-        if (isScrollMode) { setScale(1); return; }
         const updateScale = () => {
-            if (!containerRef.current || !contentRef.current) return;
+            if (!containerRef.current) return;
             const availableWidth = containerRef.current.clientWidth - 80;
             const availableHeight = containerRef.current.clientHeight - 40;
-            const natW = contentRef.current.offsetWidth || svgWidth + 40;
-            const natH = contentRef.current.offsetHeight || svgHeight * diagrams.length + 80;
-            setScale(Math.min(availableWidth / natW, availableHeight / natH, 1));
+
+            if (isScrollMode) {
+                // Scale a single fretboard to fit; leave ~120px for title row + margins
+                const scaleX = availableWidth / svgWidth;
+                const scaleY = (availableHeight - 120) / svgHeight;
+                setScale(Math.min(scaleX, scaleY, 1));
+            } else {
+                if (!contentRef.current) return;
+                const natW = contentRef.current.offsetWidth || svgWidth + 40;
+                const natH = contentRef.current.offsetHeight || svgHeight * diagrams.length + 80;
+                setScale(Math.min(availableWidth / natW, availableHeight / natH, 1));
+            }
         };
         const obs = new ResizeObserver(updateScale);
         if (containerRef.current) obs.observe(containerRef.current);
@@ -107,7 +115,7 @@ const Fretboard = ({
         const svgEl = svgRefs.current[diagramIndex];
         if (!svgEl) return null;
         const rect = svgEl.getBoundingClientRect();
-        const sc = isScrollMode ? 1 : scale;
+        const sc = scale;
         const clickX = (e.clientX - rect.left) / sc;
         const clickY = (e.clientY - rect.top) / sc;
         let stringIdx, visualFretIdx;
@@ -234,7 +242,7 @@ const Fretboard = ({
 
                     {/* Fret numbers */}
                     {config.showFretNumbers !== false && Array.from({ length: config.frets }).map((_, i) => {
-                        const fs = 16 / Math.pow(isScrollMode ? 1 : scale, 0.5);
+                        const fs = 16 / Math.pow(scale, 0.5);
                         if (isVertical) {
                             return <text key={i} x={PADDING_Y - 30} y={PADDING_X + i * FRET_SPACING + FRET_SPACING / 2 + 6} textAnchor="end" fill="var(--text-secondary)" fontSize={fs} fontWeight="bold" fontFamily="inherit" style={{ pointerEvents: 'none', userSelect: 'none' }}>{config.startFret + i}</text>;
                         }
@@ -384,8 +392,14 @@ const Fretboard = ({
                         />
                     </div>
 
-                    {/* Fretboard below */}
-                    <div style={{ position: 'relative', marginTop: '1rem' }}>
+                    {/* Fretboard below — scaled to fit, same as fit mode */}
+                    <div style={{
+                        position: 'relative',
+                        marginTop: '1rem',
+                        transform: `scale(${scale})`,
+                        transformOrigin: 'top center',
+                        marginBottom: `${svgHeight * (scale - 1)}px`,
+                    }}>
                         {renderSVG(diagrams[currentPage], currentPage, true, false)}
                     </div>
 
