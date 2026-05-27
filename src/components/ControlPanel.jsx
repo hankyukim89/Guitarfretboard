@@ -21,6 +21,7 @@ const ControlPanel = ({
     onModalToggle,
     isLoadSidebarOpen, setIsLoadSidebarOpen,
     soundEnabled, onSoundToggle,
+    onPlayHarmonic, onPlayMelodic,
 }) => {
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
@@ -177,13 +178,28 @@ const ControlPanel = ({
                         >
                             Nut
                         </button>
+                    </div>
+                </div>
+
+                <div className="tb-sep" />
+
+                {/* Sound */}
+                <div className="tb-group">
+                    <span className="tb-label">Sound</span>
+                    <div className="tb-row-items">
                         <button
                             className={`tb-btn ${soundEnabled ? 'is-active' : ''}`}
                             onClick={onSoundToggle}
-                            title={soundEnabled ? 'Sound on' : 'Sound off'}
+                            title={soundEnabled ? 'Sound on — click to turn off' : 'Sound off — click to turn on'}
                         >
                             {soundEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
-                            Sound
+                            {soundEnabled ? 'On' : 'Off'}
+                        </button>
+                        <button className="tb-btn" onClick={onPlayHarmonic} title="Play all notes together">
+                            Harmonic
+                        </button>
+                        <button className="tb-btn" onClick={onPlayMelodic} title="Play notes one at a time">
+                            Melodic
                         </button>
                     </div>
                 </div>

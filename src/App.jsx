@@ -58,11 +58,14 @@ function App() {
     return STANDARD_6[stringIdx - extra];
   };
 
-  const playNote = (stringIndex, fretIndex) => {
-    if (!soundEnabled) return;
+  const getAudioCtx = () => {
     const ctx = audioCtxRef.current || (audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)());
     if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  };
 
+  const playNoteAt = (stringIndex, fretIndex, startTime = 0) => {
+    const ctx = getAudioCtx();
     const openMidi = getOpenStringMidi(stringIndex, config.strings);
     const semitones = fretIndex === -1 ? 0 : config.startFret + fretIndex;
     const freq = 440 * Math.pow(2, (openMidi + semitones - 69) / 12);
@@ -79,16 +82,36 @@ function App() {
       out[i] = delay[p];
       delay[p] = 0.996 * 0.5 * (delay[p] + delay[(i + 1) % N]);
     }
-
     const buf = ctx.createBuffer(1, numSamples, sr);
     buf.getChannelData(0).set(out);
     const src = ctx.createBufferSource();
     src.buffer = buf;
     const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.6, ctx.currentTime);
+    gain.gain.setValueAtTime(0.6, ctx.currentTime + startTime);
     src.connect(gain);
     gain.connect(ctx.destination);
-    src.start();
+    src.start(ctx.currentTime + startTime);
+  };
+
+  const playNote = (stringIndex, fretIndex) => {
+    if (!soundEnabled) return;
+    playNoteAt(stringIndex, fretIndex, 0);
+  };
+
+  const playHarmonic = () => {
+    const allMarks = diagrams.flatMap(d => d.marks);
+    if (!allMarks.length) return;
+    getAudioCtx();
+    allMarks.forEach(m => playNoteAt(m.stringIndex, m.fretIndex, 0));
+  };
+
+  const playMelodic = () => {
+    const allMarks = diagrams.flatMap(d => d.marks);
+    if (!allMarks.length) return;
+    getAudioCtx();
+    // Sort low E (high stringIndex) first, then by fret — simulates a strum low → high
+    const sorted = [...allMarks].sort((a, b) => b.stringIndex - a.stringIndex || a.fretIndex - b.fretIndex);
+    sorted.forEach((m, i) => playNoteAt(m.stringIndex, m.fretIndex, i * 0.1));
   };
 
   const [isLoadSidebarOpen, setIsLoadSidebarOpen] = useState(false);
@@ -315,6 +338,8 @@ function App() {
         setIsLoadSidebarOpen={setIsLoadSidebarOpen}
         soundEnabled={soundEnabled}
         onSoundToggle={() => setSoundEnabled(v => !v)}
+        onPlayHarmonic={playHarmonic}
+        onPlayMelodic={playMelodic}
       />
 
       <div className="main-content-area">
