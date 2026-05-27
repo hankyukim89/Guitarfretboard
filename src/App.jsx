@@ -142,6 +142,18 @@ function App() {
         marks: d.marks.map(m => ({ ...m, fretIndex: m.fretIndex + delta }))
       })));
       setTimeout(() => setSkipMarkAnimation(false), 50);
+
+      // Play transposed notes if sound is on
+      if (soundEnabled) {
+        const minFret = config.startFret === 1 ? -1 : 0;
+        getAudioCtx();
+        diagrams.forEach(d => d.marks.forEach(m => {
+          const newFret = m.fretIndex + delta;
+          if (newFret >= minFret && newFret < config.frets) {
+            playNoteAt(m.stringIndex, newFret, 0);
+          }
+        }));
+      }
     }
   };
 
