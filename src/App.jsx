@@ -6,7 +6,7 @@ import ControlPanel from './components/ControlPanel';
 import Fretboard from './components/Fretboard';
 import './index.css';
 
-const makeEmptyDiagram = () => ({ id: Date.now() + Math.random(), marks: [] });
+const makeEmptyDiagram = () => ({ id: Date.now() + Math.random(), marks: [], ghostMarks: [] });
 
 function App() {
   const [config, setConfig] = useState({
@@ -46,6 +46,10 @@ function App() {
   const [rootNote, setRootNote] = useState(null); // MIDI number of root
   const [rootSelectorActive, setRootSelectorActive] = useState(false);
   const [autoScaleDegree, setAutoScaleDegree] = useState('off'); // 'off' | 'flats' | 'sharps'
+
+  // ── Ghost notes ──────────────────────────────────────────────────────────
+  const [showNaturals, setShowNaturals] = useState(false);
+  const [showAccidentals, setShowAccidentals] = useState('off'); // 'off' | 'flats' | 'sharps'
 
   // ── Sound ────────────────────────────────────────────────────────────────
   // Standard 6-string open-string MIDI notes, top to bottom: E4 B3 G3 D3 A2 E2
@@ -255,10 +259,43 @@ function App() {
     });
   };
 
+  // ── Ghost mark toggling ──────────────────────────────────────────────────
+  const handleToggleGhostMark = (diagramIndex, stringIndex, fretIndex) => {
+    setDiagrams(prev => {
+      const newDiagrams = [...prev];
+      const d = newDiagrams[diagramIndex];
+      const ghostMarks = d.ghostMarks || [];
+      const existingIdx = ghostMarks.findIndex(
+        m => m.stringIndex === stringIndex && m.fretIndex === fretIndex
+      );
+      newDiagrams[diagramIndex] = {
+        ...d,
+        ghostMarks: existingIdx >= 0
+          ? ghostMarks.filter((_, i) => i !== existingIdx)
+          : [...ghostMarks, { id: `gm-${Date.now()}-${Math.random()}`, stringIndex, fretIndex, text: '' }]
+      };
+      return newDiagrams;
+    });
+  };
+
+  const handleUpdateGhostMarkText = (diagramIndex, stringIndex, fretIndex, text) => {
+    setDiagrams(prev => {
+      const newDiagrams = [...prev];
+      const d = newDiagrams[diagramIndex];
+      newDiagrams[diagramIndex] = {
+        ...d,
+        ghostMarks: (d.ghostMarks || []).map(m =>
+          m.stringIndex === stringIndex && m.fretIndex === fretIndex ? { ...m, text } : m
+        )
+      };
+      return newDiagrams;
+    });
+  };
+
   // ── Clear ────────────────────────────────────────────────────────────────
   const handleClear = () => {
     if (window.confirm('Are you sure you want to clear all marks?')) {
-      setDiagrams(prev => prev.map(d => ({ ...d, marks: [] })));
+      setDiagrams(prev => prev.map(d => ({ ...d, marks: [], ghostMarks: [] })));
       setChordName('');
     }
   };
@@ -347,9 +384,9 @@ function App() {
     setChordName(diagram.chordName || diagram.name || '');
     // Support both new (diagrams array) and old (marks array) saved format
     if (diagram.diagrams) {
-      setDiagrams(diagram.diagrams);
+      setDiagrams(diagram.diagrams.map(d => ({ ...d, ghostMarks: d.ghostMarks || [] })));
     } else {
-      setDiagrams([{ id: Date.now(), marks: diagram.marks || [] }]);
+      setDiagrams([{ id: Date.now(), marks: diagram.marks || [], ghostMarks: [] }]);
     }
   };
 
@@ -389,6 +426,10 @@ function App() {
         onRootSelectorToggle={() => setRootSelectorActive(v => !v)}
         autoScaleDegree={autoScaleDegree}
         onAutoScaleDegreeToggle={() => setAutoScaleDegree(v => v === 'off' ? 'flats' : v === 'flats' ? 'sharps' : 'off')}
+        showNaturals={showNaturals}
+        onShowNaturalsToggle={() => setShowNaturals(v => !v)}
+        showAccidentals={showAccidentals}
+        onShowAccidentalsToggle={() => setShowAccidentals(v => v === 'off' ? 'flats' : v === 'flats' ? 'sharps' : 'off')}
       />
 
       <div className="main-content-area">
@@ -402,6 +443,11 @@ function App() {
             setChordName={setChordName}
             zoomMode={zoomMode}
             skipMarkAnimation={skipMarkAnimation}
+            showNaturals={showNaturals}
+            showAccidentals={showAccidentals}
+            isGhostMode={activeTool.color === 'transparent'}
+            onToggleGhostMark={handleToggleGhostMark}
+            onUpdateGhostMarkText={handleUpdateGhostMarkText}
             isLoadSidebarOpen={isLoadSidebarOpen}
             isMainModalOpen={isMainModalOpen}
           />

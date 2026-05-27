@@ -6,7 +6,7 @@ import CustomColorPicker from './CustomColorPicker';
 const COLORS = [
     '#ef4444', '#ec4899', '#f97316', '#eab308',
     '#15803d', '#3b82f6', '#a855f7', '#713f12',
-    '#000000', '#64748b',
+    '#000000', '#64748b', 'transparent',
 ];
 
 const SHAPES = ['circle', 'square', 'triangle', 'star', 'pentagon', 'cross'];
@@ -24,6 +24,8 @@ const ControlPanel = ({
     onPlayHarmonic, onPlayMelodic,
     rootNoteName, rootSelectorActive, onRootSelectorToggle,
     autoScaleDegree, onAutoScaleDegreeToggle,
+    showNaturals, onShowNaturalsToggle,
+    showAccidentals, onShowAccidentalsToggle,
 }) => {
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
@@ -180,6 +182,20 @@ const ControlPanel = ({
                         >
                             Nut
                         </button>
+                        <button
+                            className={`tb-btn ${showNaturals ? 'is-active' : ''}`}
+                            onClick={onShowNaturalsToggle}
+                            title="Show natural notes (C D E F G A B) as ghost dots"
+                        >
+                            Naturals
+                        </button>
+                        <button
+                            className={`tb-btn ${showAccidentals !== 'off' ? 'is-active' : ''}`}
+                            onClick={onShowAccidentalsToggle}
+                            title="Cycle: off → flats → sharps"
+                        >
+                            {showAccidentals === 'off' ? 'Acc °' : showAccidentals === 'flats' ? 'Acc b' : 'Acc #'}
+                        </button>
                     </div>
                 </div>
 
@@ -296,9 +312,11 @@ const ControlPanel = ({
                             <button
                                 key={i}
                                 className={`tb-color ${activeTool.color === color ? 'is-active' : ''}`}
-                                style={{ backgroundColor: color }}
+                                style={color === 'transparent'
+                                    ? { backgroundColor: 'transparent', border: '2px dashed #94a3b8' }
+                                    : { backgroundColor: color }}
                                 onClick={() => setActiveTool({ ...activeTool, color })}
-                                title={color}
+                                title={color === 'transparent' ? 'Ghost (transparent)' : color}
                             />
                         ))}
                         <button className="tb-color tb-color-add" onClick={() => setShowColorPicker(true)} title="Custom color">

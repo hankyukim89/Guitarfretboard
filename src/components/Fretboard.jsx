@@ -11,6 +11,11 @@ const GAP = 12;
 const INLAYS = [3, 5, 7, 9, 12, 15, 17, 19, 21, 24];
 const DOUBLE_INLAYS = [12, 24];
 
+const GHOST_NATURAL_IDX  = new Set([0, 2, 4, 5, 7, 9, 11]);
+const GHOST_NOTE_FLAT    = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
+const GHOST_NOTE_SHARP   = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const GHOST_STD6         = [64, 59, 55, 50, 45, 40]; // E4 B3 G3 D3 A2 E2
+
 const Fretboard = ({
     config,
     diagrams,
@@ -20,6 +25,11 @@ const Fretboard = ({
     setChordName,
     zoomMode,
     skipMarkAnimation,
+    showNaturals,
+    showAccidentals,
+    isGhostMode,
+    onToggleGhostMark,
+    onUpdateGhostMarkText,
     isLoadSidebarOpen,
 }) => {
     const svgRefs = useRef([]);
@@ -139,13 +149,29 @@ const Fretboard = ({
             return;
         }
         const r = computeIndices(e, diagramIndex);
-        if (r) onToggleMark(diagramIndex, r.stringIdx, r.visualFretIdx);
+        if (!r) return;
+        if (isGhostMode) {
+            onToggleGhostMark(diagramIndex, r.stringIdx, r.visualFretIdx);
+        } else {
+            onToggleMark(diagramIndex, r.stringIdx, r.visualFretIdx);
+        }
     };
 
     const handleContextMenu = (e, diagramIndex) => {
         e.preventDefault();
         const r = computeIndices(e, diagramIndex);
         if (!r) return;
+
+        if (isGhostMode) {
+            const ghostMark = (diagrams[diagramIndex].ghostMarks || []).find(
+                m => m.stringIndex === r.stringIdx && m.fretIndex === r.visualFretIdx
+            );
+            if (ghostMark) {
+                setEditingMark({ diagramIndex, stringIndex: r.stringIdx, fretIndex: r.visualFretIdx, initialText: ghostMark.text, isGhost: true });
+            }
+            return;
+        }
+
         const mark = diagrams[diagramIndex].marks.find(
             m => m.stringIndex === r.stringIdx && m.fretIndex === r.visualFretIdx
         );
@@ -254,6 +280,55 @@ const Fretboard = ({
                         return <text key={i} x={PADDING_X + i * FRET_SPACING + FRET_SPACING / 2} y={svgHeight - PADDING_Y + 45} textAnchor="middle" fill="var(--text-secondary)" fontSize={fs} fontWeight="bold" fontFamily="inherit" style={{ pointerEvents: 'none', userSelect: 'none' }}>{config.startFret + i}</text>;
                     })}
 
+                    {/* Ghost marks — shapes drawn first (below colored marks) */}
+                    {(diagram.ghostMarks || []).filter(gm => {
+                        const minFret = config.startFret === 1 ? -1 : 0;
+                        return gm.fretIndex >= minFret && gm.fretIndex < config.frets;
+                    }).map(gm => {
+                        const { x, y } = getCoordinates(gm.stringIndex, gm.fretIndex);
+                        return (
+                            <circle key={`gms-${gm.id}`} cx={x} cy={y} r={21}
+                                fill="rgba(128,128,128,0.12)" stroke="rgba(128,128,128,0.35)" strokeWidth={1.5} />
+                        );
+                    })}
+
+                    {/* Ghost notes */}
+                    {(showNaturals || showAccidentals !== 'off') && (() => {
+                        const getOpenMidi = (si) => {
+                            if (config.strings <= 6) return GHOST_STD6[si + (6 - config.strings)];
+                            const extra = config.strings - 6;
+                            if (si < extra) return GHOST_STD6[0] + (extra - si) * 5;
+                            return GHOST_STD6[si - extra];
+                        };
+                        const dots = [];
+                        const minFret = config.startFret === 1 ? -1 : 0;
+                        for (let si = 0; si < config.strings; si++) {
+                            const openMidi = getOpenMidi(si);
+                            for (let fi = minFret; fi < config.frets; fi++) {
+                                const midi = fi === -1 ? openMidi : openMidi + config.startFret + fi;
+                                const noteIdx = ((midi % 12) + 12) % 12;
+                                const isNatural = GHOST_NATURAL_IDX.has(noteIdx);
+                                let label = null;
+                                if (showNaturals && isNatural) label = GHOST_NOTE_FLAT[noteIdx];
+                                else if (!isNatural && showAccidentals === 'flats') label = GHOST_NOTE_FLAT[noteIdx];
+                                else if (!isNatural && showAccidentals === 'sharps') label = GHOST_NOTE_SHARP[noteIdx];
+                                if (!label) continue;
+                                const { x, y } = getCoordinates(si, fi);
+                                dots.push(
+                                    <g key={`ghost-${si}-${fi}`} style={{ pointerEvents: 'none' }}>
+                                        <circle cx={x} cy={y} r={21} fill="rgba(128,128,128,0.12)" stroke="rgba(128,128,128,0.22)" strokeWidth={1} />
+                                        <text x={x} y={y} dy="0.35em" textAnchor="middle"
+                                            fill="var(--text-primary)" fontSize="13" fontWeight="700"
+                                            fontFamily="inherit" style={{ pointerEvents: 'none', userSelect: 'none' }}>
+                                            {label}
+                                        </text>
+                                    </g>
+                                );
+                            }
+                        }
+                        return dots;
+                    })()}
+
                     {/* Split clipPaths */}
                     <defs>
                         {marks.filter(m => m.color2).map(mark => {
@@ -294,6 +369,21 @@ const Fretboard = ({
                             );
                         })}
                     </AnimatePresence>
+
+                    {/* Ghost mark labels — drawn last so they show through colored marks */}
+                    {(diagram.ghostMarks || []).filter(gm => {
+                        const minFret = config.startFret === 1 ? -1 : 0;
+                        return gm.fretIndex >= minFret && gm.fretIndex < config.frets && gm.text;
+                    }).map(gm => {
+                        const { x, y } = getCoordinates(gm.stringIndex, gm.fretIndex);
+                        return (
+                            <text key={`gml-${gm.id}`} x={x} y={y} dy="0.35em" textAnchor="middle"
+                                fill="var(--text-primary)" fontSize="13" fontWeight="700"
+                                fontFamily="inherit" style={{ pointerEvents: 'none', userSelect: 'none' }}>
+                                {gm.text}
+                            </text>
+                        );
+                    })}
                 </svg>
 
                 {/* Label editor */}
@@ -307,7 +397,11 @@ const Fretboard = ({
                                 defaultValue={editingMark.initialText}
                                 onFocus={e => e.target.select()}
                                 onBlur={e => {
-                                    onUpdateMarkText(editingMark.diagramIndex, editingMark.stringIndex, editingMark.fretIndex, e.target.value);
+                                    if (editingMark.isGhost) {
+                                        onUpdateGhostMarkText(editingMark.diagramIndex, editingMark.stringIndex, editingMark.fretIndex, e.target.value);
+                                    } else {
+                                        onUpdateMarkText(editingMark.diagramIndex, editingMark.stringIndex, editingMark.fretIndex, e.target.value);
+                                    }
                                     setEditingMark(null);
                                     wasEditing.current = true;
                                     setTimeout(() => { wasEditing.current = false; }, 200);
