@@ -85,9 +85,26 @@ function App() {
   };
 
   const getAudioCtx = () => {
-    const ctx = audioCtxRef.current || (audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)());
-    if (ctx.state === 'suspended') ctx.resume();
-    return ctx;
+    return audioCtxRef.current ?? (audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)());
+  };
+
+  // Safari requires AudioContext creation and resume to happen synchronously
+  // inside a user-gesture call stack — any async/await after them loses the
+  // gesture context and audio is silently blocked.  Call this at the top of
+  // every click handler that might play audio.
+  const unlockAudio = () => {
+    const ctx = getAudioCtx();
+    if (ctx.state === 'running') return;
+    ctx.resume(); // fire-and-forget — must be called synchronously in the gesture
+    // Play a 1-sample silent buffer: the classic Safari "audio unlock" trick
+    // that forces the audio timeline to actually start.
+    try {
+      const silentBuf = ctx.createBuffer(1, 1, ctx.sampleRate);
+      const silentSrc = ctx.createBufferSource();
+      silentSrc.buffer = silentBuf;
+      silentSrc.connect(ctx.destination);
+      silentSrc.start(0);
+    } catch (_) { /* ignore if ctx isn't ready yet */ }
   };
 
   const playNoteAt = (stringIndex, fretIndex, startTime = 0) => {
@@ -113,28 +130,34 @@ function App() {
     const src = ctx.createBufferSource();
     src.buffer = buf;
     const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.6, ctx.currentTime + startTime);
+    // Capture currentTime after the Karplus-Strong computation.
+    // If the context just started (currentTime ~0), notes scheduled at 0 play
+    // immediately once the timeline begins — the spec guarantees past-start
+    // sources fire right away.
+    const scheduleAt = ctx.currentTime + startTime;
+    gain.gain.setValueAtTime(0.6, scheduleAt);
     src.connect(gain);
     gain.connect(ctx.destination);
-    src.start(ctx.currentTime + startTime);
+    src.start(scheduleAt);
   };
 
   const playNote = (stringIndex, fretIndex) => {
     if (!soundEnabled) return;
+    unlockAudio(); // must happen synchronously before scheduling
     playNoteAt(stringIndex, fretIndex, 0);
   };
 
   const playHarmonic = () => {
     const allMarks = diagrams.flatMap(d => d.marks);
     if (!allMarks.length) return;
-    getAudioCtx();
+    unlockAudio();
     allMarks.forEach(m => playNoteAt(m.stringIndex, m.fretIndex, 0));
   };
 
   const playMelodic = () => {
     const allMarks = diagrams.flatMap(d => d.marks);
     if (!allMarks.length) return;
-    getAudioCtx();
+    unlockAudio();
     // Sort low E (high stringIndex) first, then by fret — simulates a strum low → high
     const sorted = [...allMarks].sort((a, b) => b.stringIndex - a.stringIndex || a.fretIndex - b.fretIndex);
     sorted.forEach((m, i) => playNoteAt(m.stringIndex, m.fretIndex, i * 0.1));
@@ -266,6 +289,11 @@ function App() {
 
   // ── Ghost mark toggling ──────────────────────────────────────────────────
   const handleToggleGhostMark = (diagramIndex, stringIndex, fretIndex) => {
+    const isNew = !(diagrams[diagramIndex].ghostMarks || []).find(
+      m => m.stringIndex === stringIndex && m.fretIndex === fretIndex
+    );
+    if (isNew) playNote(stringIndex, fretIndex);
+
     let autoText = '';
     if (autoNoteLabel !== 'off') {
       const midi = getMidi(stringIndex, fretIndex);
@@ -428,7 +456,15 @@ function App() {
         isLoadSidebarOpen={isLoadSidebarOpen}
         setIsLoadSidebarOpen={setIsLoadSidebarOpen}
         soundEnabled={soundEnabled}
-        onSoundToggle={() => setSoundEnabled(v => !v)}
+        onSoundToggle={() => {
+          const newEnabled = !soundEnabled;
+          setSoundEnabled(newEnabled);
+          // Prime the AudioContext on this user gesture so it's ready to play immediately.
+          if (newEnabled) {
+            const ctx = getAudioCtx();
+            if (ctx.state === 'suspended') ctx.resume();
+          }
+        }}
         onPlayHarmonic={playHarmonic}
         onPlayMelodic={playMelodic}
         rootNote={rootNote}
