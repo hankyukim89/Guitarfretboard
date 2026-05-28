@@ -11,11 +11,6 @@ const GAP = 12;
 const INLAYS = [3, 5, 7, 9, 12, 15, 17, 19, 21, 24];
 const DOUBLE_INLAYS = [12, 24];
 
-const GHOST_NATURAL_IDX  = new Set([0, 2, 4, 5, 7, 9, 11]);
-const GHOST_NOTE_FLAT    = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
-const GHOST_NOTE_SHARP   = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-const GHOST_STD6         = [64, 59, 55, 50, 45, 40]; // E4 B3 G3 D3 A2 E2
-
 const Fretboard = ({
     config,
     diagrams,
@@ -25,8 +20,6 @@ const Fretboard = ({
     setChordName,
     zoomMode,
     skipMarkAnimation,
-    showNaturals,
-    showAccidentals,
     isGhostMode,
     onToggleGhostMark,
     onUpdateGhostMarkText,
@@ -291,43 +284,6 @@ const Fretboard = ({
                                 fill="rgba(128,128,128,0.12)" stroke="rgba(128,128,128,0.35)" strokeWidth={1.5} />
                         );
                     })}
-
-                    {/* Ghost notes */}
-                    {(showNaturals || showAccidentals !== 'off') && (() => {
-                        const getOpenMidi = (si) => {
-                            if (config.strings <= 6) return GHOST_STD6[si + (6 - config.strings)];
-                            const extra = config.strings - 6;
-                            if (si < extra) return GHOST_STD6[0] + (extra - si) * 5;
-                            return GHOST_STD6[si - extra];
-                        };
-                        const dots = [];
-                        const minFret = config.startFret === 1 ? -1 : 0;
-                        for (let si = 0; si < config.strings; si++) {
-                            const openMidi = getOpenMidi(si);
-                            for (let fi = minFret; fi < config.frets; fi++) {
-                                const midi = fi === -1 ? openMidi : openMidi + config.startFret + fi;
-                                const noteIdx = ((midi % 12) + 12) % 12;
-                                const isNatural = GHOST_NATURAL_IDX.has(noteIdx);
-                                let label = null;
-                                if (showNaturals && isNatural) label = GHOST_NOTE_FLAT[noteIdx];
-                                else if (!isNatural && showAccidentals === 'flats') label = GHOST_NOTE_FLAT[noteIdx];
-                                else if (!isNatural && showAccidentals === 'sharps') label = GHOST_NOTE_SHARP[noteIdx];
-                                if (!label) continue;
-                                const { x, y } = getCoordinates(si, fi);
-                                dots.push(
-                                    <g key={`ghost-${si}-${fi}`} style={{ pointerEvents: 'none' }}>
-                                        <circle cx={x} cy={y} r={21} fill="rgba(128,128,128,0.12)" stroke="rgba(128,128,128,0.22)" strokeWidth={1} />
-                                        <text x={x} y={y} dy="0.35em" textAnchor="middle"
-                                            fill="var(--text-primary)" fontSize="13" fontWeight="700"
-                                            fontFamily="inherit" style={{ pointerEvents: 'none', userSelect: 'none' }}>
-                                            {label}
-                                        </text>
-                                    </g>
-                                );
-                            }
-                        }
-                        return dots;
-                    })()}
 
                     {/* Split clipPaths */}
                     <defs>

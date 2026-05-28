@@ -47,9 +47,11 @@ function App() {
   const [rootSelectorActive, setRootSelectorActive] = useState(false);
   const [autoScaleDegree, setAutoScaleDegree] = useState('off'); // 'off' | 'flats' | 'sharps'
 
-  // ── Ghost notes ──────────────────────────────────────────────────────────
-  const [showNaturals, setShowNaturals] = useState(false);
-  const [showAccidentals, setShowAccidentals] = useState('off'); // 'off' | 'flats' | 'sharps'
+  // ── Auto note label ──────────────────────────────────────────────────────
+  const [autoNoteLabel, setAutoNoteLabel] = useState('off'); // 'off' | 'flats' | 'sharps'
+
+  const NOTE_NAMES_FLAT  = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
+  const NOTE_NAMES_SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 
   // ── Sound ────────────────────────────────────────────────────────────────
   // Standard 6-string open-string MIDI notes, top to bottom: E4 B3 G3 D3 A2 E2
@@ -196,6 +198,9 @@ function App() {
       setRootNote(clickedMidi);
       setRootSelectorActive(false);
       autoText = '1';
+    } else if (autoNoteLabel !== 'off') {
+      const noteIdx = ((clickedMidi % 12) + 12) % 12;
+      autoText = autoNoteLabel === 'flats' ? NOTE_NAMES_FLAT[noteIdx] : NOTE_NAMES_SHARP[noteIdx];
     } else if (autoScaleDegree !== 'off' && rootNote !== null) {
       autoText = getScaleDegree(clickedMidi, rootNote);
     }
@@ -261,6 +266,12 @@ function App() {
 
   // ── Ghost mark toggling ──────────────────────────────────────────────────
   const handleToggleGhostMark = (diagramIndex, stringIndex, fretIndex) => {
+    let autoText = '';
+    if (autoNoteLabel !== 'off') {
+      const midi = getMidi(stringIndex, fretIndex);
+      const noteIdx = ((midi % 12) + 12) % 12;
+      autoText = autoNoteLabel === 'flats' ? NOTE_NAMES_FLAT[noteIdx] : NOTE_NAMES_SHARP[noteIdx];
+    }
     setDiagrams(prev => {
       const newDiagrams = [...prev];
       const d = newDiagrams[diagramIndex];
@@ -272,7 +283,7 @@ function App() {
         ...d,
         ghostMarks: existingIdx >= 0
           ? ghostMarks.filter((_, i) => i !== existingIdx)
-          : [...ghostMarks, { id: `gm-${Date.now()}-${Math.random()}`, stringIndex, fretIndex, text: '' }]
+          : [...ghostMarks, { id: `gm-${Date.now()}-${Math.random()}`, stringIndex, fretIndex, text: autoText }]
       };
       return newDiagrams;
     });
@@ -425,11 +436,21 @@ function App() {
         rootSelectorActive={rootSelectorActive}
         onRootSelectorToggle={() => setRootSelectorActive(v => !v)}
         autoScaleDegree={autoScaleDegree}
-        onAutoScaleDegreeToggle={() => setAutoScaleDegree(v => v === 'off' ? 'flats' : v === 'flats' ? 'sharps' : 'off')}
-        showNaturals={showNaturals}
-        onShowNaturalsToggle={() => setShowNaturals(v => !v)}
-        showAccidentals={showAccidentals}
-        onShowAccidentalsToggle={() => setShowAccidentals(v => v === 'off' ? 'flats' : v === 'flats' ? 'sharps' : 'off')}
+        onAutoScaleDegreeToggle={() => {
+          setAutoScaleDegree(v => {
+            const next = v === 'off' ? 'flats' : v === 'flats' ? 'sharps' : 'off';
+            if (next !== 'off') setAutoNoteLabel('off');
+            return next;
+          });
+        }}
+        autoNoteLabel={autoNoteLabel}
+        onAutoNoteLabelToggle={() => {
+          setAutoNoteLabel(v => {
+            const next = v === 'off' ? 'flats' : v === 'flats' ? 'sharps' : 'off';
+            if (next !== 'off') setAutoScaleDegree('off');
+            return next;
+          });
+        }}
       />
 
       <div className="main-content-area">
@@ -443,8 +464,6 @@ function App() {
             setChordName={setChordName}
             zoomMode={zoomMode}
             skipMarkAnimation={skipMarkAnimation}
-            showNaturals={showNaturals}
-            showAccidentals={showAccidentals}
             isGhostMode={activeTool.color === 'transparent'}
             onToggleGhostMark={handleToggleGhostMark}
             onUpdateGhostMarkText={handleUpdateGhostMarkText}

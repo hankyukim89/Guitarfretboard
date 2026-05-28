@@ -24,8 +24,7 @@ const ControlPanel = ({
     onPlayHarmonic, onPlayMelodic,
     rootNoteName, rootSelectorActive, onRootSelectorToggle,
     autoScaleDegree, onAutoScaleDegreeToggle,
-    showNaturals, onShowNaturalsToggle,
-    showAccidentals, onShowAccidentalsToggle,
+    autoNoteLabel, onAutoNoteLabelToggle,
 }) => {
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
@@ -182,20 +181,6 @@ const ControlPanel = ({
                         >
                             Nut
                         </button>
-                        <button
-                            className={`tb-btn ${showNaturals ? 'is-active' : ''}`}
-                            onClick={onShowNaturalsToggle}
-                            title="Show natural notes (C D E F G A B) as ghost dots"
-                        >
-                            Naturals
-                        </button>
-                        <button
-                            className={`tb-btn ${showAccidentals !== 'off' ? 'is-active' : ''}`}
-                            onClick={onShowAccidentalsToggle}
-                            title="Cycle: off → flats → sharps"
-                        >
-                            {showAccidentals === 'off' ? 'Acc °' : showAccidentals === 'flats' ? 'Acc b' : 'Acc #'}
-                        </button>
                     </div>
                 </div>
 
@@ -241,6 +226,13 @@ const ControlPanel = ({
                             title="Cycle: off → flats → sharps"
                         >
                             {autoScaleDegree === 'off' ? 'Scale °' : autoScaleDegree === 'flats' ? 'Scale b' : 'Scale #'}
+                        </button>
+                        <button
+                            className={`tb-btn ${autoNoteLabel !== 'off' ? 'is-active' : ''}`}
+                            onClick={onAutoNoteLabelToggle}
+                            title="Cycle: off → flats → sharps"
+                        >
+                            {autoNoteLabel === 'off' ? 'Note °' : autoNoteLabel === 'flats' ? 'Note b' : 'Note #'}
                         </button>
                     </div>
                 </div>
