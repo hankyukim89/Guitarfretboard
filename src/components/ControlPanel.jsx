@@ -9,7 +9,7 @@ const COLORS = [
     '#000000', '#64748b', 'transparent',
 ];
 
-const SHAPES = ['circle', 'square', 'triangle', 'star', 'pentagon', 'cross'];
+const SHAPES = ['circle', 'square', 'triangle', 'star', 'pentagon', 'heart', 'cross'];
 
 const ControlPanel = ({
     config, setConfig,
@@ -57,10 +57,8 @@ const ControlPanel = ({
     return (
         <div className="toolbar">
 
-            {/* ── ROW 1: Brand · Orientation · Settings · Actions ── */}
+            {/* Top row: brand, shape, setup, playback, save/export */}
             <div className="toolbar-row toolbar-row-top">
-
-                {/* Brand */}
                 <div className="tb-brand">
                     <Guitar size={18} />
                     FretDiagram
@@ -68,44 +66,31 @@ const ControlPanel = ({
 
                 <div className="tb-sep" />
 
-                {/* Orientation */}
-                <div className="tb-group">
-                    <span className="tb-label">Orientation</span>
+                <div className="tb-group tb-group-shapes">
+                    <span className="tb-label">Shape</span>
                     <div className="tb-row-items">
-                        <button
-                            className={`tb-orient ${config.orientation === 'horizontal' ? 'is-active' : ''}`}
-                            onClick={() => setConfig({ ...config, orientation: 'horizontal' })}
-                            title="Horizontal"
-                        >
-                            <svg width="26" height="18" viewBox="0 0 26 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                                <rect x="1" y="1" width="24" height="16" rx="2" />
-                                <line x1="1" y1="6.5" x2="25" y2="6.5" />
-                                <line x1="1" y1="11.5" x2="25" y2="11.5" />
-                                <line x1="8.5" y1="1" x2="8.5" y2="17" />
-                                <line x1="17.5" y1="1" x2="17.5" y2="17" />
-                            </svg>
-                        </button>
-                        <button
-                            className={`tb-orient ${config.orientation === 'vertical' ? 'is-active' : ''}`}
-                            onClick={() => setConfig({ ...config, orientation: 'vertical' })}
-                            title="Vertical"
-                        >
-                            <svg width="18" height="26" viewBox="0 0 18 26" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                                <rect x="1" y="1" width="16" height="24" rx="2" />
-                                <line x1="6.5" y1="1" x2="6.5" y2="25" />
-                                <line x1="11.5" y1="1" x2="11.5" y2="25" />
-                                <line x1="1" y1="8.5" x2="17" y2="8.5" />
-                                <line x1="1" y1="17.5" x2="17" y2="17.5" />
-                            </svg>
-                        </button>
+                        {SHAPES.map(shape => (
+                            <button
+                                key={shape}
+                                className={`tb-shape ${activeTool.shape === shape ? 'is-active' : ''}`}
+                                onClick={() => setActiveTool({ ...activeTool, shape })}
+                                title={shape}
+                            >
+                                <div
+                                    className={`ps ${shape}`}
+                                    style={activeTool.color2
+                                        ? { background: `linear-gradient(to right, ${activeTool.color} 50%, ${activeTool.color2} 50%)` }
+                                        : { backgroundColor: activeTool.color }
+                                    }
+                                />
+                            </button>
+                        ))}
                     </div>
                 </div>
 
                 <div className="tb-sep" />
 
-                {/* Fretboard numeric settings */}
                 <div className="tb-group">
-                    <span className="tb-label">Fretboard</span>
                     <div className="tb-row-items">
                         <label className="tb-num">
                             <span>Strings</span>
@@ -139,7 +124,7 @@ const ControlPanel = ({
                                 max="6"
                             />
                         </label>
-                        <div className="tb-zoom-toggle">
+                        <div className="tb-zoom-toggle tb-zoom-top">
                             <button
                                 className={`tb-zoom-btn ${zoomMode === 'fit' ? 'is-active' : ''}`}
                                 onClick={() => onZoomModeChange('fit')}
@@ -154,39 +139,8 @@ const ControlPanel = ({
                     </div>
                 </div>
 
-                <div className="tb-sep" />
+                <div className="tb-spacer" />
 
-                {/* View toggles */}
-                <div className="tb-group">
-                    <span className="tb-label">View</span>
-                    <div className="tb-row-items">
-                        <button
-                            className={`tb-btn ${config.showFretNumbers ? 'is-active' : ''}`}
-                            onClick={() => setConfig({ ...config, showFretNumbers: !config.showFretNumbers })}
-                            title="Toggle fret numbers"
-                        >
-                            Fret #s
-                        </button>
-                        <button
-                            className={`tb-btn ${config.showInlays ? 'is-active' : ''}`}
-                            onClick={() => setConfig({ ...config, showInlays: !config.showInlays })}
-                            title="Toggle fret inlays"
-                        >
-                            Inlays
-                        </button>
-                        <button
-                            className={`tb-btn ${config.showNut ? 'is-active' : ''}`}
-                            onClick={() => setConfig({ ...config, showNut: !config.showNut })}
-                            title="Toggle nut"
-                        >
-                            Nut
-                        </button>
-                    </div>
-                </div>
-
-                <div className="tb-sep" />
-
-                {/* Sound */}
                 <div className="tb-group">
                     <span className="tb-label">Sound</span>
                     <div className="tb-row-items">
@@ -209,7 +163,6 @@ const ControlPanel = ({
 
                 <div className="tb-sep" />
 
-                {/* Scale */}
                 <div className="tb-group">
                     <span className="tb-label">Scale</span>
                     <div className="tb-row-items">
@@ -239,7 +192,6 @@ const ControlPanel = ({
 
                 <div className="tb-sep" />
 
-                {/* Diagram actions */}
                 <div className="tb-group">
                     <span className="tb-label">Diagram</span>
                     <div className="tb-row-items">
@@ -252,7 +204,6 @@ const ControlPanel = ({
 
                 <div className="tb-sep" />
 
-                {/* Export */}
                 <div className="tb-group">
                     <span className="tb-label">Export</span>
                     <div className="tb-row-items">
@@ -261,43 +212,16 @@ const ControlPanel = ({
                     </div>
                 </div>
 
-                <div className="tb-sep" />
-
                 <button className="tb-help-btn" onClick={() => setShowHelp(true)} title="Help">
                     <HelpCircle size={20} />
                 </button>
             </div>
 
-            {/* ── ROW 2: Shapes · Colors · Split ── */}
+            {/* Bottom row: colors, split, orientation, view */}
             <div className="toolbar-row toolbar-row-bottom">
+                <div className="tb-brand-spacer" />
 
-                {/* Shapes */}
-                <div className="tb-group">
-                    <span className="tb-label">Shape</span>
-                    <div className="tb-row-items">
-                        {SHAPES.map(shape => (
-                            <button
-                                key={shape}
-                                className={`tb-shape ${activeTool.shape === shape ? 'is-active' : ''}`}
-                                onClick={() => setActiveTool({ ...activeTool, shape })}
-                                title={shape}
-                            >
-                                <div
-                                    className={`ps ${shape}`}
-                                    style={activeTool.color2
-                                        ? { background: `linear-gradient(to right, ${activeTool.color} 50%, ${activeTool.color2} 50%)` }
-                                        : { backgroundColor: activeTool.color }
-                                    }
-                                />
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="tb-sep" />
-
-                {/* Colors — no redundant swatch square */}
-                <div className="tb-group">
+                <div className="tb-group tb-group-colors">
                     <span className="tb-label">Color</span>
                     <div className="tb-row-items">
                         {allColors.map((color, i) => (
@@ -319,7 +243,6 @@ const ControlPanel = ({
 
                 <div className="tb-sep" />
 
-                {/* Split Color */}
                 <div className="tb-group">
                     <span className="tb-label">Split Color</span>
                     <div className="tb-row-items">
@@ -345,6 +268,81 @@ const ControlPanel = ({
                                 </button>
                             </>
                         )}
+                    </div>
+                </div>
+
+                <div className="tb-sep" />
+
+                <div className="tb-group">
+                    <span className="tb-label">Orientation</span>
+                    <div className="tb-row-items">
+                        <button
+                            className={`tb-orient ${config.orientation === 'horizontal' ? 'is-active' : ''}`}
+                            onClick={() => setConfig({ ...config, orientation: 'horizontal' })}
+                            title="Horizontal"
+                            aria-label="Horizontal orientation"
+                        >
+                            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+                                <rect x="2" y="2" width="3" height="18" fill="#050505" />
+                                <g stroke="#8d949d" strokeWidth="0.9" strokeLinecap="square">
+                                    <line x1="5" y1="2" x2="20" y2="2" />
+                                    <line x1="5" y1="8" x2="20" y2="8" />
+                                    <line x1="5" y1="14" x2="20" y2="14" />
+                                    <line x1="5" y1="20" x2="20" y2="20" />
+                                    <line x1="10" y1="2" x2="10" y2="20" />
+                                    <line x1="15" y1="2" x2="15" y2="20" />
+                                    <line x1="20" y1="2" x2="20" y2="20" />
+                                </g>
+                            </svg>
+                        </button>
+                        <button
+                            className={`tb-orient ${config.orientation === 'vertical' ? 'is-active' : ''}`}
+                            onClick={() => setConfig({ ...config, orientation: 'vertical' })}
+                            title="Vertical"
+                            aria-label="Vertical orientation"
+                        >
+                            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+                                <rect x="2" y="2" width="18" height="3" fill="#050505" />
+                                <g stroke="#8d949d" strokeWidth="0.9" strokeLinecap="square">
+                                    <line x1="2" y1="5" x2="2" y2="20" />
+                                    <line x1="8" y1="5" x2="8" y2="20" />
+                                    <line x1="14" y1="5" x2="14" y2="20" />
+                                    <line x1="20" y1="5" x2="20" y2="20" />
+                                    <line x1="2" y1="10" x2="20" y2="10" />
+                                    <line x1="2" y1="15" x2="20" y2="15" />
+                                    <line x1="2" y1="20" x2="20" y2="20" />
+                                </g>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div className="tb-sep" />
+
+                <div className="tb-group">
+                    <span className="tb-label">View</span>
+                    <div className="tb-row-items">
+                        <button
+                            className={`tb-btn ${config.showFretNumbers ? 'is-active' : ''}`}
+                            onClick={() => setConfig({ ...config, showFretNumbers: !config.showFretNumbers })}
+                            title="Toggle fret numbers"
+                        >
+                            Fret #s
+                        </button>
+                        <button
+                            className={`tb-btn ${config.showInlays ? 'is-active' : ''}`}
+                            onClick={() => setConfig({ ...config, showInlays: !config.showInlays })}
+                            title="Toggle fret inlays"
+                        >
+                            Inlays
+                        </button>
+                        <button
+                            className={`tb-btn ${config.showNut ? 'is-active' : ''}`}
+                            onClick={() => setConfig({ ...config, showNut: !config.showNut })}
+                            title="Toggle nut"
+                        >
+                            Nut
+                        </button>
                     </div>
                 </div>
             </div>

@@ -69,12 +69,12 @@ const Fretboard = ({
                 // Scale a single fretboard to fit; leave ~120px for title row + margins
                 const scaleX = availableWidth / svgWidth;
                 const scaleY = (availableHeight - 120) / svgHeight;
-                setScale(Math.min(scaleX, scaleY, 1));
+                setScale(Math.min(scaleX, scaleY));
             } else {
                 if (!contentRef.current) return;
                 const natW = contentRef.current.offsetWidth || svgWidth + 40;
                 const natH = contentRef.current.offsetHeight || svgHeight * diagrams.length + 80;
-                setScale(Math.min(availableWidth / natW, availableHeight / natH, 1));
+                setScale(Math.min(availableWidth / natW, availableHeight / natH));
             }
         };
         const obs = new ResizeObserver(updateScale);
@@ -308,6 +308,7 @@ const Fretboard = ({
                                 if (mark.shape === 'triangle') return <polygon  points={`${x},${y-24} ${x-21},${y+18} ${x+21},${y+18}`} fill={color} {...p} />;
                                 if (mark.shape === 'star')     return <polygon  points={`${x},${y-27} ${x+8},${y-8} ${x+27},${y-8} ${x+12},${y+8} ${x+18},${y+27} ${x},${y+15} ${x-18},${y+27} ${x-12},${y+8} ${x-27},${y-8} ${x-8},${y-8}`} fill={color} {...p} />;
                                 if (mark.shape === 'pentagon') return <polygon  points={`${x},${y-24} ${x+22},${y-7} ${x+15},${y+24} ${x-15},${y+24} ${x-22},${y-7}`} fill={color} {...p} />;
+                                if (mark.shape === 'heart')    return <path     d={`M ${x} ${y+19} C ${x-26} ${y} ${x-18} ${y-23} ${x-3} ${y-15} C ${x} ${y-13} ${x} ${y-13} ${x+3} ${y-15} C ${x+18} ${y-23} ${x+26} ${y} ${x} ${y+19} Z`} fill={color} {...p} />;
                                 if (mark.shape === 'cross')    return <polygon  points={`${x-8},${y-24} ${x+8},${y-24} ${x+8},${y-8} ${x+24},${y-8} ${x+24},${y+8} ${x+8},${y+8} ${x+8},${y+24} ${x-8},${y+24} ${x-8},${y+8} ${x-24},${y+8} ${x-24},${y-8} ${x-8},${y-8}`} fill={color} transform={`rotate(45,${x},${y})`} {...p} />;
                                 return null;
                             };

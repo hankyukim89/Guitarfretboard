@@ -188,7 +188,8 @@ function App() {
       setSkipMarkAnimation(true);
       setDiagrams(prev => prev.map(d => ({
         ...d,
-        marks: d.marks.map(m => ({ ...m, fretIndex: m.fretIndex + delta }))
+        marks: d.marks.map(m => ({ ...m, fretIndex: m.fretIndex + delta })),
+        ghostMarks: (d.ghostMarks || []).map(m => ({ ...m, fretIndex: m.fretIndex + delta })),
       })));
       setTimeout(() => setSkipMarkAnimation(false), 50);
 
@@ -500,7 +501,7 @@ function App() {
             setChordName={setChordName}
             zoomMode={zoomMode}
             skipMarkAnimation={skipMarkAnimation}
-            isGhostMode={activeTool.color === 'transparent'}
+            isGhostMode={activeTool.color === 'transparent' && !rootSelectorActive}
             onToggleGhostMark={handleToggleGhostMark}
             onUpdateGhostMarkText={handleUpdateGhostMarkText}
             isLoadSidebarOpen={isLoadSidebarOpen}
