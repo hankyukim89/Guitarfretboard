@@ -1,12 +1,30 @@
 import React, { useState, useRef } from 'react';
-import { toPng, toBlob } from 'html-to-image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { toBlob } from 'html-to-image';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { X, Trash2 } from 'lucide-react';
 import ControlPanel from './components/ControlPanel';
 import Fretboard from './components/Fretboard';
 import './index.css';
 
-const makeEmptyDiagram = () => ({ id: Date.now() + Math.random(), marks: [], ghostMarks: [] });
+const MAX_DIAGRAMS = 48;
+const makeEmptyDiagram = () => ({ id: Date.now() + Math.random(), name: '', marks: [], ghostMarks: [] });
+const KEY_OPTIONS = [
+  { value: 'Cb', name: 'Cb', label: 'Cb (bbbbbbb)', pitchClass: 11, accidental: 'flats' },
+  { value: 'Gb', name: 'Gb', label: 'Gb (bbbbbb)', pitchClass: 6, accidental: 'flats' },
+  { value: 'Db', name: 'Db', label: 'Db (bbbbb)', pitchClass: 1, accidental: 'flats' },
+  { value: 'Ab', name: 'Ab', label: 'Ab (bbbb)', pitchClass: 8, accidental: 'flats' },
+  { value: 'Eb', name: 'Eb', label: 'Eb (bbb)', pitchClass: 3, accidental: 'flats' },
+  { value: 'Bb', name: 'Bb', label: 'Bb (bb)', pitchClass: 10, accidental: 'flats' },
+  { value: 'F', name: 'F', label: 'F (b)', pitchClass: 5, accidental: 'flats' },
+  { value: 'C', name: 'C', label: 'C', pitchClass: 0, accidental: 'flats' },
+  { value: 'G', name: 'G', label: 'G (#)', pitchClass: 7, accidental: 'sharps' },
+  { value: 'D', name: 'D', label: 'D (##)', pitchClass: 2, accidental: 'sharps' },
+  { value: 'A', name: 'A', label: 'A (###)', pitchClass: 9, accidental: 'sharps' },
+  { value: 'E', name: 'E', label: 'E (####)', pitchClass: 4, accidental: 'sharps' },
+  { value: 'B', name: 'B', label: 'B (#####)', pitchClass: 11, accidental: 'sharps' },
+  { value: 'F#', name: 'F#', label: 'F# (######)', pitchClass: 6, accidental: 'sharps' },
+  { value: 'C#', name: 'C#', label: 'C# (#######)', pitchClass: 1, accidental: 'sharps' },
+];
 
 function App() {
   const [config, setConfig] = useState({
@@ -42,16 +60,15 @@ function App() {
   const [soundEnabled, setSoundEnabled] = useState(false);
   const audioCtxRef = useRef(null);
 
-  // ── Root / Scale Degree ──────────────────────────────────────────────────
-  const [rootNote, setRootNote] = useState(null); // MIDI number of root
-  const [rootSelectorActive, setRootSelectorActive] = useState(false);
-  const [autoScaleDegree, setAutoScaleDegree] = useState('off'); // 'off' | 'flats' | 'sharps'
-
-  // ── Auto note label ──────────────────────────────────────────────────────
-  const [autoNoteLabel, setAutoNoteLabel] = useState('off'); // 'off' | 'flats' | 'sharps'
+  // ── Root / display labels ────────────────────────────────────────────────
+  const [rootKey, setRootKey] = useState('C');
+  const [keyMode, setKeyMode] = useState('major');
+  const [showScaleDegrees, setShowScaleDegrees] = useState(false);
+  const [showNoteLabels, setShowNoteLabels] = useState(false);
 
   const NOTE_NAMES_FLAT  = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
   const NOTE_NAMES_SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const selectedRootKey = KEY_OPTIONS.find(key => key.value === rootKey) || KEY_OPTIONS[7];
 
   // ── Sound ────────────────────────────────────────────────────────────────
   // Standard 6-string open-string MIDI notes, top to bottom: E4 B3 G3 D3 A2 E2
@@ -70,8 +87,8 @@ function App() {
   };
 
   const NOTE_NAMES          = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
-  const SCALE_DEGREES_FLATS  = ['1','b2','2','b3','3','4','b5','5','b6','6','b7','7'];
-  const SCALE_DEGREES_SHARPS = ['1','#1','2','#2','3','4','#4','5','#5','6','#6','7'];
+  const SCALE_DEGREES_MAJOR = ['1','b2','2','b3','3','4','b5','5','b6','6','b7','7'];
+  const SCALE_DEGREES_MINOR = ['1','b2','2','3','#3','4','b5','5','6','#6','7','#7'];
 
   const getMidi = (stringIndex, fretIndex) => {
     const openMidi = getOpenStringMidi(stringIndex, config.strings);
@@ -79,9 +96,22 @@ function App() {
     return openMidi + semitones;
   };
 
-  const getScaleDegree = (noteMidi, rootMidi) => {
-    const interval = ((noteMidi - rootMidi) % 12 + 12) % 12;
-    return autoScaleDegree === 'sharps' ? SCALE_DEGREES_SHARPS[interval] : SCALE_DEGREES_FLATS[interval];
+  const getScaleDegree = (noteMidi) => {
+    const interval = ((noteMidi - selectedRootKey.pitchClass) % 12 + 12) % 12;
+    return keyMode === 'minor' ? SCALE_DEGREES_MINOR[interval] : SCALE_DEGREES_MAJOR[interval];
+  };
+
+  const getNoteName = (noteMidi) => {
+    const noteIdx = ((noteMidi % 12) + 12) % 12;
+    if (noteIdx === selectedRootKey.pitchClass) return selectedRootKey.name;
+    return selectedRootKey.accidental === 'sharps' ? NOTE_NAMES_SHARP[noteIdx] : NOTE_NAMES_FLAT[noteIdx];
+  };
+
+  const getMarkDisplayText = (mark) => {
+    const midi = getMidi(mark.stringIndex, mark.fretIndex);
+    if (showNoteLabels) return getNoteName(midi);
+    if (showScaleDegrees) return getScaleDegree(midi);
+    return mark.text || '';
   };
 
   const getAudioCtx = () => {
@@ -104,7 +134,7 @@ function App() {
       silentSrc.buffer = silentBuf;
       silentSrc.connect(ctx.destination);
       silentSrc.start(0);
-    } catch (_) { /* ignore if ctx isn't ready yet */ }
+    } catch { /* ignore if ctx isn't ready yet */ }
   };
 
   const playNoteAt = (stringIndex, fretIndex, startTime = 0) => {
@@ -168,7 +198,7 @@ function App() {
 
   // ── Num diagrams (rows) ──────────────────────────────────────────────────
   const handleNumDiagramsChange = (newNum) => {
-    const n = Math.max(1, Math.min(6, isNaN(newNum) ? 1 : newNum));
+    const n = Math.max(1, Math.min(MAX_DIAGRAMS, isNaN(newNum) ? 1 : newNum));
     setConfig(prev => ({ ...prev, numDiagrams: n }));
     setDiagrams(prev => {
       if (n > prev.length) {
@@ -188,8 +218,7 @@ function App() {
       setSkipMarkAnimation(true);
       setDiagrams(prev => prev.map(d => ({
         ...d,
-        marks: d.marks.map(m => ({ ...m, fretIndex: m.fretIndex + delta })),
-        ghostMarks: (d.ghostMarks || []).map(m => ({ ...m, fretIndex: m.fretIndex + delta })),
+        marks: d.marks.map(m => ({ ...m, fretIndex: m.fretIndex + delta }))
       })));
       setTimeout(() => setSkipMarkAnimation(false), 50);
 
@@ -213,21 +242,6 @@ function App() {
       m => m.stringIndex === stringIndex && m.fretIndex === fretIndex
     );
     if (!existingMark) playNote(stringIndex, fretIndex);
-
-    // Root selector + scale degree logic
-    const clickedMidi = getMidi(stringIndex, fretIndex);
-    let autoText = '';
-
-    if (rootSelectorActive) {
-      setRootNote(clickedMidi);
-      setRootSelectorActive(false);
-      autoText = '1';
-    } else if (autoNoteLabel !== 'off') {
-      const noteIdx = ((clickedMidi % 12) + 12) % 12;
-      autoText = autoNoteLabel === 'flats' ? NOTE_NAMES_FLAT[noteIdx] : NOTE_NAMES_SHARP[noteIdx];
-    } else if (autoScaleDegree !== 'off' && rootNote !== null) {
-      autoText = getScaleDegree(clickedMidi, rootNote);
-    }
 
     setDiagrams(prev => {
       const newDiagrams = [...prev];
@@ -266,7 +280,7 @@ function App() {
           shape: targetShape,
           color: targetColor,
           color2: activeTool.color2 || null,
-          text: autoText,
+          text: '',
         }];
       }
 
@@ -288,6 +302,13 @@ function App() {
     });
   };
 
+  const handleUpdateDiagramName = (diagramIndex, name) => {
+    setDiagrams(prev => prev.map((diagram, index) =>
+      index === diagramIndex ? { ...diagram, name } : diagram
+    ));
+    if (diagramIndex === 0) setChordName(name);
+  };
+
   // ── Ghost mark toggling ──────────────────────────────────────────────────
   const handleToggleGhostMark = (diagramIndex, stringIndex, fretIndex) => {
     const isNew = !(diagrams[diagramIndex].ghostMarks || []).find(
@@ -295,12 +316,6 @@ function App() {
     );
     if (isNew) playNote(stringIndex, fretIndex);
 
-    let autoText = '';
-    if (autoNoteLabel !== 'off') {
-      const midi = getMidi(stringIndex, fretIndex);
-      const noteIdx = ((midi % 12) + 12) % 12;
-      autoText = autoNoteLabel === 'flats' ? NOTE_NAMES_FLAT[noteIdx] : NOTE_NAMES_SHARP[noteIdx];
-    }
     setDiagrams(prev => {
       const newDiagrams = [...prev];
       const d = newDiagrams[diagramIndex];
@@ -312,7 +327,7 @@ function App() {
         ...d,
         ghostMarks: existingIdx >= 0
           ? ghostMarks.filter((_, i) => i !== existingIdx)
-          : [...ghostMarks, { id: `gm-${Date.now()}-${Math.random()}`, stringIndex, fretIndex, text: autoText }]
+          : [...ghostMarks, { id: `gm-${Date.now()}-${Math.random()}`, stringIndex, fretIndex, text: '' }]
       };
       return newDiagrams;
     });
@@ -356,7 +371,8 @@ function App() {
       const blob = await toBlob(node, { backgroundColor: '#ffffff' });
       if (!blob) throw new Error('Failed to generate image blob');
 
-      const fileName = `${chordName || 'guitar-diagram'}.png`;
+      const diagramNames = diagrams.map(d => d.name).filter(Boolean).join('-');
+      const fileName = `${chordName || diagramNames || 'guitar-diagram'}.png`;
 
       if (window.showSaveFilePicker) {
         try {
@@ -392,7 +408,8 @@ function App() {
 
   // ── Save / Load ──────────────────────────────────────────────────────────
   const handleSaveDiagram = () => {
-    let name = chordName || prompt('Enter a name for this diagram:');
+    const firstDiagramName = diagrams.find(d => d.name)?.name;
+    let name = chordName || firstDiagramName || prompt('Enter a name for this diagram:');
     if (!name) return;
 
     const existingIndex = savedDiagrams.findIndex(d => d.name === name);
@@ -424,9 +441,13 @@ function App() {
     setChordName(diagram.chordName || diagram.name || '');
     // Support both new (diagrams array) and old (marks array) saved format
     if (diagram.diagrams) {
-      setDiagrams(diagram.diagrams.map(d => ({ ...d, ghostMarks: d.ghostMarks || [] })));
+      setDiagrams(diagram.diagrams.map((d, i) => ({
+        ...d,
+        name: d.name || (i === 0 ? (diagram.chordName || diagram.name || '') : ''),
+        ghostMarks: d.ghostMarks || []
+      })));
     } else {
-      setDiagrams([{ id: Date.now(), marks: diagram.marks || [], ghostMarks: [] }]);
+      setDiagrams([{ id: Date.now(), name: diagram.chordName || diagram.name || '', marks: diagram.marks || [], ghostMarks: [] }]);
     }
   };
 
@@ -468,23 +489,24 @@ function App() {
         }}
         onPlayHarmonic={playHarmonic}
         onPlayMelodic={playMelodic}
-        rootNote={rootNote}
-        rootNoteName={rootNote !== null ? ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'][rootNote % 12] : null}
-        rootSelectorActive={rootSelectorActive}
-        onRootSelectorToggle={() => setRootSelectorActive(v => !v)}
-        autoScaleDegree={autoScaleDegree}
-        onAutoScaleDegreeToggle={() => {
-          setAutoScaleDegree(v => {
-            const next = v === 'off' ? 'flats' : v === 'flats' ? 'sharps' : 'off';
-            if (next !== 'off') setAutoNoteLabel('off');
+        rootKeyOptions={KEY_OPTIONS}
+        rootKeyValue={rootKey}
+        onRootKeyChange={setRootKey}
+        keyMode={keyMode}
+        onKeyModeChange={setKeyMode}
+        showScaleDegrees={showScaleDegrees}
+        onScaleDegreeToggle={() => {
+          setShowScaleDegrees(value => {
+            const next = !value;
+            if (next) setShowNoteLabels(false);
             return next;
           });
         }}
-        autoNoteLabel={autoNoteLabel}
-        onAutoNoteLabelToggle={() => {
-          setAutoNoteLabel(v => {
-            const next = v === 'off' ? 'flats' : v === 'flats' ? 'sharps' : 'off';
-            if (next !== 'off') setAutoScaleDegree('off');
+        showNoteLabels={showNoteLabels}
+        onNoteLabelToggle={() => {
+          setShowNoteLabels(value => {
+            const next = !value;
+            if (next) setShowScaleDegrees(false);
             return next;
           });
         }}
@@ -497,13 +519,15 @@ function App() {
             diagrams={diagrams}
             onToggleMark={handleToggleMark}
             onUpdateMarkText={handleUpdateMarkText}
+            onUpdateDiagramName={handleUpdateDiagramName}
             chordName={chordName}
             setChordName={setChordName}
             zoomMode={zoomMode}
             skipMarkAnimation={skipMarkAnimation}
-            isGhostMode={activeTool.color === 'transparent' && !rootSelectorActive}
+            isGhostMode={activeTool.color === 'transparent'}
             onToggleGhostMark={handleToggleGhostMark}
             onUpdateGhostMarkText={handleUpdateGhostMarkText}
+            getMarkDisplayText={getMarkDisplayText}
             isLoadSidebarOpen={isLoadSidebarOpen}
             isMainModalOpen={isMainModalOpen}
           />
@@ -511,7 +535,7 @@ function App() {
 
         <AnimatePresence>
           {isLoadSidebarOpen && (
-            <motion.div
+            <Motion.div
               className="load-sidebar"
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
@@ -551,7 +575,7 @@ function App() {
                   )}
                 </div>
               </div>
-            </motion.div>
+            </Motion.div>
           )}
         </AnimatePresence>
       </div>

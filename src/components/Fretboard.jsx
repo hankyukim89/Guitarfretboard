@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import './Fretboard.css';
 
 const STRING_SPACING = 50;
@@ -16,6 +16,7 @@ const Fretboard = ({
     diagrams,
     onToggleMark,
     onUpdateMarkText,
+    onUpdateDiagramName,
     chordName,
     setChordName,
     zoomMode,
@@ -23,6 +24,7 @@ const Fretboard = ({
     isGhostMode,
     onToggleGhostMark,
     onUpdateGhostMarkText,
+    getMarkDisplayText,
     isLoadSidebarOpen,
 }) => {
     const svgRefs = useRef([]);
@@ -35,28 +37,24 @@ const Fretboard = ({
     const [scale, setScale] = useState(1);
     const [contentNaturalHeight, setContentNaturalHeight] = useState(0);
     const [currentPage, setCurrentPage] = useState(0);
+    const visiblePage = Math.min(currentPage, Math.max(0, diagrams.length - 1));
 
     const isVertical = config.orientation === 'vertical';
     const isScrollMode = zoomMode === 'scroll';
+    const useSideBySideDiagrams = isVertical && diagrams.length > 1;
 
     const boardWidth = config.frets * FRET_SPACING + PADDING_X * 2;
     const boardHeight = (config.strings - 1) * STRING_SPACING + PADDING_Y * 2;
     const svgWidth = isVertical ? boardHeight : boardWidth;
     const svgHeight = isVertical ? boardWidth : boardHeight;
 
-    // Clamp currentPage if diagrams count shrinks
-    useEffect(() => {
-        if (currentPage >= diagrams.length) {
-            setCurrentPage(Math.max(0, diagrams.length - 1));
-        }
-    }, [diagrams.length, currentPage]);
-
     // Measure content for whitespace fix (fit mode)
     React.useLayoutEffect(() => {
         if (contentRef.current) {
-            setContentNaturalHeight(contentRef.current.offsetHeight);
+            const nextHeight = contentRef.current.offsetHeight;
+            setContentNaturalHeight(current => current === nextHeight ? current : nextHeight);
         }
-    });
+    }, [diagrams.length, svgWidth, svgHeight, useSideBySideDiagrams, isScrollMode]);
 
     // Auto-scale: both modes
     React.useLayoutEffect(() => {
@@ -69,12 +67,12 @@ const Fretboard = ({
                 // Scale a single fretboard to fit; leave ~120px for title row + margins
                 const scaleX = availableWidth / svgWidth;
                 const scaleY = (availableHeight - 120) / svgHeight;
-                setScale(Math.min(scaleX, scaleY));
+                setScale(Math.min(scaleX, scaleY, 1));
             } else {
                 if (!contentRef.current) return;
                 const natW = contentRef.current.offsetWidth || svgWidth + 40;
                 const natH = contentRef.current.offsetHeight || svgHeight * diagrams.length + 80;
-                setScale(Math.min(availableWidth / natW, availableHeight / natH));
+                setScale(Math.min(availableWidth / natW, availableHeight / natH, 1));
             }
         };
         const obs = new ResizeObserver(updateScale);
@@ -182,7 +180,7 @@ const Fretboard = ({
         const minFret = config.startFret === 1 ? -1 : 0;
         const marks = diagram.marks.filter(m => m.fretIndex >= minFret && m.fretIndex < config.frets);
 
-        // Always use motion.g so element type never changes — switching types causes
+        // Always use Motion.g so element type never changes — switching types causes
         // React to remount and framer-motion to replay entrance animations.
         // When skipMarkAnimation is true (transpose), use duration:0 for instant snap.
         const mProps = {
@@ -192,12 +190,6 @@ const Fretboard = ({
             transition: skipMarkAnimation
                 ? { duration: 0 }
                 : { type: 'spring', stiffness: 300, damping: 20 }
-        };
-
-        const renderShape = (color, clipPath = null) => {
-            const p = clipPath ? { clipPath: `url(#${clipPath})` } : {};
-            if (marks.length === 0) return null; // resolved per-mark below
-            return null; // placeholder — used inline
         };
 
         return (
@@ -300,6 +292,7 @@ const Fretboard = ({
                             const { x, y } = getCoordinates(mark.stringIndex, mark.fretIndex);
                             const clipId = `sc-${diagramIndex}-${mark.stringIndex}-${mark.fretIndex}`;
                             const hasSplit = !!mark.color2;
+                            const displayText = getMarkDisplayText ? getMarkDisplayText(mark) : mark.text;
 
                             const shape = (color, clip = null) => {
                                 const p = clip ? { clipPath: `url(#${clip})` } : {};
@@ -308,21 +301,20 @@ const Fretboard = ({
                                 if (mark.shape === 'triangle') return <polygon  points={`${x},${y-24} ${x-21},${y+18} ${x+21},${y+18}`} fill={color} {...p} />;
                                 if (mark.shape === 'star')     return <polygon  points={`${x},${y-27} ${x+8},${y-8} ${x+27},${y-8} ${x+12},${y+8} ${x+18},${y+27} ${x},${y+15} ${x-18},${y+27} ${x-12},${y+8} ${x-27},${y-8} ${x-8},${y-8}`} fill={color} {...p} />;
                                 if (mark.shape === 'pentagon') return <polygon  points={`${x},${y-24} ${x+22},${y-7} ${x+15},${y+24} ${x-15},${y+24} ${x-22},${y-7}`} fill={color} {...p} />;
-                                if (mark.shape === 'heart')    return <path     d={`M ${x} ${y+19} C ${x-26} ${y} ${x-18} ${y-23} ${x-3} ${y-15} C ${x} ${y-13} ${x} ${y-13} ${x+3} ${y-15} C ${x+18} ${y-23} ${x+26} ${y} ${x} ${y+19} Z`} fill={color} {...p} />;
                                 if (mark.shape === 'cross')    return <polygon  points={`${x-8},${y-24} ${x+8},${y-24} ${x+8},${y-8} ${x+24},${y-8} ${x+24},${y+8} ${x+8},${y+8} ${x+8},${y+24} ${x-8},${y+24} ${x-8},${y+8} ${x-24},${y+8} ${x-24},${y-8} ${x-8},${y-8}`} fill={color} transform={`rotate(45,${x},${y})`} {...p} />;
                                 return null;
                             };
 
                             return (
-                                <motion.g key={mark.id || `${mark.stringIndex}-${mark.fretIndex}`} {...mProps}>
+                                <Motion.g key={mark.id || `${mark.stringIndex}-${mark.fretIndex}`} {...mProps}>
                                     {hasSplit ? <>{shape(mark.color2)}{shape(mark.color, clipId)}</> : shape(mark.color)}
-                                    {mark.text && (
+                                    {displayText && (
                                         <text x={x} y={y} dy="0.35em" textAnchor="middle" fill="white" fontSize="14"
                                             style={{ fontWeight: 'bold', textShadow: '0 1px 2px rgba(0,0,0,0.8)', pointerEvents: 'none', userSelect: 'none' }}>
-                                            {mark.text}
+                                            {displayText}
                                         </text>
                                     )}
-                                </motion.g>
+                                </Motion.g>
                             );
                         })}
                     </AnimatePresence>
@@ -330,14 +322,16 @@ const Fretboard = ({
                     {/* Ghost mark labels — drawn last so they show through colored marks */}
                     {(diagram.ghostMarks || []).filter(gm => {
                         const minFret = config.startFret === 1 ? -1 : 0;
-                        return gm.fretIndex >= minFret && gm.fretIndex < config.frets && gm.text;
+                        return gm.fretIndex >= minFret && gm.fretIndex < config.frets;
                     }).map(gm => {
+                        const displayText = getMarkDisplayText ? getMarkDisplayText(gm) : gm.text;
+                        if (!displayText) return null;
                         const { x, y } = getCoordinates(gm.stringIndex, gm.fretIndex);
                         return (
                             <text key={`gml-${gm.id}`} x={x} y={y} dy="0.35em" textAnchor="middle"
                                 fill="var(--text-primary)" fontSize="13" fontWeight="700"
                                 fontFamily="inherit" style={{ pointerEvents: 'none', userSelect: 'none' }}>
-                                {gm.text}
+                                {displayText}
                             </text>
                         );
                     })}
@@ -395,6 +389,40 @@ const Fretboard = ({
         transition: 'all 0.2s ease-out',
     };
 
+    const getDiagramName = (diagram, index) => {
+        if (diagram.name) return diagram.name;
+        return index === 0 ? chordName : '';
+    };
+
+    const handleDiagramNameChange = (diagramIndex, value) => {
+        onUpdateDiagramName?.(diagramIndex, value);
+        if (diagramIndex === 0) setChordName(value);
+    };
+
+    const renderDiagramBlock = (diagram, diagramIndex, interactive = true, showGap = true) => (
+        <div
+            key={diagram.id}
+            className={`diagram-block ${useSideBySideDiagrams ? 'diagram-block-vertical-column' : ''}`}
+            style={{
+                display: useSideBySideDiagrams ? 'inline-flex' : 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                flex: `0 0 ${svgWidth}px`,
+                width: svgWidth,
+                marginBottom: !useSideBySideDiagrams && showGap && diagramIndex < diagrams.length - 1 ? GAP : 0,
+            }}
+        >
+            <input
+                readOnly={!interactive}
+                value={getDiagramName(diagram, diagramIndex)}
+                onChange={interactive ? e => handleDiagramNameChange(diagramIndex, e.target.value) : undefined}
+                placeholder="Click to Edit"
+                style={{ ...chordInputStyle, width: svgWidth, maxWidth: svgWidth, marginBottom: '1rem' }}
+            />
+            {renderSVG(diagram, diagramIndex, interactive, false)}
+        </div>
+    );
+
     // ── SCROLL MODE ────────────────────────────────────────────────────────
 
     if (isScrollMode) {
@@ -408,12 +436,16 @@ const Fretboard = ({
                     style={{
                         position: 'absolute', left: '-9999px', top: 0,
                         pointerEvents: 'none',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center',
+                        display: 'flex',
+                        flexDirection: useSideBySideDiagrams ? 'row' : 'column',
+                        alignItems: useSideBySideDiagrams ? 'flex-start' : 'center',
+                        flexWrap: 'nowrap',
+                        gap: useSideBySideDiagrams ? `${GAP * 2}px` : 0,
+                        width: useSideBySideDiagrams ? 'max-content' : 'auto',
                         padding: '20px', background: '#ffffff',
                     }}
                 >
-                    <input readOnly value={chordName} style={{ ...chordInputStyle, fontSize: '2rem' }} />
-                    {diagrams.map((d, i) => renderSVG(d, i, false, true))}
+                    {diagrams.map((d, i) => renderDiagramBlock(d, i, false, true))}
                 </div>
 
                 {/* Visible editing view — one row at a time */}
@@ -426,23 +458,23 @@ const Fretboard = ({
                                 <button
                                     className="scroll-nav-btn"
                                     onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
-                                    disabled={currentPage === 0}
+                                    disabled={visiblePage === 0}
                                     title="Previous row"
                                 >▲</button>
                                 <div className="scroll-row-indicator">
-                                    {currentPage + 1} / {diagrams.length}
+                                    {visiblePage + 1} / {diagrams.length}
                                 </div>
                                 <button
                                     className="scroll-nav-btn"
                                     onClick={() => setCurrentPage(p => Math.min(diagrams.length - 1, p + 1))}
-                                    disabled={currentPage === diagrams.length - 1}
+                                    disabled={visiblePage === diagrams.length - 1}
                                     title="Next row"
                                 >▼</button>
                             </div>
                         )}
                         <input
-                            value={chordName}
-                            onChange={e => setChordName(e.target.value)}
+                            value={getDiagramName(diagrams[visiblePage], visiblePage)}
+                            onChange={e => handleDiagramNameChange(visiblePage, e.target.value)}
                             placeholder="Click to Edit"
                             style={{ ...chordInputStyle, fontSize: '2rem', width: svgWidth, marginBottom: 0 }}
                         />
@@ -456,7 +488,7 @@ const Fretboard = ({
                         transformOrigin: 'top center',
                         marginBottom: `${svgHeight * (scale - 1)}px`,
                     }}>
-                        {renderSVG(diagrams[currentPage], currentPage, true, false)}
+                        {renderSVG(diagrams[visiblePage], visiblePage, true, false)}
                     </div>
 
                 </div>
@@ -469,9 +501,54 @@ const Fretboard = ({
     // CSS transform doesn't affect layout — compensate with negative bottom margin
     const marginFix = contentNaturalHeight * (scale - 1);
 
+    if (isVertical) {
+        return (
+            <div className="fretboard-container" ref={containerRef}>
+                <div
+                className="fretboard-scroll-area vertical-fit-scroll-area"
+                style={{
+                    justifyContent: 'flex-start',
+                    alignItems: 'flex-start',
+                    overflow: 'auto',
+                }}
+                >
+                    <div
+                        style={{
+                            transform: `scale(${scale})`,
+                            transformOrigin: 'top left',
+                            marginBottom: `${marginFix}px`,
+                            transition: 'transform 0.2s ease-out',
+                            flexShrink: 0,
+                        }}
+                    >
+                        <div
+                            ref={contentRef}
+                            className="actual-download-target vertical-diagram-strip"
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                flexWrap: 'nowrap',
+                                alignItems: 'start',
+                                gap: `${GAP * 2}px`,
+                                width: 'max-content',
+                                padding: '20px',
+                                background: 'var(--bg-main,#ffffff)'
+                            }}
+                        >
+                            {diagrams.map((d, i) => renderDiagramBlock(d, i, true, false))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="fretboard-container" ref={containerRef}>
-            <div className="fretboard-scroll-area" style={{ justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
+            <div
+                className="fretboard-scroll-area"
+                style={{ justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}
+            >
                 <div style={{
                     transform: `scale(${scale})`,
                     transformOrigin: 'top center',
@@ -482,15 +559,17 @@ const Fretboard = ({
                     <div
                         ref={contentRef}
                         className="actual-download-target"
-                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px', background: 'var(--bg-main,#ffffff)' }}
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: 0,
+                            width: 'auto',
+                            padding: '20px',
+                            background: 'var(--bg-main,#ffffff)'
+                        }}
                     >
-                        <input
-                            value={chordName}
-                            onChange={e => setChordName(e.target.value)}
-                            placeholder="Click to Edit"
-                            style={chordInputStyle}
-                        />
-                        {diagrams.map((d, i) => renderSVG(d, i, true, true))}
+                        {diagrams.map((d, i) => renderDiagramBlock(d, i, true, true))}
                     </div>
                 </div>
             </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Plus, Minus } from 'lucide-react';
 import './Piano.css';
 
@@ -41,7 +41,6 @@ const BLACK_KEY_INDICES = [1, 3, 6, 8, 10];
 const Piano = ({
     pianoMarks,
     onTogglePianoMark,
-    activeTool,
     pianoConfig,
     setPianoConfig,
     showWhiteNames,
@@ -134,7 +133,7 @@ const Piano = ({
                                 {/* Dot Mark */}
                                 <AnimatePresence>
                                     {mark && (
-                                        <motion.div
+                                        <Motion.div
                                             className="piano-dot white-dot"
                                             initial={{ scale: 0, opacity: 0 }}
                                             animate={{ scale: 1, opacity: 1 }}
@@ -177,7 +176,7 @@ const Piano = ({
                                 {/* Dot Mark (smaller for black keys) */}
                                 <AnimatePresence>
                                     {mark && (
-                                        <motion.div
+                                        <Motion.div
                                             className="piano-dot black-dot"
                                             initial={{ scale: 0, opacity: 0 }}
                                             animate={{ scale: 1, opacity: 1 }}

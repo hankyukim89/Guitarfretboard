@@ -122,6 +122,20 @@
     cursor: crosshair;
 }
 
+.vertical-diagram-strip {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: flex-start !important;
+    width: max-content !important;
+}
+
+.vertical-diagram-strip .diagram-block {
+    display: inline-flex !important;
+    flex-direction: column !important;
+    flex-shrink: 0 !important;
+}
+
 .mark-text-input {
     width: 80px;
     height: 32px;
