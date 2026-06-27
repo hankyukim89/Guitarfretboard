@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Trash2, Download, Plus, HelpCircle, Info, Guitar, FolderOpen, Save, Volume2, VolumeX } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Trash2, Download, Plus, HelpCircle, Info, Guitar, FolderOpen, Save, Volume2, VolumeX, ChevronDown, LogIn, LogOut, Cloud } from 'lucide-react';
 import './ControlPanel.css';
 import CustomColorPicker from './CustomColorPicker';
 
@@ -18,6 +18,7 @@ const ControlPanel = ({
     onNumDiagramsChange,
     zoomMode, onZoomModeChange,
     onClear, onDownload, onSave,
+    firebaseConfigured, user, authReady, cloudBusy, onSignIn, onSignOut,
     onModalToggle,
     isLoadSidebarOpen, setIsLoadSidebarOpen,
     soundEnabled, onSoundToggle,
@@ -29,6 +30,8 @@ const ControlPanel = ({
 }) => {
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
+    const [showRootMenu, setShowRootMenu] = useState(false);
+    const rootMenuRef = useRef(null);
     const [customPalette, setCustomPalette] = useState(() => {
         const saved = localStorage.getItem('custom_guitar_palette');
         return saved ? JSON.parse(saved) : [];
@@ -47,6 +50,21 @@ const ControlPanel = ({
         if (!showColorPicker) sync();
         return () => window.removeEventListener('storage', sync);
     }, [showColorPicker]);
+
+    useEffect(() => {
+        if (!showRootMenu) return;
+        const closeMenu = (event) => {
+            if (event.key === 'Escape' || !rootMenuRef.current?.contains(event.target)) {
+                setShowRootMenu(false);
+            }
+        };
+        document.addEventListener('pointerdown', closeMenu);
+        document.addEventListener('keydown', closeMenu);
+        return () => {
+            document.removeEventListener('pointerdown', closeMenu);
+            document.removeEventListener('keydown', closeMenu);
+        };
+    }, [showRootMenu]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -214,21 +232,38 @@ const ControlPanel = ({
                                 Major
                             </button>
                         </div>
-                        <label
-                            className="tb-select-control tb-root-select"
-                            title="Choose root key"
-                        >
-                            <span className="tb-select-prefix">Root:</span>
-                            <select
-                                value={rootKeyValue}
-                                onChange={(e) => onRootKeyChange(e.target.value)}
-                                aria-label="Root key"
+                        <div className="tb-root-picker" ref={rootMenuRef}>
+                            <button
+                                className={`tb-root-trigger ${showRootMenu ? 'is-open' : ''}`}
+                                onClick={() => setShowRootMenu(open => !open)}
+                                title="Choose root key"
+                                aria-label={`Root key: ${rootKeyValue}`}
+                                aria-haspopup="listbox"
+                                aria-expanded={showRootMenu}
                             >
-                                {rootKeyOptions.map(key => (
-                                    <option key={key.value} value={key.value}>{key.label}</option>
-                                ))}
-                            </select>
-                        </label>
+                                <span>{rootKeyValue}</span>
+                                <ChevronDown size={12} />
+                            </button>
+                            {showRootMenu && (
+                                <div className="tb-root-menu" role="listbox" aria-label="Root key">
+                                    {rootKeyOptions.map(key => (
+                                        <button
+                                            key={key.value}
+                                            className={rootKeyValue === key.value ? 'is-active' : ''}
+                                            onClick={() => {
+                                                onRootKeyChange(key.value);
+                                                setShowRootMenu(false);
+                                            }}
+                                            role="option"
+                                            aria-selected={rootKeyValue === key.value}
+                                            title={key.label}
+                                        >
+                                            {key.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                         <button
                             className={`tb-btn ${showScaleDegrees ? 'is-active' : ''}`}
                             onClick={onScaleDegreeToggle}
@@ -245,6 +280,33 @@ const ControlPanel = ({
                         >
                             Note
                         </button>
+                    </div>
+                </div>
+
+                <div className="tb-group tb-account-group">
+                    <span className="tb-label">Account</span>
+                    <div className="tb-row-items">
+                        {!firebaseConfigured ? (
+                            <button className="tb-btn tb-account-btn" disabled title="Add Firebase values to .env.local">
+                                <Cloud size={14} /> Setup needed
+                            </button>
+                        ) : !authReady ? (
+                            <button className="tb-btn tb-account-btn" disabled>Connecting…</button>
+                        ) : user ? (
+                            <>
+                                <div className="tb-user" title={user.email || user.displayName}>
+                                    {user.photoURL ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" /> : <Cloud size={14} />}
+                                    <span>{user.displayName || user.email || 'Signed in'}</span>
+                                </div>
+                                <button className="tb-btn tb-btn-icon" onClick={onSignOut} title="Sign out" aria-label="Sign out">
+                                    <LogOut size={14} />
+                                </button>
+                            </>
+                        ) : (
+                            <button className="tb-btn tb-account-btn" onClick={onSignIn} disabled={cloudBusy}>
+                                <LogIn size={14} /> Sign in with Google
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -327,7 +389,7 @@ const ControlPanel = ({
                 <div className="tb-group tb-group-actions">
                     <span className="tb-label">Files</span>
                     <div className="tb-row-items">
-                        <button className="tb-btn tb-btn-icon" onClick={onSave} title="Save diagram" aria-label="Save diagram">
+                        <button className="tb-btn tb-btn-icon" onClick={onSave} disabled={cloudBusy} title={user ? 'Save diagram to cloud' : 'Save diagram on this device'} aria-label="Save diagram">
                             <Save size={15} />
                         </button>
                         <button

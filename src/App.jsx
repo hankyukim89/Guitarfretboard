@@ -1,9 +1,18 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { toBlob } from 'html-to-image';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { X, Trash2 } from 'lucide-react';
 import ControlPanel from './components/ControlPanel';
 import Fretboard from './components/Fretboard';
+import {
+  deleteUserDiagram,
+  getUserDiagrams,
+  isFirebaseConfigured,
+  observeAuth,
+  saveUserDiagram,
+  signInWithGoogle,
+  signOutUser,
+} from './firebase';
 import './index.css';
 
 const MAX_DIAGRAMS = 48;
@@ -54,11 +63,48 @@ function App() {
     const saved = localStorage.getItem('guitar-diagrams');
     return saved ? JSON.parse(saved) : [];
   });
+  const [user, setUser] = useState(null);
+  const [authReady, setAuthReady] = useState(!isFirebaseConfigured);
+  const [cloudBusy, setCloudBusy] = useState(false);
+  const [cloudMessage, setCloudMessage] = useState('');
 
   const [zoomMode, setZoomMode] = useState('fit');
   const [skipMarkAnimation, setSkipMarkAnimation] = useState(false); // 'fit' | 'scroll'
   const [soundEnabled, setSoundEnabled] = useState(false);
   const audioCtxRef = useRef(null);
+
+  useEffect(() => observeAuth(async (nextUser) => {
+    setUser(nextUser);
+    setAuthReady(true);
+    setCloudMessage('');
+
+    if (!nextUser) {
+      const local = localStorage.getItem('guitar-diagrams');
+      setSavedDiagrams(local ? JSON.parse(local) : []);
+      return;
+    }
+
+    setCloudBusy(true);
+    try {
+      let cloudDiagrams = await getUserDiagrams(nextUser.uid);
+      const local = localStorage.getItem('guitar-diagrams');
+      const localDiagrams = local ? JSON.parse(local) : [];
+
+      if (cloudDiagrams.length === 0 && localDiagrams.length > 0) {
+        const migratedDiagrams = localDiagrams.map(diagram => ({ ...diagram, id: String(diagram.id) }));
+        await Promise.all(migratedDiagrams.map(diagram => saveUserDiagram(nextUser.uid, diagram)));
+        cloudDiagrams = migratedDiagrams;
+        setCloudMessage(`Moved ${migratedDiagrams.length} saved diagram${migratedDiagrams.length === 1 ? '' : 's'} to your account.`);
+      }
+
+      setSavedDiagrams(cloudDiagrams);
+    } catch (error) {
+      console.error('Failed to load cloud diagrams', error);
+      setCloudMessage('Could not load your cloud diagrams. Check Firestore setup.');
+    } finally {
+      setCloudBusy(false);
+    }
+  }), []);
 
   // ── Root / display labels ────────────────────────────────────────────────
   const [rootKey, setRootKey] = useState('C');
@@ -146,14 +192,15 @@ function App() {
     // Karplus-Strong plucked string synthesis
     const sr = ctx.sampleRate;
     const N = Math.max(2, Math.round(sr / freq));
-    const numSamples = Math.floor(sr * 3);
+    const noteDuration = 1.5;
+    const numSamples = Math.floor(sr * noteDuration);
     const delay = new Float32Array(N);
     for (let i = 0; i < N; i++) delay[i] = Math.random() * 2 - 1;
     const out = new Float32Array(numSamples);
     for (let i = 0; i < numSamples; i++) {
       const p = i % N;
       out[i] = delay[p];
-      delay[p] = 0.996 * 0.5 * (delay[p] + delay[(i + 1) % N]);
+      delay[p] = 0.992 * 0.5 * (delay[p] + delay[(i + 1) % N]);
     }
     const buf = ctx.createBuffer(1, numSamples, sr);
     buf.getChannelData(0).set(out);
@@ -166,6 +213,7 @@ function App() {
     // sources fire right away.
     const scheduleAt = ctx.currentTime + startTime;
     gain.gain.setValueAtTime(0.6, scheduleAt);
+    gain.gain.exponentialRampToValueAtTime(0.0001, scheduleAt + noteDuration);
     src.connect(gain);
     gain.connect(ctx.destination);
     src.start(scheduleAt);
@@ -221,18 +269,6 @@ function App() {
         marks: d.marks.map(m => ({ ...m, fretIndex: m.fretIndex + delta }))
       })));
       setTimeout(() => setSkipMarkAnimation(false), 50);
-
-      // Play transposed notes if sound is on
-      if (soundEnabled) {
-        const minFret = config.startFret === 1 ? -1 : 0;
-        getAudioCtx();
-        diagrams.forEach(d => d.marks.forEach(m => {
-          const newFret = m.fretIndex + delta;
-          if (newFret >= minFret && newFret < config.frets) {
-            playNoteAt(m.stringIndex, newFret, 0);
-          }
-        }));
-      }
     }
   };
 
@@ -367,7 +403,10 @@ function App() {
 
     const node = document.querySelector('.actual-download-target');
     if (!node) { if (wasScroll) setZoomMode('scroll'); return; }
+    const titleInputs = [...node.querySelectorAll('input[placeholder]')];
+    const placeholders = titleInputs.map(input => input.getAttribute('placeholder'));
     try {
+      titleInputs.forEach(input => input.setAttribute('placeholder', ''));
       const blob = await toBlob(node, { backgroundColor: '#ffffff' });
       if (!blob) throw new Error('Failed to generate image blob');
 
@@ -402,19 +441,20 @@ function App() {
       console.error('Failed to download image', err);
       alert('Failed to download image');
     } finally {
+      titleInputs.forEach((input, index) => input.setAttribute('placeholder', placeholders[index] || ''));
       if (wasScroll) setZoomMode('scroll');
     }
   };
 
   // ── Save / Load ──────────────────────────────────────────────────────────
-  const handleSaveDiagram = () => {
+  const handleSaveDiagram = async () => {
     const firstDiagramName = diagrams.find(d => d.name)?.name;
     let name = chordName || firstDiagramName || prompt('Enter a name for this diagram:');
     if (!name) return;
 
     const existingIndex = savedDiagrams.findIndex(d => d.name === name);
     const newDiagram = {
-      id: existingIndex >= 0 ? savedDiagrams[existingIndex].id : Date.now(),
+      id: existingIndex >= 0 ? savedDiagrams[existingIndex].id : crypto.randomUUID(),
       name,
       config: { ...config },
       chordName: name,
@@ -431,9 +471,24 @@ function App() {
       updated = [...savedDiagrams, newDiagram];
     }
 
-    setSavedDiagrams(updated);
-    localStorage.setItem('guitar-diagrams', JSON.stringify(updated));
-    setChordName(name);
+    setCloudBusy(true);
+    setCloudMessage('');
+    try {
+      if (user) {
+        await saveUserDiagram(user.uid, newDiagram);
+        setCloudMessage('Saved to your account.');
+      } else {
+        localStorage.setItem('guitar-diagrams', JSON.stringify(updated));
+        setCloudMessage('Saved on this device. Sign in to save across devices.');
+      }
+      setSavedDiagrams(updated);
+      setChordName(name);
+    } catch (error) {
+      console.error('Failed to save diagram', error);
+      setCloudMessage('Save failed. Check your Firebase setup and try again.');
+    } finally {
+      setCloudBusy(false);
+    }
   };
 
   const handleLoadDiagram = (diagram) => {
@@ -451,11 +506,43 @@ function App() {
     }
   };
 
-  const handleDeleteDiagram = (id) => {
+  const handleDeleteDiagram = async (id) => {
     if (window.confirm('Delete this saved diagram?')) {
       const updated = savedDiagrams.filter(d => d.id !== id);
-      setSavedDiagrams(updated);
-      localStorage.setItem('guitar-diagrams', JSON.stringify(updated));
+      setCloudBusy(true);
+      setCloudMessage('');
+      try {
+        if (user) await deleteUserDiagram(user.uid, id);
+        else localStorage.setItem('guitar-diagrams', JSON.stringify(updated));
+        setSavedDiagrams(updated);
+      } catch (error) {
+        console.error('Failed to delete diagram', error);
+        setCloudMessage('Delete failed. Please try again.');
+      } finally {
+        setCloudBusy(false);
+      }
+    }
+  };
+
+  const handleSignIn = async () => {
+    setCloudMessage('');
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      console.error('Google sign-in failed', error);
+      setCloudMessage(error.code === 'auth/unauthorized-domain'
+        ? 'This domain must be added to Firebase Authorized domains.'
+        : 'Google sign-in failed. Please try again.');
+    }
+  };
+
+  const handleSignOut = async () => {
+    setCloudMessage('');
+    try {
+      await signOutUser();
+    } catch (error) {
+      console.error('Sign-out failed', error);
+      setCloudMessage('Sign-out failed. Please try again.');
     }
   };
 
@@ -474,6 +561,12 @@ function App() {
         onClear={handleClear}
         onDownload={handleDownload}
         onSave={handleSaveDiagram}
+        firebaseConfigured={isFirebaseConfigured}
+        user={user}
+        authReady={authReady}
+        cloudBusy={cloudBusy}
+        onSignIn={handleSignIn}
+        onSignOut={handleSignOut}
         onModalToggle={setIsMainModalOpen}
         isLoadSidebarOpen={isLoadSidebarOpen}
         setIsLoadSidebarOpen={setIsLoadSidebarOpen}
@@ -543,14 +636,20 @@ function App() {
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             >
               <div className="sidebar-header">
-                <h3>Saved Diagrams</h3>
+                <div>
+                  <h3>Saved Diagrams</h3>
+                  <div className="sidebar-storage-label">{user ? 'Cloud library' : 'This device'}</div>
+                </div>
                 <button className="close-sidebar-btn" onClick={() => setIsLoadSidebarOpen(false)}>
                   <X size={20} />
                 </button>
               </div>
               <div className="sidebar-body">
+                {cloudMessage && <div className="cloud-message">{cloudMessage}</div>}
                 <div className="saved-diagrams-list-v2">
-                  {savedDiagrams.length === 0 ? (
+                  {cloudBusy ? (
+                    <div className="empty-state">Loading…</div>
+                  ) : savedDiagrams.length === 0 ? (
                     <div className="empty-state">No diagrams saved yet.</div>
                   ) : (
                     savedDiagrams.map((diagram) => (

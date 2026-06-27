@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "firebase": "^12.15.0",
     "framer-motion": "^12.23.26",
     "html-to-image": "^1.11.13",
     "lucide-react": "^0.562.0",

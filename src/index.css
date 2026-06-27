@@ -146,6 +146,13 @@ select:focus {
   font-weight: 700;
 }
 
+.sidebar-storage-label {
+  margin-top: 0.15rem;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
 .close-sidebar-btn {
   background: transparent;
   border: none;
@@ -172,6 +179,17 @@ select:focus {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
+}
+
+.cloud-message {
+  margin-bottom: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius-md);
+  color: #1d4ed8;
+  font-size: 0.78rem;
+  line-height: 1.4;
 }
 
 .diagram-item-v2 {

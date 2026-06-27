@@ -190,6 +190,16 @@
     color: #3b82f6;
 }
 
+.tb-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.tb-btn:disabled:hover {
+    border-color: #e2e8f0;
+    color: #334155;
+}
+
 .tb-btn.is-active {
     background: #3b82f6;
     border-color: #3b82f6;
@@ -253,50 +263,119 @@
     color: #fff;
 }
 
-/* ── Compact root key select ── */
-.tb-select-control {
+/* ── Compact root key picker ── */
+.tb-root-picker {
+    position: relative;
+    z-index: 20;
+}
+
+.tb-root-trigger {
+    width: 48px;
+    min-height: 32px;
+    padding: 0.3rem 0.42rem 0.3rem 0.55rem;
     display: flex;
     align-items: center;
-    min-height: 32px;
+    justify-content: space-between;
+    gap: 2px;
     background: #fff;
     border: 1.5px solid #e2e8f0;
     border-radius: 6px;
     color: #334155;
-    transition: all 0.1s;
-    overflow: hidden;
-}
-
-.tb-select-control:hover,
-.tb-select-control:focus-within {
-    border-color: #3b82f6;
-}
-
-.tb-select-prefix {
-    padding-left: 0.62rem;
-    color: #334155;
+    cursor: pointer;
+    font-family: inherit;
     font-size: 0.8rem;
     font-weight: 700;
     line-height: 1;
-    white-space: nowrap;
 }
 
-.tb-root-select select {
-    min-height: 30px;
-    padding: 0.24rem 1.35rem 0.24rem 0.28rem;
+.tb-root-trigger:hover,
+.tb-root-trigger.is-open {
+    border-color: #3b82f6;
+    color: #2563eb;
+}
+
+.tb-root-trigger svg {
+    transition: transform 0.15s ease;
+}
+
+.tb-root-trigger.is-open svg {
+    transform: rotate(180deg);
+}
+
+.tb-root-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 176px;
+    padding: 6px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 3px;
+    background: #fff;
+    border: 1px solid #dbe3ee;
+    border-radius: 9px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+}
+
+.tb-root-menu button {
+    height: 28px;
+    padding: 0;
     background: transparent;
     border: 0;
-    border-radius: 0;
-    box-shadow: none;
+    border-radius: 5px;
     color: #334155;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-family: inherit;
+    font-size: 0.75rem;
     font-weight: 700;
     line-height: 1;
 }
 
-.tb-root-select select:focus {
-    border-color: transparent;
-    box-shadow: none;
+.tb-root-menu button:hover {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.tb-root-menu button.is-active {
+    background: #3b82f6;
+    color: #fff;
+}
+
+/* ── Account ── */
+.tb-account-group {
+    margin-left: auto;
+}
+
+.tb-account-btn {
+    min-width: 126px;
+}
+
+.tb-user {
+    height: 32px;
+    max-width: 170px;
+    padding: 0.25rem 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #fff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 6px;
+    color: #334155;
+    font-size: 0.76rem;
+    font-weight: 650;
+}
+
+.tb-user img {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.tb-user span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* ── Zoom toggle (Fit / Scroll) ── */
@@ -616,5 +695,9 @@
 
     .tb-group-layout {
         flex-basis: 100%;
+    }
+
+    .tb-account-group {
+        margin-left: 0;
     }
 }
