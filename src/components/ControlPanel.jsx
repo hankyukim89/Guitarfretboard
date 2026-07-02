@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Trash2, Download, Plus, HelpCircle, Info, Guitar, FolderOpen, Save, Volume2, VolumeX, ChevronDown, LogIn, LogOut, Cloud } from 'lucide-react';
+import { Trash2, Download, Plus, HelpCircle, Info, FolderOpen, Save, Volume2, VolumeX, ChevronDown } from 'lucide-react';
 import './ControlPanel.css';
 import CustomColorPicker from './CustomColorPicker';
 
@@ -18,7 +18,7 @@ const ControlPanel = ({
     onNumDiagramsChange,
     zoomMode, onZoomModeChange,
     onClear, onDownload, onSave,
-    firebaseConfigured, user, authReady, cloudBusy, onSignIn, onSignOut,
+    user,
     onModalToggle,
     isLoadSidebarOpen, setIsLoadSidebarOpen,
     soundEnabled, onSoundToggle,
@@ -78,11 +78,6 @@ const ControlPanel = ({
 
             {/* Row 1: setup, view, playback, and scale controls */}
             <div className="toolbar-row toolbar-row-top">
-
-                <div className="tb-brand">
-                    <Guitar size={18} />
-                    FretDiagram
-                </div>
 
                 <div className="tb-group tb-group-layout">
                     <span className="tb-label">Layout</span>
@@ -216,14 +211,6 @@ const ControlPanel = ({
                     <div className="tb-row-items">
                         <div className="tb-mode-toggle" aria-label="Key mode">
                             <button
-                                className={`tb-mode-btn ${keyMode === 'minor' ? 'is-active' : ''}`}
-                                onClick={() => onKeyModeChange('minor')}
-                                title="Minor key"
-                                aria-pressed={keyMode === 'minor'}
-                            >
-                                Minor
-                            </button>
-                            <button
                                 className={`tb-mode-btn ${keyMode === 'major' ? 'is-active' : ''}`}
                                 onClick={() => onKeyModeChange('major')}
                                 title="Major key"
@@ -231,8 +218,17 @@ const ControlPanel = ({
                             >
                                 Major
                             </button>
+                            <button
+                                className={`tb-mode-btn ${keyMode === 'minor' ? 'is-active' : ''}`}
+                                onClick={() => onKeyModeChange('minor')}
+                                title="Minor key"
+                                aria-pressed={keyMode === 'minor'}
+                            >
+                                Minor
+                            </button>
                         </div>
                         <div className="tb-root-picker" ref={rootMenuRef}>
+                            <span className="tb-control-label">Key</span>
                             <button
                                 className={`tb-root-trigger ${showRootMenu ? 'is-open' : ''}`}
                                 onClick={() => setShowRootMenu(open => !open)}
@@ -278,35 +274,8 @@ const ControlPanel = ({
                             title={showNoteLabels ? 'Hide note names' : 'Show note names'}
                             aria-pressed={showNoteLabels}
                         >
-                            Note
+                            Note #
                         </button>
-                    </div>
-                </div>
-
-                <div className="tb-group tb-account-group">
-                    <span className="tb-label">Account</span>
-                    <div className="tb-row-items">
-                        {!firebaseConfigured ? (
-                            <button className="tb-btn tb-account-btn" disabled title="Add Firebase values to .env.local">
-                                <Cloud size={14} /> Setup needed
-                            </button>
-                        ) : !authReady ? (
-                            <button className="tb-btn tb-account-btn" disabled>Connecting…</button>
-                        ) : user ? (
-                            <>
-                                <div className="tb-user" title={user.email || user.displayName}>
-                                    {user.photoURL ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" /> : <Cloud size={14} />}
-                                    <span>{user.displayName || user.email || 'Signed in'}</span>
-                                </div>
-                                <button className="tb-btn tb-btn-icon" onClick={onSignOut} title="Sign out" aria-label="Sign out">
-                                    <LogOut size={14} />
-                                </button>
-                            </>
-                        ) : (
-                            <button className="tb-btn tb-account-btn" onClick={onSignIn} disabled={cloudBusy}>
-                                <LogIn size={14} /> Sign in with Google
-                            </button>
-                        )}
                     </div>
                 </div>
 
@@ -389,7 +358,7 @@ const ControlPanel = ({
                 <div className="tb-group tb-group-actions">
                     <span className="tb-label">Files</span>
                     <div className="tb-row-items">
-                        <button className="tb-btn tb-btn-icon" onClick={onSave} disabled={cloudBusy} title={user ? 'Save diagram to cloud' : 'Save diagram on this device'} aria-label="Save diagram">
+                        <button className="tb-btn tb-btn-icon" onClick={onSave} title={user ? 'Save diagram and sync to cloud' : 'Save diagram on this device'} aria-label="Save diagram">
                             <Save size={15} />
                         </button>
                         <button

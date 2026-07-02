@@ -8,6 +8,17 @@ const PADDING_X = 100;
 const PADDING_Y = 60;
 const GAP = 12;
 
+const DIAGRAM_TITLE_INPUT_PROPS = {
+    type: 'text',
+    autoComplete: 'off',
+    inputMode: 'text',
+    'data-1p-ignore': 'true',
+    'data-lpignore': 'true',
+    'data-bwignore': 'true',
+    'data-keeper-ignore': 'true',
+    'data-form-type': 'other',
+};
+
 const INLAYS = [3, 5, 7, 9, 12, 15, 17, 19, 21, 24];
 const DOUBLE_INLAYS = [12, 24];
 
@@ -407,18 +418,23 @@ const Fretboard = ({
                 display: useSideBySideDiagrams ? 'inline-flex' : 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                flex: `0 0 ${svgWidth}px`,
+                flex: useSideBySideDiagrams ? `0 0 ${svgWidth}px` : '0 0 auto',
                 width: svgWidth,
                 marginBottom: !useSideBySideDiagrams && showGap && diagramIndex < diagrams.length - 1 ? GAP : 0,
             }}
         >
-            <input
-                readOnly={!interactive}
-                value={getDiagramName(diagram, diagramIndex)}
-                onChange={interactive ? e => handleDiagramNameChange(diagramIndex, e.target.value) : undefined}
-                placeholder="Click to Edit"
-                style={{ ...chordInputStyle, width: svgWidth, maxWidth: svgWidth, marginBottom: '1rem' }}
-            />
+            {diagramIndex === 0 && (
+                <input
+                    {...DIAGRAM_TITLE_INPUT_PROPS}
+                    name="diagram-title-0"
+                    aria-label="Diagram title"
+                    readOnly={!interactive}
+                    value={getDiagramName(diagram, diagramIndex)}
+                    onChange={interactive ? e => handleDiagramNameChange(diagramIndex, e.target.value) : undefined}
+                    placeholder="Click to Edit"
+                    style={{ ...chordInputStyle, width: svgWidth, maxWidth: svgWidth, marginBottom: '1rem' }}
+                />
+            )}
             {renderSVG(diagram, diagramIndex, interactive, false)}
         </div>
     );
@@ -472,12 +488,17 @@ const Fretboard = ({
                                 >▼</button>
                             </div>
                         )}
-                        <input
-                            value={getDiagramName(diagrams[visiblePage], visiblePage)}
-                            onChange={e => handleDiagramNameChange(visiblePage, e.target.value)}
-                            placeholder="Click to Edit"
-                            style={{ ...chordInputStyle, fontSize: '2rem', width: svgWidth, marginBottom: 0 }}
-                        />
+                        {visiblePage === 0 && (
+                            <input
+                                {...DIAGRAM_TITLE_INPUT_PROPS}
+                                name="diagram-title-0"
+                                aria-label="Diagram title"
+                                value={getDiagramName(diagrams[visiblePage], visiblePage)}
+                                onChange={e => handleDiagramNameChange(visiblePage, e.target.value)}
+                                placeholder="Click to Edit"
+                                style={{ ...chordInputStyle, fontSize: '2rem', width: svgWidth, marginBottom: 0 }}
+                            />
+                        )}
                     </div>
 
                     {/* Fretboard below — scaled to fit, same as fit mode */}

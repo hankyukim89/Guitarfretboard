@@ -1,4 +1,4 @@
 #!/bin/bash
-cd "/Users/kyu-macbookpro/Documents/Programs/Guitarfretboard"
+cd "$(dirname "$0")"
 echo "Starting your Guitar Fretboard App..."
 npm run dev

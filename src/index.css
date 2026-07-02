@@ -69,6 +69,135 @@ select:focus {
   overflow: hidden;
 }
 
+/* Brand and account live in the workspace, separate from the tool controls. */
+.workspace-identity {
+  min-height: 42px;
+  padding: 0.4rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  background: #fff;
+}
+
+.workspace-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #0f172a;
+  font-size: 1rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.workspace-brand svg {
+  color: var(--accent-primary);
+}
+
+.workspace-account {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.workspace-account-btn,
+.workspace-signout-btn {
+  min-height: 28px;
+  padding: 0.25rem 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.28rem;
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 6px;
+  color: #334155;
+  font-size: 0.8rem;
+  font-weight: 650;
+  white-space: nowrap;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+
+.workspace-account-btn:hover:not(:disabled),
+.workspace-signout-btn:hover:not(:disabled) {
+  background: #eff6ff;
+  border-color: var(--accent-primary);
+  color: #2563eb;
+}
+
+.workspace-account-btn:disabled,
+.workspace-signout-btn:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.workspace-account-btn {
+  min-width: 0;
+}
+
+.workspace-signout-btn {
+  background: transparent;
+  border-color: transparent;
+  color: #64748b;
+}
+
+.workspace-user {
+  height: 28px;
+  max-width: 260px;
+  padding: 0.2rem 0.45rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #f8fafc;
+  border: 0;
+  border-radius: 6px;
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.workspace-user img {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.workspace-user-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  background: #22c55e;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px #dcfce7;
+}
+
+.workspace-user span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-cloud-message {
+  padding: 0.38rem 0.55rem;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  color: #1d4ed8;
+  font-size: 0.76rem;
+}
+
+@media (max-width: 600px) {
+  .workspace-identity {
+    padding: 0.5rem;
+  }
+
+  .workspace-cloud-message {
+    width: 100%;
+  }
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

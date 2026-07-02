@@ -31,20 +31,6 @@
     min-height: 54px;
 }
 
-/* ── Brand ── */
-.tb-brand {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    font-weight: 800;
-    font-size: 1rem;
-    color: #0f172a;
-    white-space: nowrap;
-    flex-shrink: 0;
-    letter-spacing: 0;
-    margin-right: 0.15rem;
-}
-
 /* ── Separator ── */
 .tb-sep {
     display: none;
@@ -267,6 +253,20 @@
 .tb-root-picker {
     position: relative;
     z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+}
+
+.tb-control-label {
+    font-size: 0.58rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    white-space: nowrap;
 }
 
 .tb-root-trigger {
@@ -339,43 +339,6 @@
 .tb-root-menu button.is-active {
     background: #3b82f6;
     color: #fff;
-}
-
-/* ── Account ── */
-.tb-account-group {
-    margin-left: auto;
-}
-
-.tb-account-btn {
-    min-width: 126px;
-}
-
-.tb-user {
-    height: 32px;
-    max-width: 170px;
-    padding: 0.25rem 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    background: #fff;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 6px;
-    color: #334155;
-    font-size: 0.76rem;
-    font-weight: 650;
-}
-
-.tb-user img {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.tb-user span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 /* ── Zoom toggle (Fit / Scroll) ── */
@@ -685,10 +648,6 @@
         row-gap: 0.5rem;
     }
 
-    .tb-brand {
-        width: 100%;
-    }
-
     .toolbar-help {
         margin-left: 0;
     }
@@ -697,7 +656,4 @@
         flex-basis: 100%;
     }
 
-    .tb-account-group {
-        margin-left: 0;
-    }
 }

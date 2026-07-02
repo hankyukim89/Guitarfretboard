@@ -35,6 +35,10 @@ const getFirebaseServices = async () => {
   return servicesPromise;
 };
 
+export const prepareFirebaseAuth = async () => {
+  if (isFirebaseConfigured) await getFirebaseServices();
+};
+
 export const observeAuth = (callback) => {
   if (!isFirebaseConfigured) {
     callback(null);
@@ -60,15 +64,17 @@ export const observeAuth = (callback) => {
 
 export const signInWithGoogle = async () => {
   const { auth, authModule, googleProvider } = await getFirebaseServices();
-  try {
-    await authModule.signInWithPopup(auth, googleProvider);
-  } catch (error) {
-    if (error.code === 'auth/popup-blocked') {
-      await authModule.signInWithRedirect(auth, googleProvider);
-      return;
-    }
-    throw error;
-  }
+  await authModule.signInWithPopup(auth, googleProvider);
+};
+
+export const signInWithEmail = async (email, password) => {
+  const { auth, authModule } = await getFirebaseServices();
+  await authModule.signInWithEmailAndPassword(auth, email, password);
+};
+
+export const createEmailAccount = async (email, password) => {
+  const { auth, authModule } = await getFirebaseServices();
+  await authModule.createUserWithEmailAndPassword(auth, email, password);
 };
 
 export const signOutUser = async () => {

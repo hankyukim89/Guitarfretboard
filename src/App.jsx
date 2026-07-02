@@ -1,22 +1,72 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { toBlob } from 'html-to-image';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { X, Trash2 } from 'lucide-react';
+import { X, Trash2, Guitar, LogOut, Cloud } from 'lucide-react';
 import ControlPanel from './components/ControlPanel';
 import Fretboard from './components/Fretboard';
+import AuthDialog from './components/AuthDialog';
 import {
+  createEmailAccount,
   deleteUserDiagram,
   getUserDiagrams,
   isFirebaseConfigured,
   observeAuth,
+  prepareFirebaseAuth,
   saveUserDiagram,
+  signInWithEmail,
   signInWithGoogle,
   signOutUser,
 } from './firebase';
 import './index.css';
 
 const MAX_DIAGRAMS = 48;
+const DIAGRAM_STORAGE_KEY = 'guitar-diagrams';
 const makeEmptyDiagram = () => ({ id: Date.now() + Math.random(), name: '', marks: [], ghostMarks: [] });
+
+const readLocalDiagrams = () => {
+  try {
+    const saved = localStorage.getItem(DIAGRAM_STORAGE_KEY);
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn('Ignoring invalid saved diagram data', error);
+    return [];
+  }
+};
+
+const writeLocalDiagrams = (items) => {
+  localStorage.setItem(DIAGRAM_STORAGE_KEY, JSON.stringify(items));
+};
+
+const toCloudDiagram = (diagram) => {
+  const cloudDiagram = { ...diagram };
+  delete cloudDiagram._pendingCloudSync;
+  delete cloudDiagram._cloudSynced;
+  return cloudDiagram;
+};
+
+const mergeSavedDiagrams = (...collections) => {
+  const byId = new Map();
+  collections.flat().forEach((diagram) => {
+    if (!diagram?.id) return;
+    const id = String(diagram.id);
+    const existing = byId.get(id);
+    const incomingTime = Date.parse(diagram.timestamp || 0) || 0;
+    const existingTime = Date.parse(existing?.timestamp || 0) || 0;
+    if (!existing || incomingTime >= existingTime) byId.set(id, { ...diagram, id });
+  });
+  return [...byId.values()].sort((a, b) =>
+    (Date.parse(b.timestamp || 0) || 0) - (Date.parse(a.timestamp || 0) || 0)
+  );
+};
+
+const getUntitledDiagramName = (items) => {
+  const names = new Set(items.map(item => item.name?.trim().toLowerCase()).filter(Boolean));
+  let number = 1;
+  while (names.has(`untitled diagram ${number}`)) number += 1;
+  return `Untitled Diagram ${number}`;
+};
 const KEY_OPTIONS = [
   { value: 'Cb', name: 'Cb', label: 'Cb (bbbbbbb)', pitchClass: 11, accidental: 'flats' },
   { value: 'Gb', name: 'Gb', label: 'Gb (bbbbbb)', pitchClass: 6, accidental: 'flats' },
@@ -59,12 +109,12 @@ function App() {
   // Each diagram has { id, marks }
   const [diagrams, setDiagrams] = useState([makeEmptyDiagram()]);
 
-  const [savedDiagrams, setSavedDiagrams] = useState(() => {
-    const saved = localStorage.getItem('guitar-diagrams');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [savedDiagrams, setSavedDiagrams] = useState(readLocalDiagrams);
   const [user, setUser] = useState(null);
   const [authReady, setAuthReady] = useState(!isFirebaseConfigured);
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
+  const [authBusy, setAuthBusy] = useState(false);
+  const [authMessage, setAuthMessage] = useState('');
   const [cloudBusy, setCloudBusy] = useState(false);
   const [cloudMessage, setCloudMessage] = useState('');
 
@@ -73,38 +123,66 @@ function App() {
   const [soundEnabled, setSoundEnabled] = useState(false);
   const audioCtxRef = useRef(null);
 
-  useEffect(() => observeAuth(async (nextUser) => {
-    setUser(nextUser);
-    setAuthReady(true);
-    setCloudMessage('');
+  useEffect(() => {
+    prepareFirebaseAuth().catch(error => console.error('Failed to prepare Firebase Auth', error));
+    return observeAuth(async (nextUser) => {
+      setUser(nextUser);
+      setAuthReady(true);
+      setCloudMessage('');
 
-    if (!nextUser) {
-      const local = localStorage.getItem('guitar-diagrams');
-      setSavedDiagrams(local ? JSON.parse(local) : []);
-      return;
-    }
-
-    setCloudBusy(true);
-    try {
-      let cloudDiagrams = await getUserDiagrams(nextUser.uid);
-      const local = localStorage.getItem('guitar-diagrams');
-      const localDiagrams = local ? JSON.parse(local) : [];
-
-      if (cloudDiagrams.length === 0 && localDiagrams.length > 0) {
-        const migratedDiagrams = localDiagrams.map(diagram => ({ ...diagram, id: String(diagram.id) }));
-        await Promise.all(migratedDiagrams.map(diagram => saveUserDiagram(nextUser.uid, diagram)));
-        cloudDiagrams = migratedDiagrams;
-        setCloudMessage(`Moved ${migratedDiagrams.length} saved diagram${migratedDiagrams.length === 1 ? '' : 's'} to your account.`);
+      if (nextUser) {
+        setIsAuthDialogOpen(false);
+        setAuthMessage('');
       }
 
-      setSavedDiagrams(cloudDiagrams);
-    } catch (error) {
-      console.error('Failed to load cloud diagrams', error);
-      setCloudMessage('Could not load your cloud diagrams. Check Firestore setup.');
-    } finally {
-      setCloudBusy(false);
-    }
-  }), []);
+      if (!nextUser) {
+        setSavedDiagrams(readLocalDiagrams());
+        return;
+      }
+
+      setCloudBusy(true);
+      try {
+        const cloudDiagrams = await getUserDiagrams(nextUser.uid);
+        const localDiagrams = readLocalDiagrams();
+        const cloudBackups = cloudDiagrams.map(diagram => ({ ...diagram, _cloudSynced: true }));
+        const localDiagramsToKeep = localDiagrams.filter(diagram =>
+          diagram._pendingCloudSync || (!diagram._cloudSynced && cloudDiagrams.length === 0)
+        );
+        const mergedDiagrams = mergeSavedDiagrams(cloudBackups, localDiagramsToKeep);
+        const diagramsToSync = mergedDiagrams.filter(diagram => diagram._pendingCloudSync);
+
+        writeLocalDiagrams(mergedDiagrams);
+        setSavedDiagrams(mergedDiagrams);
+
+        if (diagramsToSync.length > 0) {
+          Promise.all(diagramsToSync.map(diagram => saveUserDiagram(nextUser.uid, toCloudDiagram(diagram))))
+            .then(() => {
+              const syncedVersions = new Map(diagramsToSync.map(diagram => [String(diagram.id), diagram.timestamp]));
+              setSavedDiagrams((current) => {
+                const synced = current.map((diagram) =>
+                  syncedVersions.get(String(diagram.id)) === diagram.timestamp
+                    ? { ...diagram, _pendingCloudSync: false, _cloudSynced: true }
+                    : diagram
+                );
+                writeLocalDiagrams(synced);
+                return synced;
+              });
+              setCloudMessage(`Synced ${diagramsToSync.length} saved diagram${diagramsToSync.length === 1 ? '' : 's'} to your account.`);
+            })
+            .catch((error) => {
+              console.error('Failed to sync local diagrams', error);
+              setCloudMessage('Your diagrams are safe on this device, but cloud sync is unavailable.');
+            });
+        }
+      } catch (error) {
+        console.error('Failed to load cloud diagrams', error);
+        setSavedDiagrams(readLocalDiagrams());
+        setCloudMessage('Cloud library is unavailable. Device saves still work.');
+      } finally {
+        setCloudBusy(false);
+      }
+    });
+  }, []);
 
   // ── Root / display labels ────────────────────────────────────────────────
   const [rootKey, setRootKey] = useState('C');
@@ -447,47 +525,53 @@ function App() {
   };
 
   // ── Save / Load ──────────────────────────────────────────────────────────
-  const handleSaveDiagram = async () => {
+  const handleSaveDiagram = () => {
     const firstDiagramName = diagrams.find(d => d.name)?.name;
-    let name = chordName || firstDiagramName || prompt('Enter a name for this diagram:');
-    if (!name) return;
+    const enteredName = (chordName || firstDiagramName || '').trim();
+    const name = enteredName || getUntitledDiagramName(savedDiagrams);
 
-    const existingIndex = savedDiagrams.findIndex(d => d.name === name);
-    const newDiagram = {
+    const existingIndex = savedDiagrams.findIndex(d => d.name?.trim().toLowerCase() === name.toLowerCase());
+    const newDiagram = JSON.parse(JSON.stringify({
       id: existingIndex >= 0 ? savedDiagrams[existingIndex].id : crypto.randomUUID(),
       name,
       config: { ...config },
       chordName: name,
       diagrams: [...diagrams],
       timestamp: new Date().toISOString()
-    };
+    }));
 
-    let updated;
-    if (existingIndex >= 0) {
-      if (!window.confirm(`A diagram named "${name}" already exists. Overwrite it?`)) return;
-      updated = [...savedDiagrams];
-      updated[existingIndex] = newDiagram;
-    } else {
-      updated = [...savedDiagrams, newDiagram];
-    }
+    const localDiagram = { ...newDiagram, _pendingCloudSync: true, _cloudSynced: false };
+    const updated = mergeSavedDiagrams([localDiagram], savedDiagrams);
 
-    setCloudBusy(true);
-    setCloudMessage('');
     try {
-      if (user) {
-        await saveUserDiagram(user.uid, newDiagram);
-        setCloudMessage('Saved to your account.');
-      } else {
-        localStorage.setItem('guitar-diagrams', JSON.stringify(updated));
-        setCloudMessage('Saved on this device. Sign in to save across devices.');
-      }
+      writeLocalDiagrams(updated);
       setSavedDiagrams(updated);
       setChordName(name);
+      setCloudMessage(user ? 'Saved on this device. Syncing to your account…' : 'Saved on this device.');
     } catch (error) {
-      console.error('Failed to save diagram', error);
-      setCloudMessage('Save failed. Check your Firebase setup and try again.');
-    } finally {
-      setCloudBusy(false);
+      console.error('Failed to save diagram on this device', error);
+      setCloudMessage('Save failed. Browser storage may be full or unavailable.');
+      return;
+    }
+
+    if (user) {
+      saveUserDiagram(user.uid, newDiagram)
+        .then(() => {
+          setSavedDiagrams((current) => {
+            const synced = current.map((diagram) =>
+              String(diagram.id) === String(newDiagram.id) && diagram.timestamp === newDiagram.timestamp
+                ? { ...diagram, _pendingCloudSync: false, _cloudSynced: true }
+                : diagram
+            );
+            writeLocalDiagrams(synced);
+            return synced;
+          });
+          setCloudMessage('Saved to your account.');
+        })
+        .catch((error) => {
+          console.error('Failed to sync saved diagram', error);
+          setCloudMessage('Saved on this device. Cloud sync will need another try.');
+        });
     }
   };
 
@@ -512,27 +596,43 @@ function App() {
       setCloudBusy(true);
       setCloudMessage('');
       try {
-        if (user) await deleteUserDiagram(user.uid, id);
-        else localStorage.setItem('guitar-diagrams', JSON.stringify(updated));
+        writeLocalDiagrams(updated);
         setSavedDiagrams(updated);
+        if (user) await deleteUserDiagram(user.uid, id);
       } catch (error) {
         console.error('Failed to delete diagram', error);
-        setCloudMessage('Delete failed. Please try again.');
+        setCloudMessage(user
+          ? 'Removed on this device, but the cloud copy could not be deleted.'
+          : 'Delete failed. Please try again.');
       } finally {
         setCloudBusy(false);
       }
     }
   };
 
-  const handleSignIn = async () => {
-    setCloudMessage('');
+  const getAuthErrorMessage = (error) => {
+    const messages = {
+      'auth/email-already-in-use': 'An account already exists for that email.',
+      'auth/invalid-credential': 'That email or password is incorrect.',
+      'auth/invalid-email': 'Enter a valid email address.',
+      'auth/popup-closed-by-user': 'Google sign-in was cancelled.',
+      'auth/too-many-requests': 'Too many attempts. Please wait and try again.',
+      'auth/unauthorized-domain': 'This domain must be added to Firebase Authorized domains.',
+      'auth/weak-password': 'Use a password with at least 6 characters.',
+    };
+    return messages[error.code] || 'Could not sign in. Please try again.';
+  };
+
+  const runAuthAction = async (action) => {
+    setAuthMessage('');
+    setAuthBusy(true);
     try {
-      await signInWithGoogle();
+      await action();
     } catch (error) {
-      console.error('Google sign-in failed', error);
-      setCloudMessage(error.code === 'auth/unauthorized-domain'
-        ? 'This domain must be added to Firebase Authorized domains.'
-        : 'Google sign-in failed. Please try again.');
+      console.error('Sign-in failed', error);
+      setAuthMessage(getAuthErrorMessage(error));
+    } finally {
+      setAuthBusy(false);
     }
   };
 
@@ -561,12 +661,7 @@ function App() {
         onClear={handleClear}
         onDownload={handleDownload}
         onSave={handleSaveDiagram}
-        firebaseConfigured={isFirebaseConfigured}
         user={user}
-        authReady={authReady}
-        cloudBusy={cloudBusy}
-        onSignIn={handleSignIn}
-        onSignOut={handleSignOut}
         onModalToggle={setIsMainModalOpen}
         isLoadSidebarOpen={isLoadSidebarOpen}
         setIsLoadSidebarOpen={setIsLoadSidebarOpen}
@@ -605,6 +700,53 @@ function App() {
         }}
       />
 
+      <div className="workspace-identity" aria-label="FretDiagram account">
+        <div className="workspace-brand">
+          <Guitar size={19} aria-hidden="true" />
+          <span>FretDiagram</span>
+        </div>
+
+        <div className="workspace-account">
+          {!isFirebaseConfigured ? (
+            <button className="workspace-account-btn" disabled title="Add Firebase values to .env.local">
+              <Cloud size={15} /> Setup needed
+            </button>
+          ) : !authReady ? (
+            <button className="workspace-account-btn" disabled>Connecting…</button>
+          ) : user ? (
+            <>
+              <div className="workspace-user" title={user.email || user.displayName}>
+                {user.photoURL ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" /> : <span className="workspace-user-dot" />}
+                <span><strong>Signed in</strong> · {user.displayName || user.email || 'Account'}</span>
+              </div>
+              <button className="workspace-signout-btn" onClick={handleSignOut} title="Sign out">
+                <LogOut size={13} /> Sign out
+              </button>
+            </>
+          ) : (
+            <button className="workspace-account-btn" onClick={() => {
+              setAuthMessage('');
+              setIsAuthDialogOpen(true);
+            }}>
+              Sign in
+            </button>
+          )}
+        </div>
+
+        {cloudMessage && <div className="workspace-cloud-message" role="status">{cloudMessage}</div>}
+      </div>
+
+      {isAuthDialogOpen && (
+        <AuthDialog
+          busy={authBusy}
+          message={authMessage}
+          onClose={() => !authBusy && setIsAuthDialogOpen(false)}
+          onGoogle={() => runAuthAction(signInWithGoogle)}
+          onEmailSignIn={(email, password) => runAuthAction(() => signInWithEmail(email, password))}
+          onCreateAccount={(email, password) => runAuthAction(() => createEmailAccount(email, password))}
+        />
+      )}
+
       <div className="main-content-area">
         <div className="instruments-area">
           <Fretboard
@@ -622,7 +764,7 @@ function App() {
             onUpdateGhostMarkText={handleUpdateGhostMarkText}
             getMarkDisplayText={getMarkDisplayText}
             isLoadSidebarOpen={isLoadSidebarOpen}
-            isMainModalOpen={isMainModalOpen}
+            isMainModalOpen={isMainModalOpen || isAuthDialogOpen}
           />
         </div>
 
