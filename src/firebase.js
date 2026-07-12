@@ -26,7 +26,11 @@ const getFirebaseServices = async () => {
     ]).then(([appModule, authModule, firestoreModule]) => {
       const app = appModule.initializeApp(firebaseConfig);
       const auth = authModule.getAuth(app);
-      const db = firestoreModule.getFirestore(app);
+      // Auto-detect long polling: prevents Firestore requests from hanging
+      // forever on networks/proxies that block WebChannel streaming.
+      const db = firestoreModule.initializeFirestore(app, {
+        experimentalAutoDetectLongPolling: true,
+      });
       const googleProvider = new authModule.GoogleAuthProvider();
       googleProvider.setCustomParameters({ prompt: 'select_account' });
       return { auth, authModule, db, firestoreModule, googleProvider };

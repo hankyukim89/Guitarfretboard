@@ -29,6 +29,8 @@ const ControlPanel = ({
     showNoteLabels, onNoteLabelToggle,
 }) => {
     const [showColorPicker, setShowColorPicker] = useState(false);
+    // Draft text for the transpose field so "-" / "" can be typed without being reset
+    const [transposeDraft, setTransposeDraft] = useState(null);
     const [showHelp, setShowHelp] = useState(false);
     const [showRootMenu, setShowRootMenu] = useState(false);
     const rootMenuRef = useRef(null);
@@ -128,8 +130,14 @@ const ControlPanel = ({
                             <span>Transpose</span>
                             <input
                                 type="number"
-                                value={transpose}
-                                onChange={(e) => onTransposeChange(parseInt(e.target.value, 10))}
+                                value={transposeDraft ?? transpose}
+                                onChange={(e) => {
+                                    const raw = e.target.value;
+                                    setTransposeDraft(raw);
+                                    const parsed = parseInt(raw, 10);
+                                    if (!isNaN(parsed)) onTransposeChange(parsed);
+                                }}
+                                onBlur={() => setTransposeDraft(null)}
                                 min="-24"
                                 max="24"
                             />
@@ -141,7 +149,8 @@ const ControlPanel = ({
                                 value={config.numDiagrams || 1}
                                 onChange={(e) => onNumDiagramsChange(parseInt(e.target.value, 10))}
                                 min="1"
-                                max="48"
+                                max={config.orientation === 'vertical' ? 24 : 6}
+                                title="Max 6 rows horizontal, 24 vertical"
                             />
                         </label>
                         <div className="tb-zoom-toggle">
@@ -182,6 +191,13 @@ const ControlPanel = ({
                             title="Toggle nut"
                         >
                             Nut
+                        </button>
+                        <button
+                            className={`tb-btn ${config.showRowLabels ? 'is-active' : ''}`}
+                            onClick={() => setConfig({ ...config, showRowLabels: !config.showRowLabels })}
+                            title="Show a name label on every row"
+                        >
+                            Row labels
                         </button>
                     </div>
                 </div>
@@ -254,7 +270,7 @@ const ControlPanel = ({
                                             aria-selected={rootKeyValue === key.value}
                                             title={key.label}
                                         >
-                                            {key.name}
+                                            {key.display || key.name}
                                         </button>
                                     ))}
                                 </div>

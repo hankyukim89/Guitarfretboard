@@ -46,18 +46,23 @@ const Fretboard = ({
 
     const [editingMark, setEditingMark] = useState(null);
     const [scale, setScale] = useState(1);
+    const [userZoom, setUserZoom] = useState(1); // pinch / Ctrl+wheel zoom multiplier
     const [contentNaturalHeight, setContentNaturalHeight] = useState(0);
     const [currentPage, setCurrentPage] = useState(0);
     const visiblePage = Math.min(currentPage, Math.max(0, diagrams.length - 1));
 
     const isVertical = config.orientation === 'vertical';
     const isScrollMode = zoomMode === 'scroll';
+    const effectiveScale = scale * userZoom;
     const useSideBySideDiagrams = isVertical && diagrams.length > 1;
 
+    const COLUMNS_PER_LINE = 6; // vertical view wraps after 6 boards
     const boardWidth = config.frets * FRET_SPACING + PADDING_X * 2;
     const boardHeight = (config.strings - 1) * STRING_SPACING + PADDING_Y * 2;
     const svgWidth = isVertical ? boardHeight : boardWidth;
     const svgHeight = isVertical ? boardWidth : boardHeight;
+    // Max strip width so the vertical side-by-side layout wraps 6 per line
+    const verticalStripMaxWidth = COLUMNS_PER_LINE * svgWidth + (COLUMNS_PER_LINE - 1) * GAP * 2 + 40;
 
     // Measure content for whitespace fix (fit mode)
     React.useLayoutEffect(() => {
@@ -97,6 +102,7 @@ const Fretboard = ({
         const el = scrollViewRef.current;
         if (!el || !isScrollMode) return;
         const onWheel = (e) => {
+            if (e.ctrlKey) return; // pinch/Ctrl+wheel is handled by the zoom listener
             e.preventDefault();
             if (e.deltaY > 0) setCurrentPage(p => Math.min(diagrams.length - 1, p + 1));
             else setCurrentPage(p => Math.max(0, p - 1));
@@ -104,6 +110,19 @@ const Fretboard = ({
         el.addEventListener('wheel', onWheel, { passive: false });
         return () => el.removeEventListener('wheel', onWheel);
     }, [isScrollMode, diagrams.length]);
+
+    // Pinch / Ctrl+wheel zoom — trackpad pinch gestures arrive as ctrlKey wheel events
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        const onWheel = (e) => {
+            if (!e.ctrlKey) return;
+            e.preventDefault();
+            setUserZoom(z => Math.max(0.4, Math.min(3, z * Math.exp(-e.deltaY * 0.01))));
+        };
+        el.addEventListener('wheel', onWheel, { passive: false });
+        return () => el.removeEventListener('wheel', onWheel);
+    }, [isScrollMode, isVertical]);
 
     // ── Coordinate helpers ─────────────────────────────────────────────────
 
@@ -127,7 +146,7 @@ const Fretboard = ({
         const svgEl = svgRefs.current[diagramIndex];
         if (!svgEl) return null;
         const rect = svgEl.getBoundingClientRect();
-        const sc = scale;
+        const sc = effectiveScale;
         const clickX = (e.clientX - rect.left) / sc;
         const clickY = (e.clientY - rect.top) / sc;
         let stringIdx, visualFretIdx;
@@ -382,8 +401,10 @@ const Fretboard = ({
 
     // ── Shared chord name input style ──────────────────────────────────────
 
+    // Fixed size — does not grow with fret count or zoom scale
+    const TITLE_MAX_WIDTH = 420;
     const chordInputStyle = {
-        fontSize: `${2 / Math.pow(isScrollMode ? 1 : scale, 0.5)}rem`,
+        fontSize: '1.5rem',
         fontWeight: 'bold',
         textAlign: 'center',
         border: '2px solid #000',
@@ -392,10 +413,10 @@ const Fretboard = ({
         color: 'var(--text-primary)',
         marginBottom: '1rem',
         width: '100%',
-        maxWidth: '600px',
+        maxWidth: `${TITLE_MAX_WIDTH}px`,
         outline: 'none',
-        padding: '0.5rem',
-        lineHeight: '1.5',
+        padding: '0.35rem 0.5rem',
+        lineHeight: '1.4',
         userSelect: 'none',
         transition: 'all 0.2s ease-out',
     };
@@ -423,20 +444,41 @@ const Fretboard = ({
                 marginBottom: !useSideBySideDiagrams && showGap && diagramIndex < diagrams.length - 1 ? GAP : 0,
             }}
         >
-            {diagramIndex === 0 && (
+            {(diagramIndex === 0 || config.showRowLabels) && (
                 <input
                     {...DIAGRAM_TITLE_INPUT_PROPS}
-                    name="diagram-title-0"
-                    aria-label="Diagram title"
+                    name={`diagram-title-${diagramIndex}`}
+                    aria-label={diagramIndex === 0 ? 'Diagram title' : `Row ${diagramIndex + 1} label`}
                     readOnly={!interactive}
                     value={getDiagramName(diagram, diagramIndex)}
                     onChange={interactive ? e => handleDiagramNameChange(diagramIndex, e.target.value) : undefined}
                     placeholder="Click to Edit"
-                    style={{ ...chordInputStyle, width: svgWidth, maxWidth: svgWidth, marginBottom: '1rem' }}
+                    style={{
+                        ...chordInputStyle,
+                        maxWidth: `${Math.min(svgWidth, TITLE_MAX_WIDTH)}px`,
+                        marginBottom: '1rem',
+                    }}
                 />
             )}
             {renderSVG(diagram, diagramIndex, interactive, false)}
         </div>
+    );
+
+    // Small floating chip showing zoom level, with click-to-reset
+    const zoomChip = userZoom !== 1 && (
+        <button
+            onClick={() => setUserZoom(1)}
+            title="Reset zoom"
+            style={{
+                position: 'absolute', top: 10, right: 14, zIndex: 40,
+                padding: '4px 10px', borderRadius: 999,
+                border: '1px solid var(--border-color, #cbd5e1)',
+                background: 'var(--bg-panel, #fff)', color: 'var(--text-secondary, #475569)',
+                fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            }}
+        >
+            {Math.round(effectiveScale * 100)}% ✕
+        </button>
     );
 
     // ── SCROLL MODE ────────────────────────────────────────────────────────
@@ -444,6 +486,7 @@ const Fretboard = ({
     if (isScrollMode) {
         return (
             <div className="fretboard-container" ref={containerRef}>
+                {zoomChip}
 
                 {/* Off-screen download target — all rows stacked, captured by export */}
                 <div
@@ -455,9 +498,10 @@ const Fretboard = ({
                         display: 'flex',
                         flexDirection: useSideBySideDiagrams ? 'row' : 'column',
                         alignItems: useSideBySideDiagrams ? 'flex-start' : 'center',
-                        flexWrap: 'nowrap',
+                        flexWrap: useSideBySideDiagrams ? 'wrap' : 'nowrap',
                         gap: useSideBySideDiagrams ? `${GAP * 2}px` : 0,
                         width: useSideBySideDiagrams ? 'max-content' : 'auto',
+                        maxWidth: useSideBySideDiagrams ? verticalStripMaxWidth : undefined,
                         padding: '20px', background: '#ffffff',
                     }}
                 >
@@ -488,15 +532,15 @@ const Fretboard = ({
                                 >▼</button>
                             </div>
                         )}
-                        {visiblePage === 0 && (
+                        {(visiblePage === 0 || config.showRowLabels) && (
                             <input
                                 {...DIAGRAM_TITLE_INPUT_PROPS}
-                                name="diagram-title-0"
-                                aria-label="Diagram title"
+                                name={`diagram-title-${visiblePage}`}
+                                aria-label={visiblePage === 0 ? 'Diagram title' : `Row ${visiblePage + 1} label`}
                                 value={getDiagramName(diagrams[visiblePage], visiblePage)}
                                 onChange={e => handleDiagramNameChange(visiblePage, e.target.value)}
                                 placeholder="Click to Edit"
-                                style={{ ...chordInputStyle, fontSize: '2rem', width: svgWidth, marginBottom: 0 }}
+                                style={{ ...chordInputStyle, marginBottom: 0 }}
                             />
                         )}
                     </div>
@@ -505,9 +549,9 @@ const Fretboard = ({
                     <div style={{
                         position: 'relative',
                         marginTop: '1rem',
-                        transform: `scale(${scale})`,
+                        transform: `scale(${effectiveScale})`,
                         transformOrigin: 'top center',
-                        marginBottom: `${svgHeight * (scale - 1)}px`,
+                        marginBottom: `${svgHeight * (effectiveScale - 1)}px`,
                     }}>
                         {renderSVG(diagrams[visiblePage], visiblePage, true, false)}
                     </div>
@@ -520,11 +564,12 @@ const Fretboard = ({
     // ── FIT MODE ───────────────────────────────────────────────────────────
 
     // CSS transform doesn't affect layout — compensate with negative bottom margin
-    const marginFix = contentNaturalHeight * (scale - 1);
+    const marginFix = contentNaturalHeight * (effectiveScale - 1);
 
     if (isVertical) {
         return (
             <div className="fretboard-container" ref={containerRef}>
+                {zoomChip}
                 <div
                 className="fretboard-scroll-area vertical-fit-scroll-area"
                 style={{
@@ -535,7 +580,7 @@ const Fretboard = ({
                 >
                     <div
                         style={{
-                            transform: `scale(${scale})`,
+                            transform: `scale(${effectiveScale})`,
                             transformOrigin: 'top left',
                             marginBottom: `${marginFix}px`,
                             transition: 'transform 0.2s ease-out',
@@ -548,10 +593,11 @@ const Fretboard = ({
                             style={{
                                 display: 'flex',
                                 flexDirection: 'row',
-                                flexWrap: 'nowrap',
+                                flexWrap: 'wrap',
                                 alignItems: 'start',
                                 gap: `${GAP * 2}px`,
                                 width: 'max-content',
+                                maxWidth: verticalStripMaxWidth,
                                 padding: '20px',
                                 background: 'var(--bg-main,#ffffff)'
                             }}
@@ -566,13 +612,16 @@ const Fretboard = ({
 
     return (
         <div className="fretboard-container" ref={containerRef}>
+            {zoomChip}
             <div
                 className="fretboard-scroll-area"
-                style={{ justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}
+                style={userZoom > 1
+                    ? { justifyContent: 'flex-start', alignItems: 'flex-start', overflow: 'auto' }
+                    : { justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}
             >
                 <div style={{
-                    transform: `scale(${scale})`,
-                    transformOrigin: 'top center',
+                    transform: `scale(${effectiveScale})`,
+                    transformOrigin: userZoom > 1 ? 'top left' : 'top center',
                     marginBottom: `${marginFix}px`,
                     transition: 'transform 0.2s ease-out',
                     flexShrink: 0,

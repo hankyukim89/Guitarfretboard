@@ -19,7 +19,9 @@ import {
 } from './firebase';
 import './index.css';
 
-const MAX_DIAGRAMS = 48;
+const MAX_ROWS_HORIZONTAL = 6;
+const MAX_ROWS_VERTICAL = 24;
+const getMaxRows = (orientation) => orientation === 'vertical' ? MAX_ROWS_VERTICAL : MAX_ROWS_HORIZONTAL;
 const DIAGRAM_STORAGE_KEY = 'guitar-diagrams';
 const makeEmptyDiagram = () => ({ id: Date.now() + Math.random(), name: '', marks: [], ghostMarks: [] });
 
@@ -61,28 +63,36 @@ const mergeSavedDiagrams = (...collections) => {
   );
 };
 
+// Reject after `ms` so a stalled Firestore call can't hang the UI forever
+const withTimeout = (promise, ms) => Promise.race([
+  promise,
+  new Promise((_, reject) => setTimeout(() => reject(new Error('Cloud request timed out')), ms)),
+]);
+
 const getUntitledDiagramName = (items) => {
   const names = new Set(items.map(item => item.name?.trim().toLowerCase()).filter(Boolean));
   let number = 1;
   while (names.has(`untitled diagram ${number}`)) number += 1;
   return `Untitled Diagram ${number}`;
 };
+// Ordered C first, then sharp keys (1♯–7♯), then flat keys (1♭–7♭).
+// `display` is shown in the dropdown menu; `label` is the tooltip.
 const KEY_OPTIONS = [
-  { value: 'Cb', name: 'Cb', label: 'Cb (bbbbbbb)', pitchClass: 11, accidental: 'flats' },
-  { value: 'Gb', name: 'Gb', label: 'Gb (bbbbbb)', pitchClass: 6, accidental: 'flats' },
-  { value: 'Db', name: 'Db', label: 'Db (bbbbb)', pitchClass: 1, accidental: 'flats' },
-  { value: 'Ab', name: 'Ab', label: 'Ab (bbbb)', pitchClass: 8, accidental: 'flats' },
-  { value: 'Eb', name: 'Eb', label: 'Eb (bbb)', pitchClass: 3, accidental: 'flats' },
-  { value: 'Bb', name: 'Bb', label: 'Bb (bb)', pitchClass: 10, accidental: 'flats' },
-  { value: 'F', name: 'F', label: 'F (b)', pitchClass: 5, accidental: 'flats' },
-  { value: 'C', name: 'C', label: 'C', pitchClass: 0, accidental: 'flats' },
-  { value: 'G', name: 'G', label: 'G (#)', pitchClass: 7, accidental: 'sharps' },
-  { value: 'D', name: 'D', label: 'D (##)', pitchClass: 2, accidental: 'sharps' },
-  { value: 'A', name: 'A', label: 'A (###)', pitchClass: 9, accidental: 'sharps' },
-  { value: 'E', name: 'E', label: 'E (####)', pitchClass: 4, accidental: 'sharps' },
-  { value: 'B', name: 'B', label: 'B (#####)', pitchClass: 11, accidental: 'sharps' },
-  { value: 'F#', name: 'F#', label: 'F# (######)', pitchClass: 6, accidental: 'sharps' },
-  { value: 'C#', name: 'C#', label: 'C# (#######)', pitchClass: 1, accidental: 'sharps' },
+  { value: 'C',  name: 'C',  display: 'C',        label: 'C — no sharps or flats', pitchClass: 0,  accidental: 'flats' },
+  { value: 'G',  name: 'G',  display: 'G · 1♯',   label: 'G — 1 sharp',  pitchClass: 7,  accidental: 'sharps' },
+  { value: 'D',  name: 'D',  display: 'D · 2♯',   label: 'D — 2 sharps', pitchClass: 2,  accidental: 'sharps' },
+  { value: 'A',  name: 'A',  display: 'A · 3♯',   label: 'A — 3 sharps', pitchClass: 9,  accidental: 'sharps' },
+  { value: 'E',  name: 'E',  display: 'E · 4♯',   label: 'E — 4 sharps', pitchClass: 4,  accidental: 'sharps' },
+  { value: 'B',  name: 'B',  display: 'B · 5♯',   label: 'B — 5 sharps', pitchClass: 11, accidental: 'sharps' },
+  { value: 'F#', name: 'F#', display: 'F♯ · 6♯',  label: 'F# — 6 sharps', pitchClass: 6, accidental: 'sharps' },
+  { value: 'C#', name: 'C#', display: 'C♯ · 7♯',  label: 'C# — 7 sharps', pitchClass: 1, accidental: 'sharps' },
+  { value: 'F',  name: 'F',  display: 'F · 1♭',   label: 'F — 1 flat',   pitchClass: 5,  accidental: 'flats' },
+  { value: 'Bb', name: 'Bb', display: 'B♭ · 2♭',  label: 'Bb — 2 flats', pitchClass: 10, accidental: 'flats' },
+  { value: 'Eb', name: 'Eb', display: 'E♭ · 3♭',  label: 'Eb — 3 flats', pitchClass: 3,  accidental: 'flats' },
+  { value: 'Ab', name: 'Ab', display: 'A♭ · 4♭',  label: 'Ab — 4 flats', pitchClass: 8,  accidental: 'flats' },
+  { value: 'Db', name: 'Db', display: 'D♭ · 5♭',  label: 'Db — 5 flats', pitchClass: 1,  accidental: 'flats' },
+  { value: 'Gb', name: 'Gb', display: 'G♭ · 6♭',  label: 'Gb — 6 flats', pitchClass: 6,  accidental: 'flats' },
+  { value: 'Cb', name: 'Cb', display: 'C♭ · 7♭',  label: 'Cb — 7 flats', pitchClass: 11, accidental: 'flats' },
 ];
 
 function App() {
@@ -95,6 +105,7 @@ function App() {
     showInlays: true,
     showNut: true,
     numDiagrams: 1,
+    showRowLabels: false,
   });
 
   const [chordName, setChordName] = useState('');
@@ -142,7 +153,7 @@ function App() {
 
       setCloudBusy(true);
       try {
-        const cloudDiagrams = await getUserDiagrams(nextUser.uid);
+        const cloudDiagrams = await withTimeout(getUserDiagrams(nextUser.uid), 12000);
         const localDiagrams = readLocalDiagrams();
         const cloudBackups = cloudDiagrams.map(diagram => ({ ...diagram, _cloudSynced: true }));
         const localDiagramsToKeep = localDiagrams.filter(diagram =>
@@ -192,7 +203,7 @@ function App() {
 
   const NOTE_NAMES_FLAT  = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
   const NOTE_NAMES_SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-  const selectedRootKey = KEY_OPTIONS.find(key => key.value === rootKey) || KEY_OPTIONS[7];
+  const selectedRootKey = KEY_OPTIONS.find(key => key.value === rootKey) || KEY_OPTIONS[0];
 
   // ── Sound ────────────────────────────────────────────────────────────────
   // Standard 6-string open-string MIDI notes, top to bottom: E4 B3 G3 D3 A2 E2
@@ -238,8 +249,34 @@ function App() {
     return mark.text || '';
   };
 
+  const reverbRef = useRef(null);
+
   const getAudioCtx = () => {
     return audioCtxRef.current ?? (audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)());
+  };
+
+  // Shared subtle reverb: generated impulse response + low wet mix
+  const getReverb = (ctx) => {
+    if (reverbRef.current) return reverbRef.current;
+    const duration = 1.4;
+    const decay = 3.5;
+    const sr = ctx.sampleRate;
+    const len = Math.floor(sr * duration);
+    const impulse = ctx.createBuffer(2, len, sr);
+    for (let ch = 0; ch < 2; ch++) {
+      const data = impulse.getChannelData(ch);
+      for (let i = 0; i < len; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+      }
+    }
+    const convolver = ctx.createConvolver();
+    convolver.buffer = impulse;
+    const wetGain = ctx.createGain();
+    wetGain.gain.value = 0.12; // a tiny bit of reverb
+    convolver.connect(wetGain);
+    wetGain.connect(ctx.destination);
+    reverbRef.current = convolver;
+    return convolver;
   };
 
   // Safari requires AudioContext creation and resume to happen synchronously
@@ -293,7 +330,8 @@ function App() {
     gain.gain.setValueAtTime(0.6, scheduleAt);
     gain.gain.exponentialRampToValueAtTime(0.0001, scheduleAt + noteDuration);
     src.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(ctx.destination);      // dry signal
+    gain.connect(getReverb(ctx));       // + subtle reverb
     src.start(scheduleAt);
   };
 
@@ -304,14 +342,14 @@ function App() {
   };
 
   const playHarmonic = () => {
-    const allMarks = diagrams.flatMap(d => d.marks);
+    const allMarks = visibleDiagrams.flatMap(d => d.marks);
     if (!allMarks.length) return;
     unlockAudio();
     allMarks.forEach(m => playNoteAt(m.stringIndex, m.fretIndex, 0));
   };
 
   const playMelodic = () => {
-    const allMarks = diagrams.flatMap(d => d.marks);
+    const allMarks = visibleDiagrams.flatMap(d => d.marks);
     if (!allMarks.length) return;
     unlockAudio();
     // Sort low E (high stringIndex) first, then by fret — simulates a strum low → high
@@ -323,21 +361,35 @@ function App() {
   const [isMainModalOpen, setIsMainModalOpen] = useState(false);
 
   // ── Num diagrams (rows) ──────────────────────────────────────────────────
+  // Rows beyond numDiagrams are hidden, never deleted — their marks are kept
+  // so they reappear when the row count is increased again.
+  const visibleDiagrams = diagrams.slice(0, config.numDiagrams || 1);
+
   const handleNumDiagramsChange = (newNum) => {
-    const n = Math.max(1, Math.min(MAX_DIAGRAMS, isNaN(newNum) ? 1 : newNum));
+    if (isNaN(newNum)) return; // ignore incomplete input
+    const n = Math.max(1, Math.min(getMaxRows(config.orientation), newNum));
     setConfig(prev => ({ ...prev, numDiagrams: n }));
     setDiagrams(prev => {
       if (n > prev.length) {
         const extras = Array.from({ length: n - prev.length }, makeEmptyDiagram);
         return [...prev, ...extras];
       }
-      return prev.slice(0, n);
+      return prev; // keep hidden rows — do NOT slice
     });
   };
 
+  // Clamp row count when switching orientation (vertical allows more rows)
+  useEffect(() => {
+    const max = getMaxRows(config.orientation);
+    if ((config.numDiagrams || 1) > max) {
+      setConfig(prev => ({ ...prev, numDiagrams: max }));
+    }
+  }, [config.orientation, config.numDiagrams]);
+
   // ── Transpose ────────────────────────────────────────────────────────────
   const handleTransposeChange = (newValue) => {
-    const val = isNaN(newValue) ? 0 : newValue;
+    if (isNaN(newValue)) return; // ignore incomplete input like "" or "-"
+    const val = Math.max(-24, Math.min(24, newValue));
     const delta = val - transpose;
     setTranspose(val);
     if (delta !== 0) {
@@ -464,7 +516,9 @@ function App() {
   // ── Clear ────────────────────────────────────────────────────────────────
   const handleClear = () => {
     if (window.confirm('Are you sure you want to clear all marks?')) {
-      setDiagrams(prev => prev.map(d => ({ ...d, marks: [], ghostMarks: [] })));
+      // Only clear visible rows — hidden rows keep their marks
+      const n = config.numDiagrams || 1;
+      setDiagrams(prev => prev.map((d, i) => i < n ? { ...d, marks: [], ghostMarks: [] } : d));
       setChordName('');
     }
   };
@@ -547,7 +601,7 @@ function App() {
       writeLocalDiagrams(updated);
       setSavedDiagrams(updated);
       setChordName(name);
-      setCloudMessage(user ? 'Saved on this device. Syncing to your account…' : 'Saved on this device.');
+      setCloudMessage('Saved ✓');
     } catch (error) {
       console.error('Failed to save diagram on this device', error);
       setCloudMessage('Save failed. Browser storage may be full or unavailable.');
@@ -555,7 +609,7 @@ function App() {
     }
 
     if (user) {
-      saveUserDiagram(user.uid, newDiagram)
+      withTimeout(saveUserDiagram(user.uid, newDiagram), 10000)
         .then(() => {
           setSavedDiagrams((current) => {
             const synced = current.map((diagram) =>
@@ -566,17 +620,20 @@ function App() {
             writeLocalDiagrams(synced);
             return synced;
           });
-          setCloudMessage('Saved to your account.');
+          setCloudMessage('Saved ✓ (synced to your account)');
         })
         .catch((error) => {
           console.error('Failed to sync saved diagram', error);
-          setCloudMessage('Saved on this device. Cloud sync will need another try.');
+          setCloudMessage('Saved on this device. Cloud sync will retry next time you sign in.');
         });
     }
   };
 
   const handleLoadDiagram = (diagram) => {
-    setConfig(diagram.config);
+    const loadedConfig = { ...diagram.config };
+    const maxRows = getMaxRows(loadedConfig.orientation);
+    loadedConfig.numDiagrams = Math.max(1, Math.min(maxRows, loadedConfig.numDiagrams || 1));
+    setConfig(loadedConfig);
     setChordName(diagram.chordName || diagram.name || '');
     // Support both new (diagrams array) and old (marks array) saved format
     if (diagram.diagrams) {
@@ -590,23 +647,24 @@ function App() {
     }
   };
 
-  const handleDeleteDiagram = async (id) => {
-    if (window.confirm('Delete this saved diagram?')) {
-      const updated = savedDiagrams.filter(d => d.id !== id);
-      setCloudBusy(true);
-      setCloudMessage('');
-      try {
-        writeLocalDiagrams(updated);
-        setSavedDiagrams(updated);
-        if (user) await deleteUserDiagram(user.uid, id);
-      } catch (error) {
-        console.error('Failed to delete diagram', error);
-        setCloudMessage(user
-          ? 'Removed on this device, but the cloud copy could not be deleted.'
-          : 'Delete failed. Please try again.');
-      } finally {
-        setCloudBusy(false);
-      }
+  const handleDeleteDiagram = (id) => {
+    if (!window.confirm('Delete this saved diagram?')) return;
+    // Optimistic: remove locally right away, delete the cloud copy in the background.
+    const updated = savedDiagrams.filter(d => d.id !== id);
+    setCloudMessage('');
+    try {
+      writeLocalDiagrams(updated);
+      setSavedDiagrams(updated);
+    } catch (error) {
+      console.error('Failed to delete diagram', error);
+      setCloudMessage('Delete failed. Please try again.');
+      return;
+    }
+    if (user) {
+      withTimeout(deleteUserDiagram(user.uid, id), 10000).catch((error) => {
+        console.error('Failed to delete cloud copy', error);
+        setCloudMessage('Removed on this device, but the cloud copy could not be deleted.');
+      });
     }
   };
 
@@ -751,7 +809,7 @@ function App() {
         <div className="instruments-area">
           <Fretboard
             config={config}
-            diagrams={diagrams}
+            diagrams={visibleDiagrams}
             onToggleMark={handleToggleMark}
             onUpdateMarkText={handleUpdateMarkText}
             onUpdateDiagramName={handleUpdateDiagramName}

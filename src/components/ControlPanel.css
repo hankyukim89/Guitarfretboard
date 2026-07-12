@@ -62,7 +62,7 @@
 
 .tb-row-items {
     display: flex;
-    align-items: center;
+    align-items: flex-end; /* bottoms line up: labeled inputs sit next to plain buttons */
     flex-wrap: wrap;
     gap: 4px;
 }
@@ -126,6 +126,8 @@
 
 .tb-num input[type="number"] {
     width: 48px;
+    height: 32px;
+    box-sizing: border-box;
     text-align: center;
     padding: 0.24rem 0.16rem;
     background: #fff;
@@ -221,7 +223,7 @@
 }
 
 .tb-mode-btn {
-    min-height: 30px;
+    min-height: 32px;
     padding: 0.29rem 0.5rem;
     background: transparent;
     border: none;
@@ -306,10 +308,12 @@
     position: absolute;
     top: calc(100% + 6px);
     left: 0;
-    width: 176px;
+    width: 208px;
+    max-height: 320px;
+    overflow-y: auto;
     padding: 6px;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 3px;
     background: #fff;
     border: 1px solid #dbe3ee;
@@ -319,7 +323,9 @@
 
 .tb-root-menu button {
     height: 28px;
-    padding: 0;
+    padding: 0 8px;
+    text-align: left;
+    white-space: nowrap;
     background: transparent;
     border: 0;
     border-radius: 5px;
@@ -352,7 +358,7 @@
 }
 
 .tb-zoom-btn {
-    min-height: 30px;
+    min-height: 32px;
     padding: 0.29rem 0.48rem;
     background: #fff;
     border: none;
@@ -409,8 +415,8 @@
 
 /* ── Shape buttons ── */
 .tb-shape {
-    width: 40px;
-    height: 36px;
+    width: 38px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
