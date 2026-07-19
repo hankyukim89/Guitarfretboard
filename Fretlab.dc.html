@@ -1,0 +1,1824 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&amp;display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; }
+    * { box-sizing: border-box; }
+    button, input, select { font-family: inherit; }
+    @keyframes rise { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+  </style>
+</helmet>
+<div style="display:flex; flex-direction:column; height:100vh; font-family:'Instrument Sans', sans-serif; color:#1A1A1A; background:#F7F7F5">
+
+  <div style="display:flex; align-items:flex-start; flex-wrap:wrap; gap:5px; row-gap:8px; padding:10px 14px 6px; background:#FFFFFF; border-bottom:1px solid #E6E6E2; position:relative; z-index:20">
+
+    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:3px">
+      <span style="font-size:9px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#9A9A95; user-select:none">Shape</span>
+      <div style="display:flex; align-items:center; gap:5px">
+        <sc-for list="{{ shapeBtns }}" as="b" hint-placeholder-count="6">
+          <button title="{{ b.tip }}" onClick="{{ b.onClick }}" style="{{ b.style }}" style-hover="background:#F0F0EE">
+            <span style="{{ b.inner }}">{{ b.txt }}</span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+
+    <span style="width:1px; align-self:stretch; background:#E6E6E2; margin:2px 5px"></span>
+
+    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:3px">
+      <span style="font-size:9px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#9A9A95; user-select:none">COLOR&nbsp; SPLIT&nbsp; &nbsp;PALETTE</span>
+      <div style="display:flex; align-items:center; gap:5px">
+        <div style="position:relative; width:32px; height:32px; flex:none" title="Color 1 / Color 2">
+          <button onClick="{{ pick1 }}" style="{{ sw1Style }}"></button>
+          <button onClick="{{ pick2 }}" style="{{ sw2Style }}"></button>
+        </div>
+        <button title="Split color — markers use both colors" onClick="{{ toggleSplit }}" style="{{ splitBtnStyle }}" style-hover="background:#F0F0EE">
+          <span style="{{ splitIconStyle }}"></span>
+        </button>
+        <div style="display:flex; align-items:center; gap:4px; margin-left:3px">
+          <sc-for list="{{ palette }}" as="p" hint-placeholder-count="10">
+            <button title="{{ p.name }}" onClick="{{ p.onClick }}" style="{{ p.style }}"></button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <span style="width:1px; align-self:stretch; background:#E6E6E2; margin:2px 5px"></span>
+
+    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:3px">
+      <span style="font-size:9px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#9A9A95; user-select:none">STRINGS&nbsp; FRETS&nbsp; &nbsp; &nbsp; &nbsp;START&nbsp; &nbsp; &nbsp;ROWS TRANSPOSE&nbsp; LAYOUT</span>
+      <div style="display:flex; align-items:center; gap:5px">
+    <div style="{{ stepWrapStyle }}" title="Strings">
+      <span style="{{ stepLabelStyle }}">{{ strings }}<span style="{{ stepUnitStyle }}"><br></span></span>
+      <div style="{{ stepColStyle }}">
+        <button onClick="{{ incStrings }}" style="{{ stepBtnUpStyle }}" style-hover="background:#F0F0EE">
+          <svg width="8" height="5" viewBox="0 0 8 5"><polygon points="4,0 8,5 0,5" fill="currentColor"></polygon></svg>
+        </button>
+        <button onClick="{{ decStrings }}" style="{{ stepBtnDownStyle }}" style-hover="background:#F0F0EE">
+          <svg width="8" height="5" viewBox="0 0 8 5"><polygon points="0,0 8,0 4,5" fill="currentColor"></polygon></svg>
+        </button>
+      </div>
+    </div>
+    <div style="{{ stepWrapStyle }}" title="Frets shown">
+      <span style="{{ stepLabelStyle }}">{{ frets }}<span style="{{ stepUnitStyle }}"><br></span></span>
+      <div style="{{ stepColStyle }}">
+        <button onClick="{{ incFrets }}" style="{{ stepBtnUpStyle }}" style-hover="background:#F0F0EE">
+          <svg width="8" height="5" viewBox="0 0 8 5"><polygon points="4,0 8,5 0,5" fill="currentColor"></polygon></svg>
+        </button>
+        <button onClick="{{ decFrets }}" style="{{ stepBtnDownStyle }}" style-hover="background:#F0F0EE">
+          <svg width="8" height="5" viewBox="0 0 8 5"><polygon points="0,0 8,0 4,5" fill="currentColor"></polygon></svg>
+        </button>
+      </div>
+    </div>
+    <div style="{{ stepWrapStyle }}" title="First fret">
+      <span style="{{ stepLabelStyle }}">{{ startFret }}<span style="{{ stepUnitStyle }}"><br></span></span>
+      <div style="{{ stepColStyle }}">
+        <button onClick="{{ incStart }}" style="{{ stepBtnUpStyle }}" style-hover="background:#F0F0EE">
+          <svg width="8" height="5" viewBox="0 0 8 5"><polygon points="4,0 8,5 0,5" fill="currentColor"></polygon></svg>
+        </button>
+        <button onClick="{{ decStart }}" style="{{ stepBtnDownStyle }}" style-hover="background:#F0F0EE">
+          <svg width="8" height="5" viewBox="0 0 8 5"><polygon points="0,0 8,0 4,5" fill="currentColor"></polygon></svg>
+        </button>
+      </div>
+    </div>
+    <div style="{{ stepWrapStyle }}" title="Rows — stacked diagrams (max 6)">
+      <span style="{{ stepLabelStyle }}">{{ rows }}<span style="{{ stepUnitStyle }}"><br></span></span>
+      <div style="{{ stepColStyle }}">
+        <button onClick="{{ incRows }}" style="{{ stepBtnUpStyle }}" style-hover="background:#F0F0EE">
+          <svg width="8" height="5" viewBox="0 0 8 5"><polygon points="4,0 8,5 0,5" fill="currentColor"></polygon></svg>
+        </button>
+        <button onClick="{{ decRows }}" style="{{ stepBtnDownStyle }}" style-hover="background:#F0F0EE">
+          <svg width="8" height="5" viewBox="0 0 8 5"><polygon points="0,0 8,0 4,5" fill="currentColor"></polygon></svg>
+        </button>
+      </div>
+    </div>
+    
+    <div style="{{ stepWrapStyle }}" title="Transpose all markers up/down in semitones">
+      <span style="{{ stepLabelStyle }}">{{ transpose }}<span style="{{ stepUnitStyle }}"><br></span></span>
+      <div style="{{ stepColStyle }}">
+        <button onClick="{{ incTrans }}" style="{{ stepBtnUpStyle }}" style-hover="background:#F0F0EE">
+          <svg width="8" height="5" viewBox="0 0 8 5"><polygon points="4,0 8,5 0,5" fill="currentColor"></polygon></svg>
+        </button>
+        <button onClick="{{ decTrans }}" style="{{ stepBtnDownStyle }}" style-hover="background:#F0F0EE">
+          <svg width="8" height="5" viewBox="0 0 8 5"><polygon points="0,0 8,0 4,5" fill="currentColor"></polygon></svg>
+        </button>
+      </div>
+    </div><button title="Horizontal board" onClick="{{ setOrientH }}" style="{{ orientHStyle }}" style-hover="background:#F0F0EE">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1.5 4.5h13M1.5 8h13M1.5 11.5h13"></path><path d="M5.5 3.5v9M10.5 3.5v9"></path></svg>
+    </button><button title="Vertical board" onClick="{{ setOrientV }}" style="{{ orientVStyle }}" style-hover="background:#F0F0EE">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4.5 1.5v13M8 1.5v13M11.5 1.5v13"></path><path d="M3.5 5.5h9M3.5 10.5h9"></path></svg>
+    </button>
+    <span style="width:1px; height:22px; background:#E6E6E2; margin:0 3px"></span>
+    
+      </div>
+    </div>
+
+    <span style="width:1px; align-self:stretch; background:#E6E6E2; margin:2px 5px"></span>
+
+    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:3px">
+      <span style="font-size:9px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#9A9A95; user-select:none">KEY&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; SCALE&nbsp; &nbsp; &nbsp;OVERLAY&nbsp; &nbsp; &nbsp;ROOT</span>
+      <div style="display:flex; align-items:center; gap:5px">
+    <select value="{{ keyName }}" onChange="{{ onKey }}" title="Key" style="height:28px; border:1px solid #E0E0DC; border-radius:7px; background:#fff; font-size:12.5px; font-weight:600; padding:0 4px; cursor:pointer; outline:none">
+      <sc-for list="{{ keys }}" as="k" hint-placeholder-count="12">
+        <option value="{{ k }}">{{ k }}</option>
+      </sc-for>
+    </select>
+    <button title="Major / minor" onClick="{{ toggleScaleType }}" style="{{ btnScaleType }}" style-hover="background:#F0F0EE">{{ scaleTypeLabel }}</button>
+    <button title="Show Notes" onClick="{{ toggleOverlay }}" style="{{ overlayBtnStyle }}" style-hover="background:#F0F0EE">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+    </button>
+    <button title="Interval highlighting — click a marker to set the root; every marker recolors by interval from it" onClick="{{ toggleInterval }}" style="{{ intervalBtnStyle }}" style-hover="background:#F0F0EE"><span style="font-size:11px; font-weight:800">R</span></button>
+      </div>
+    </div>
+
+    <span style="width:1px; align-self:stretch; background:#E6E6E2; margin:2px 5px"></span>
+
+    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:3px">
+      <span style="font-size:9px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#9A9A95; user-select:none">Note labels</span>
+      <div style="display:flex; align-items:center; gap:5px">
+        <button title="Note names — click again for flat/sharp" onClick="{{ setModeName }}" style="{{ modeNameStyle }}" style-hover="background:#F0F0EE"><span style="font-size:12px; font-weight:700; white-space:nowrap">{{ modeNameText }}</span></button>
+        <button title="Scale degree numbers — click again for flat/sharp" onClick="{{ setModeDegree }}" style="{{ modeDegreeStyle }}" style-hover="background:#F0F0EE"><span style="font-size:12px; font-weight:700; white-space:nowrap">{{ modeDegreeText }}</span></button>
+        <button title="Solfège (do re mi) — click again for flat/sharp" onClick="{{ setModeSolfege }}" style="{{ modeSolfegeStyle }}" style-hover="background:#F0F0EE"><span style="font-size:11px; font-weight:700; white-space:nowrap">{{ modeSolfegeText }}</span></button>
+      </div>
+    </div>
+
+    <span style="width:1px; align-self:stretch; background:#E6E6E2; margin:2px 5px"></span>
+
+    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:3px">
+      <span style="font-size:9px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#9A9A95; user-select:none">Line</span>
+      <button title="Connect dots — click a placed dot, then another to draw a line. Keep clicking to chain. Click empty space or Esc to stop. Click a line to remove it." onClick="{{ toggleLine }}" style="{{ toolLineStyle }}" style-hover="background:#F0F0EE">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="19" r="2.4" fill="currentColor" stroke="none"></circle><circle cx="19" cy="5" r="2.4" fill="currentColor" stroke="none"></circle><line x1="7" y1="17" x2="17" y2="7"></line></svg>
+      </button>
+    </div>
+
+    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:3px">
+      <span style="font-size:9px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#9A9A95; user-select:none">Sound</span>
+      <button title="Sound on placing" onClick="{{ toggleSound }}" style="{{ soundBtnStyle }}" style-hover="background:#F0F0EE">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.5 8.5a5 5 0 0 1 0 7"></path></svg>
+      </button>
+    </div>
+
+    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:3px">
+      <span style="font-size:9px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#9A9A95; user-select:none">Play</span>
+      <div style="display:flex; gap:4px; border:1px solid #ECECE8; background:#FFFFFF; border-radius:999px; padding:4px 8px">
+        <button title="Play together (harmonic) — click again to stop" onClick="{{ topOnPlayChord }}" style="{{ topChordBtnStyle }}" style-hover="background:#F0F0EE">
+          <sc-if value="{{ topChordPlaying }}" hint-placeholder-val="{{ false }}">
+            <svg width="10" height="10" viewBox="0 0 10 10"><rect width="10" height="10" rx="2" fill="currentColor"></rect></svg>
+          </sc-if>
+          <sc-if value="{{ topChordIdle }}" hint-placeholder-val="{{ true }}">
+            <svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="2.5" r="2" fill="currentColor"></circle><circle cx="7" cy="7" r="2" fill="currentColor"></circle><circle cx="7" cy="11.5" r="2" fill="currentColor"></circle></svg>
+          </sc-if>
+        </button>
+        <button title="Play one at a time, ascending — click again to stop" onClick="{{ topOnPlayMelody }}" style="{{ topMelodyBtnStyle }}" style-hover="background:#F0F0EE">
+          <sc-if value="{{ topMelodyPlaying }}" hint-placeholder-val="{{ false }}">
+            <svg width="10" height="10" viewBox="0 0 10 10"><rect width="10" height="10" rx="2" fill="currentColor"></rect></svg>
+          </sc-if>
+          <sc-if value="{{ topMelodyIdle }}" hint-placeholder-val="{{ true }}">
+            <svg width="14" height="14" viewBox="0 0 14 14"><circle cx="2.5" cy="2.5" r="2" fill="currentColor"></circle><circle cx="7" cy="7" r="2" fill="currentColor"></circle><circle cx="11.5" cy="11.5" r="2" fill="currentColor"></circle></svg>
+          </sc-if>
+        </button>
+        <button title="Play one at a time, string by string, highest string first, from the highest note to the lowest note on each string — click again to stop" onClick="{{ topOnPlayDescending }}" style="{{ topDescBtnStyle }}" style-hover="background:#F0F0EE">
+          <sc-if value="{{ topDescPlaying }}" hint-placeholder-val="{{ false }}">
+            <svg width="10" height="10" viewBox="0 0 10 10"><rect width="10" height="10" rx="2" fill="currentColor"></rect></svg>
+          </sc-if>
+          <sc-if value="{{ topDescIdle }}" hint-placeholder-val="{{ true }}">
+            <svg width="14" height="14" viewBox="0 0 14 14"><circle cx="11.5" cy="2.5" r="2" fill="currentColor"></circle><circle cx="7" cy="7" r="2" fill="currentColor"></circle><circle cx="2.5" cy="11.5" r="2" fill="currentColor"></circle></svg>
+          </sc-if>
+        </button>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:3px; margin-left:auto">
+      <span style="font-size:9px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#9A9A95; user-select:none">UNDO&nbsp; REDO&nbsp; &nbsp;SAVE&nbsp; &nbsp;OPEN&nbsp; &nbsp; LIBRARY&nbsp; &nbsp; &nbsp; EXPORT</span>
+      <div style="display:flex; align-items:center; gap:5px">
+      <button title="Undo (Ctrl+Z)" onClick="{{ undoDoc }}" style="{{ btnPlain }}" style-hover="background:#F0F0EE">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-7.5 4L3 13"></path></svg>
+      </button>
+      <button title="Redo (Ctrl+Shift+Z)" onClick="{{ redoDoc }}" style="{{ btnPlain }}" style-hover="background:#F0F0EE">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"></path><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 7.5 4L21 13"></path></svg>
+      </button>
+      <span style="width:1px; height:22px; background:#E6E6E2; margin:0 3px"></span>
+      <button title="Save to library" onClick="{{ saveDoc }}" style="{{ btnPlain }}" style-hover="background:#F0F0EE">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><path d="M17 21v-8H7v8"></path><path d="M7 3v5h8"></path></svg>
+      </button>
+      <button title="Open saved" onClick="{{ toggleLib }}" style="{{ libBtnStyle }}" style-hover="background:#F0F0EE">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+      </button>
+      <button title="Scale library — scales, modes, CAGED shapes" onClick="{{ toggleScaleLib }}" style="{{ scaleLibBtnStyle }}" style-hover="background:#F0F0EE">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+      </button>
+      
+      <span style="width:1px; height:22px; background:#E6E6E2; margin:0 3px"></span>
+      <div ref="{{ exportWrapRef }}" style="position:relative">
+        <button title="Download" onClick="{{ toggleExportMenu }}" style="{{ btnPlain }}" style-hover="background:#F0F0EE">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        </button>
+        <sc-if value="{{ exportMenuOpen }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute; top:36px; right:0; background:#fff; border:1px solid #E6E6E2; border-radius:9px; box-shadow:0 8px 20px rgba(0,0,0,0.1); display:flex; flex-direction:column; padding:4px; z-index:30; min-width:84px">
+            <button onClick="{{ exportPNG }}" style="border:none; background:transparent; text-align:left; padding:7px 9px; font-size:12.5px; font-weight:600; border-radius:6px; cursor:pointer; color:#1A1A1A" style-hover="background:#F0F0EE">PNG</button>
+            <button onClick="{{ exportSVG }}" style="border:none; background:transparent; text-align:left; padding:7px 9px; font-size:12.5px; font-weight:600; border-radius:6px; cursor:pointer; color:#1A1A1A" style-hover="background:#F0F0EE">SVG</button>
+          </div>
+        </sc-if>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex:1; display:flex; overflow:hidden">
+  <div style="flex:1; position:relative; display:flex; overflow:hidden">
+  
+  <div style="position:absolute; top:12px; right:16px; display:flex; align-items:center; gap:2px; height:32px; padding:0 4px; background:#FFFFFF; border:1px solid #E6E6E2; border-radius:99px; box-shadow:0 4px 12px rgba(0,0,0,0.08); z-index:15" title="Zoom — Ctrl + scroll also works">
+    <button onClick="{{ zoomOut }}" style="border:none; background:transparent; width:26px; height:26px; border-radius:50%; cursor:pointer; font-size:15px; font-weight:600; color:#55554F; padding:0; flex:none" style-hover="background:#F0F0EE">−</button>
+    <input type="range" min="{{ zoomMinInt }}" max="200" step="5" value="{{ zoomInt }}" onChange="{{ onZoomSlide }}" style="width:110px; accent-color:#1C1C1E; cursor:pointer; margin:0">
+    <button onClick="{{ zoomIn }}" style="border:none; background:transparent; width:26px; height:26px; border-radius:50%; cursor:pointer; font-size:15px; font-weight:600; color:#55554F; padding:0; flex:none" style-hover="background:#F0F0EE">+</button>
+    <button title="Reset to 100%" onClick="{{ zoom100 }}" style="border:none; background:transparent; height:26px; border-radius:99px; font-size:11.5px; font-weight:600; min-width:38px; text-align:center; color:#55554F; cursor:pointer; padding:0 4px; flex:none" style-hover="background:#F0F0EE">{{ zoomPct }}</button>
+    <span style="width:1px; height:16px; background:#E6E6E2; margin:0 2px"></span>
+    <button title="Fit to page" onClick="{{ zoomFit }}" style="border:none; background:transparent; height:26px; border-radius:99px; cursor:pointer; font-size:11px; font-weight:700; color:#55554F; padding:0 8px; flex:none" style-hover="background:#F0F0EE">Fit</button>
+  </div>
+  <div ref="{{ scrollRef }}" style="flex: 1; overflow: auto; padding: 64px 24px 90px; background-color: #FFFFFF">
+    <div style="{{ zoomStyle }}">
+    <div style="position:relative; display:flex; align-items:center; gap:8px; width:max-content; margin:0 auto 10px">
+      <input value="{{ docTitle }}" onChange="{{ onDocTitle }}" placeholder="Click to Edit" style="border: 1px solid #ECECE8; background: #FFFFFF; border-radius: 8px; outline: none; text-align: center; font-size: 19px; font-weight: 600; color: #1A1A1A; width: 320px; padding: 5px 10px; border-color: #000000" style-focus="border-color:#C9C9C4">
+      <button title="Clear all — removes markers, lines, and barres from every row" onClick="{{ clearAll }}" style="position:absolute; left:100%; margin-left:8px; display:flex; align-items:center; gap:5px; border:1px solid #ECECE8; background:#FFFFFF; color:#C43D3D; font-size:12px; font-weight:600; cursor:pointer; padding:8px 12px; border-radius:8px; white-space:nowrap" style-hover="background:#FBEAEA">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        Clear all
+      </button>
+    </div>
+    <sc-for list="{{ diagrams }}" as="d" hint-placeholder-count="1">
+      <div data-screen-label="{{ d.label }}" style="display:flex; align-items:center; gap:4px; width:max-content; margin:0 auto 14px">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:10px; width:170px; flex:none">
+          <input value="{{ d.title }}" onChange="{{ d.onTitle }}" placeholder="Name this fretboard" style="border: 1px solid #ECECE8; background: #FFFFFF; border-radius: 8px; outline: none; text-align: center; font-size: 15px; font-weight: 600; color: #1A1A1A; width: 170px; padding: 8px 10px; border-color: #000000" style-focus="border-color:#C9C9C4">
+          <button title="Clear this row — removes its markers, lines, and barres" onClick="{{ d.onClearRow }}" style="display:flex; align-items:center; gap:5px; border:none; background:transparent; color:#C43D3D; font-size:12px; font-weight:600; cursor:pointer; padding:4px 8px; border-radius:6px" style-hover="background:#FBEAEA">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            Clear row
+          </button>
+        </div>
+
+        <div style="{{ d.wrapStyle }}" onClick="{{ d.onBoard }}" onContextMenu="{{ d.onBoardCtx }}" onMouseDown="{{ d.onDown }}" onMouseMove="{{ d.onMove }}" onMouseUp="{{ d.onUp }}" onMouseLeave="{{ d.onLeave }}">
+          {{ d.gridEl }}
+          <sc-for list="{{ d.barres }}" as="bar" hint-placeholder-count="0">
+            <div title="Barre — click to remove" onClick="{{ bar.onClick }}" style="{{ bar.style }}"></div>
+          </sc-for>
+          {{ d.linesEl }}
+          <sc-for list="{{ d.ghosts }}" as="g" hint-placeholder-count="0">
+            <div style="{{ g }}"></div>
+          </sc-for>
+          <sc-for list="{{ d.nums }}" as="n" hint-placeholder-count="4">
+            <div style="{{ n.style }}">{{ n.t }}</div>
+          </sc-for>
+          <sc-for list="{{ d.markers }}" as="m" hint-placeholder-count="0">
+            <div title="{{ m.tip }}" onClick="{{ m.onClick }}" onContextMenu="{{ m.onCtx }}" style="{{ m.style }}">
+              {{ m.svgEl }}
+              <span style="{{ m.textStyle }}">{{ m.text }}</span>
+            </div>
+          </sc-for>
+          <sc-if value="{{ d.editOn }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ stopProp }}" style="{{ d.editBoxStyle }}">
+              <input ref="{{ editRef }}" defaultValue="{{ editVal }}" onKeyDown="{{ onEditKey }}" onBlur="{{ onEditBlur }}" placeholder="label" style="width:76px; border:none; background:transparent; outline:none; color:#fff; font-size:13px; font-weight:600; text-align:center">
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ d.showTuningFork }}" hint-placeholder-val="{{ false }}">
+            <button ref="{{ tuningForkRef }}" title="Tuning — click to adjust" onClick="{{ toggleTuningPopover }}" style="{{ tuningForkStyle }}" style-hover="background:#F0F0EE">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 2v10a3 3 0 0 0 6 0V2"></path>
+                <line x1="12" y1="15" x2="12" y2="22"></line>
+              </svg>
+            </button>
+            <sc-if value="{{ tuningPopoverOpen }}" hint-placeholder-val="{{ false }}">
+              <div ref="{{ tuningPopRef }}" onClick="{{ stopProp }}" style="{{ tuningPopStyle }}">
+                <div style="font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#9A9A95; margin-bottom:1px">Tuning</div>
+                <div style="{{ allTuneWrapStyle }}">
+                  <button title="Down-tune all strings 1 semitone" onClick="{{ allTuneDown }}" style="{{ allTuneBtnStyle }}" style-hover="background:#F0F0EE">
+                    <svg width="10" height="6" viewBox="0 0 10 6"><polyline points="1,1 5,5 9,1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>
+                  </button>
+                  <button title="Up-tune all strings 1 semitone" onClick="{{ allTuneUp }}" style="{{ allTuneBtnStyleR }}" style-hover="background:#F0F0EE">
+                    <svg width="10" height="6" viewBox="0 0 10 6"><polyline points="1,5 5,1 9,5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>
+                  </button>
+                </div>
+                <sc-for list="{{ tuningRows }}" as="tr" hint-placeholder-count="6">
+                  <div style="display:flex; align-items:center; gap:6px">
+                    <span style="width:13px; text-align:center; font-size:11.5px; font-weight:700; color:#9A9A95">{{ tr.n }}</span>
+                    <span style="{{ tr.pillStyle }}">{{ tr.name }}</span>
+                    <div style="{{ tr.colStyle }}">
+                      <button title="{{ tr.upTip }}" onClick="{{ tr.onUp }}" style="{{ tr.upBtnStyle }}" style-hover="background:#F0F0EE">
+                        <svg width="8" height="5" viewBox="0 0 8 5"><polygon points="4,0 8,5 0,5" fill="currentColor"></polygon></svg>
+                      </button>
+                      <button title="{{ tr.downTip }}" onClick="{{ tr.onDown }}" style="{{ tr.downBtnStyle }}" style-hover="background:#F0F0EE">
+                        <svg width="8" height="5" viewBox="0 0 8 5"><polygon points="0,0 8,0 4,5" fill="currentColor"></polygon></svg>
+                      </button>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </sc-if>
+        </div>
+
+      </div>
+    </sc-for>
+    </div>
+  </div></div>
+
+  <sc-if value="{{ scaleLibOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="width:300px; flex:none; background:#fff; border-left:1px solid #E6E6E2; z-index:20; display:flex; flex-direction:column; padding:16px; overflow:hidden">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:2px">
+        <div style="font-size:15px; font-weight:700">Scale Library</div>
+        <button onClick="{{ toggleScaleLib }}" style="border:none; background:transparent; color:#8A8A85; cursor:pointer; font-size:14px; padding:4px" style-hover="color:#1A1A1A">✕</button>
+      </div>
+      <div style="font-size:11px; color:#9A9A95; margin-bottom:10px">Pick a scale to preview it on the boards, then load it</div>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px">
+        <span style="font-size:11px; font-weight:700; color:#9A9A95; text-transform:uppercase; letter-spacing:0.05em">Root</span>
+        <select value="{{ keyName }}" onChange="{{ onKey }}" style="flex:1; height:30px; border:1px solid #E0E0DC; border-radius:7px; background:#fff; font-size:12.5px; font-weight:600; padding:0 6px; cursor:pointer; outline:none">
+          <sc-for list="{{ keys }}" as="k" hint-placeholder-count="12"><option value="{{ k }}">{{ k }}</option></sc-for>
+        </select>
+      </div>
+      <div style="display:flex; gap:4px; margin-bottom:10px">
+        <sc-for list="{{ libCats }}" as="c" hint-placeholder-count="4">
+          <button onClick="{{ c.onClick }}" style="{{ c.style }}" style-hover="background:#F0F0EE">{{ c.name }}</button>
+        </sc-for>
+      </div>
+      <sc-if value="{{ libCustomOn }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px">
+          <input value="{{ libFormula }}" onChange="{{ onFormula }}" onKeyDown="{{ onFormulaKey }}" placeholder="e.g. 1 b3 4 b5 5 b7" style="height:34px; border:1px solid #E0E0DC; border-radius:8px; padding:0 10px; font-size:13px; font-weight:600; outline:none" style-focus="border-color:#141414">
+          <button onClick="{{ applyFormula }}" style="height:32px; border:none; border-radius:8px; background:#1C1C1E; color:#fff; font-size:12.5px; font-weight:700; cursor:pointer">Use formula</button>
+          <div style="font-size:11px; color:#9A9A95">Degrees 1–7 with b / # (e.g. 1 2 b3 #4 5 b6 7)</div>
+        </div>
+      </sc-if>
+      <div style="flex:1; overflow:auto; display:flex; flex-direction:column; gap:4px; margin-bottom:10px">
+        <sc-for list="{{ scaleItems }}" as="sc" hint-placeholder-count="6">
+          <button onClick="{{ sc.onClick }}" style="{{ sc.style }}" style-hover="background:#F7F7F5">
+            <span style="font-size:12.5px; font-weight:600; color:#1A1A1A">{{ sc.name }}</span>
+            <span style="font-size:11px; color:#9A9A95">{{ sc.formula }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <sc-if value="{{ libSelName }}" hint-placeholder-val="{{ false }}">
+        <div style="border-top:1px solid #ECECE8; padding-top:10px; display:flex; flex-direction:column; gap:6px">
+          <div style="font-size:12px; font-weight:700">{{ libSelTitle }}</div>
+          <button onClick="{{ loadWhole }}" style="height:34px; border:none; border-radius:8px; background:#1C1C1E; color:#fff; font-size:12.5px; font-weight:700; cursor:pointer">Load — whole neck</button>
+          <button onClick="{{ loadCaged }}" style="height:34px; border:1px solid #1C1C1E; border-radius:8px; background:#fff; color:#1C1C1E; font-size:12.5px; font-weight:700; cursor:pointer" style-hover="background:#F0F0EE">Load — CAGED · 5 shapes</button>
+          <button onClick="{{ clearScaleOverlay }}" style="height:30px; border:none; border-radius:8px; background:transparent; color:#8A8A85; font-size:12px; font-weight:600; cursor:pointer" style-hover="background:#F0F0EE">Clear preview</button>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ libOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="width:280px; flex:none; background:#fff; border-left:1px solid #E6E6E2; z-index:20; display:flex; flex-direction:column; padding:16px; overflow:auto">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:2px">
+        <div style="font-size:15px; font-weight:700">Saved Diagrams</div>
+        <button onClick="{{ toggleLib }}" style="border:none; background:transparent; color:#8A8A85; cursor:pointer; font-size:14px; padding:4px" style-hover="color:#1A1A1A">✕</button>
+      </div>
+      <div style="font-size:11px; color:#9A9A95; margin-bottom:12px">Saved in this browser</div>
+      <sc-if value="{{ libEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="font-size:12.5px; color:#9A9A95; padding:12px 0">Nothing saved yet. Hit the save icon to keep the current canvas.</div>
+      </sc-if>
+      <div style="display:flex; flex-direction:column; gap:6px; overflow:auto">
+        <sc-for list="{{ lib }}" as="en" hint-placeholder-count="2">
+          <div onClick="{{ en.onLoad }}" style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; border:1px solid #ECECE8; border-radius:10px; cursor:pointer" style-hover="background:#F7F7F5">
+            <div style="min-width:0">
+              <div style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ en.name }}</div>
+              <div style="font-size:11px; color:#9A9A95; margin-top:2px">{{ en.date }}</div>
+            </div>
+            <button title="Delete" onClick="{{ en.onDel }}" style="border:none; background:transparent; color:#C9C9C4; cursor:pointer; padding:4px; flex:none" style-hover="color:#C43D3D">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </button>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+  </div>
+
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#1C1C1E; color:#fff; padding:8px 16px; border-radius:99px; font-size:12.5px; font-weight:600; z-index:60; animation:rise 0.18s ease; pointer-events:none">{{ toast }}</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;markerSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:32,&quot;min&quot;:24,&quot;max&quot;:42,&quot;step&quot;:2,&quot;unit&quot;:&quot;px&quot;,&quot;section&quot;:&quot;Board&quot;},&quot;lineColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#9AA5B1&quot;,&quot;options&quot;:[&quot;#9AA5B1&quot;,&quot;#26303B&quot;,&quot;#B9A88F&quot;],&quot;section&quot;:&quot;Board&quot;},&quot;showInlays&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;section&quot;:&quot;Board&quot;}}">
+const NAMES = ['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
+const NAMES_SHARP = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+const TUNINGS = { 4:[43,38,33,28], 5:[43,38,33,28,23], 6:[64,59,55,50,45,40], 7:[64,59,55,50,45,40,35], 8:[64,59,55,50,45,40,35,30] };
+const SCALES = { major:[0,2,4,5,7,9,11], minor:[0,2,3,5,7,8,10] };
+const TUNE_PILL = 'flex:1;height:24px;border:1px solid #E0E0DC;border-radius:6px;background:#F7F7F5;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:#1A1A1A';
+const TUNE_COL = 'display:flex;flex-direction:column;border:1px solid #E0E0DC;border-radius:6px;width:16px;height:24px;overflow:hidden;flex:none;background:#fff';
+const TUNE_BTN_UP = 'flex:1;border:none;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;color:#8A8A85';
+const TUNE_BTN_DOWN = 'flex:1;border:none;border-top:1px solid #E0E0DC;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;color:#8A8A85';
+const INTERVAL_NAMES = ['R','♭2','2','♭3','3','4','♭5','5','♭6','6','♭7','7'];
+const INTERVAL_COLORS = ['#E94040','#E05299','#F2743A','#8B5CF6','#F0B429','#2E9E5B','#8E8E93','#2F7DE1','#B45309','#0EA5A4','#7A4A32','#1C1C1E'];
+const LIB = {
+  'Common': [
+    ['Major (Ionian)', '1 2 3 4 5 6 7'],
+    ['Natural Minor', '1 2 b3 4 5 b6 b7'],
+    ['Harmonic Minor', '1 2 b3 4 5 b6 7'],
+    ['Melodic Minor', '1 2 b3 4 5 6 7'],
+    ['Major Pentatonic', '1 2 3 5 6'],
+    ['Minor Pentatonic', '1 b3 4 5 b7'],
+    ['Blues (Minor)', '1 b3 4 b5 5 b7'],
+    ['Blues (Major)', '1 2 b3 3 5 6']
+  ],
+  'Modes': [
+    ['Ionian', '1 2 3 4 5 6 7'],
+    ['Dorian', '1 2 b3 4 5 6 b7'],
+    ['Phrygian', '1 b2 b3 4 5 b6 b7'],
+    ['Lydian', '1 2 3 #4 5 6 7'],
+    ['Mixolydian', '1 2 3 4 5 6 b7'],
+    ['Aeolian', '1 2 b3 4 5 b6 b7'],
+    ['Locrian', '1 b2 b3 4 b5 b6 b7']
+  ],
+  'Exotic': [
+    ['Phrygian Dominant', '1 b2 3 4 5 b6 b7'],
+    ['Double Harmonic', '1 b2 3 4 5 b6 7'],
+    ['Hungarian Minor', '1 2 b3 #4 5 b6 7'],
+    ['Hungarian Major', '1 #2 3 #4 5 6 b7'],
+    ['Neapolitan Minor', '1 b2 b3 4 5 b6 7'],
+    ['Neapolitan Major', '1 b2 b3 4 5 6 7'],
+    ['Harmonic Major', '1 2 3 4 5 b6 7'],
+    ['Lydian Dominant', '1 2 3 #4 5 6 b7'],
+    ['Whole Tone', '1 2 3 #4 #5 b7'],
+    ['Diminished (W–H)', '1 2 b3 4 b5 b6 6 7'],
+    ['Diminished (H–W)', '1 b2 b3 3 #4 5 6 b7'],
+    ['Bebop Dominant', '1 2 3 4 5 6 b7 7'],
+    ['Bebop Major', '1 2 3 4 5 #5 6 7']
+  ]
+};
+const LIB_CATS = ['Common', 'Modes', 'Exotic', 'Custom'];
+const DEG_SEMI = {'1':0,'b2':1,'#1':1,'2':2,'b3':3,'#2':3,'3':4,'b4':4,'4':5,'#3':5,'#4':6,'b5':6,'5':7,'#5':8,'b6':8,'6':9,'bb7':9,'#6':10,'b7':10,'7':11};
+function parseFormula(str) {
+  const toks = String(str).trim().split(/[\s,·\-–]+/).filter(Boolean);
+  if (!toks.length) return null;
+  const iv = [];
+  for (const t of toks) {
+    const k = t.replace(/♭/g, 'b').replace(/♯/g, '#').toLowerCase();
+    if (!(k in DEG_SEMI)) return null;
+    const v = DEG_SEMI[k];
+    if (!iv.includes(v)) iv.push(v);
+  }
+  if (!iv.includes(0)) iv.unshift(0);
+  return iv.sort((a, b) => a - b);
+}
+// Maps each nominal scale-degree number (1-7, from formula tokens like '1 2 b3 4 5 b6 7')
+// to its semitone value. Used to retarget the reference CAGED shapes (below) onto any
+// scale by degree number rather than absolute semitone.
+function formulaDegreeMap(str) {
+  const toks = String(str).trim().split(/[\s,·\-–]+/).filter(Boolean);
+  const map = {}; let dup = false;
+  for (const t of toks) {
+    const k = t.replace(/♭/g, 'b').replace(/♯/g, '#').toLowerCase();
+    if (!(k in DEG_SEMI)) continue;
+    const m = k.match(/(\d)/);
+    if (!m) continue;
+    const dn = Number(m[1]);
+    if (map[dn] !== undefined) { dup = true; continue; }
+    map[dn] = DEG_SEMI[k];
+  }
+  return { map, dup };
+}
+// Reference CAGED fingering for a 6-string major scale, hand-tuned (see saved
+// "C Major (Ionian) — CAGED" library entry). Captured per shape letter as, for each
+// string (0 = high e … 5 = low E), a list of [fretOffsetFromShapeWindowStart, degreeNumber]
+// — degree 1 = root. cagedShapeMarkers() below retargets these onto any scale/key by
+// shifting each cell's fret by the semitone delta between the new scale's degree and
+// the major scale's, so the same clean, no-duplicate-note shape carries over everywhere.
+const CAGED_TEMPLATE = {
+  C: [
+    [[0,3],[1,4],[3,5]], [[0,7],[1,1],[3,2]], [[0,5],[2,6]],
+    [[0,2],[2,3],[3,4]], [[0,6],[2,7],[3,1]], [[0,3],[1,4],[3,5]]
+  ],
+  A: [
+    [[0,5],[2,6]], [[0,2],[2,3],[3,4]], [[-1,6],[1,7],[2,1]],
+    [[-1,3],[0,4],[2,5]], [[-1,7],[0,1],[2,2]], [[0,5],[2,6]]
+  ],
+  G: [
+    [[0,6],[2,7],[3,1]], [[0,3],[1,4],[3,5]], [[-1,7],[0,1],[2,2]],
+    [[0,5],[2,6]], [[0,2],[2,3],[3,4]], [[0,6],[2,7],[3,1]]
+  ],
+  E: [
+    [[0,7],[1,1],[3,2]], [[1,5],[3,6]], [[0,2],[2,3],[3,4]],
+    [[0,6],[2,7],[3,1]], [[0,3],[1,4],[3,5]], [[0,7],[1,1],[3,2]]
+  ],
+  D: [
+    [[0,2],[2,3],[3,4]], [[0,6],[2,7],[3,1]], [[-1,3],[0,4],[2,5]],
+    [[-1,7],[0,1],[2,2]], [[0,5],[2,6]], [[0,2],[2,3],[3,4]]
+  ]
+};
+const PAL = [
+  {c:'#E94040', n:'Red'}, {c:'#F2743A', n:'Orange'}, {c:'#F0B429', n:'Amber'}, {c:'#2E9E5B', n:'Green'},
+  {c:'#2F7DE1', n:'Blue'}, {c:'#8B5CF6', n:'Purple'}, {c:'#E05299', n:'Pink'}, {c:'#7A4A32', n:'Brown'},
+  {c:'#1C1C1E', n:'Black'}, {c:'#8E8E93', n:'Gray'}
+];
+const SHAPES = ['circle','square','triangle','star','heart','x'];
+const STAR_PTS = [[50,0],[61,35],[98,35],[68,57],[79,91],[50,70],[21,91],[32,57],[2,35],[39,35]];
+const HEART_PTS = [[50,15],[61,0],[75,0],[87,8],[94,20],[94,35],[85,55],[50,85],[15,55],[6,35],[6,20],[13,8],[25,0],[39,0]];
+const SOLFEGE_CHROM = ['Do','Ra','Re','Me','Mi','Fa','Se','Sol','Le','La','Te','Ti'];
+const SOLFEGE_CHROM_SHARP = ['Do','Di','Re','Ri','Mi','Fa','Fi','Sol','Si','La','Li','Ti'];
+const DEGREE_CHROM = ['1','2♭','2','3♭','3','4','5♭','5','6♭','6','7♭','7'];
+const DEGREE_CHROM_SHARP = ['1','1♯','2','2♯','3','4','4♯','5','5♯','6','6♯','7'];
+const STEP_WRAP = 'display:flex;align-items:stretch;border:1px solid #E0E0DC;border-radius:7px;background:#fff;height:28px;overflow:hidden;flex:none';
+const STEP_LABEL = 'font-size:12.5px;font-weight:600;padding:0 5px 0 9px;white-space:nowrap;color:#1A1A1A;display:flex;align-items:center';
+const STEP_UNIT = 'color:#9A9A95;font-weight:500';
+const STEP_COL = 'display:flex;flex-direction:column;border-left:1px solid #E0E0DC;width:17px;flex:none';
+const STEP_BTN_UP = 'flex:1;border:none;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;color:#8A8A85';
+const STEP_BTN_DOWN = 'flex:1;border:none;border-top:1px solid #E0E0DC;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;color:#8A8A85';
+const INLAY1 = [3,5,7,9,15,17,19,21];
+const INLAY2 = [12,24];
+const NATURAL_SEMITONES = new Set([0,2,4,5,7,9,11]);
+
+function shapeCss(shape) {
+  if (shape === 'circle') return 'border-radius:50%;';
+  if (shape === 'square') return 'border-radius:5px;';
+  if (shape === 'triangle') return 'clip-path:polygon(50% 0, 100% 100%, 0 100%);';
+  if (shape === 'star') return 'clip-path:polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);';
+  if (shape === 'heart') return 'clip-path:polygon(50% 15%, 61% 0%, 75% 0%, 87% 8%, 94% 20%, 94% 35%, 85% 55%, 50% 85%, 15% 55%, 6% 35%, 6% 20%, 13% 8%, 25% 0%, 39% 0%);';
+  return '';
+}
+// Pointed/inset shapes (triangle, star, heart) fill less of their bounding box than a
+// circle/square, so they read as smaller at the same box size — and their visual
+// centroid sits off the box's geometric center. Scale the box up and nudge the label
+// so all shapes feel like a matched set.
+function shapeAdjust(shape) {
+  if (shape === 'triangle') return { scale: 1.14, dy: 0.15 };
+  if (shape === 'star') return { scale: 1.16, dy: 0.04 };
+  if (shape === 'heart') return { scale: 1.05, dy: -0.08 };
+  return { scale: 1, dy: 0 };
+}
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      shape: 'circle', c1: '#E94040', c2: '#2F7DE1', slot: 1, split: false,
+      strings: 6, frets: 12, startFret: 1, orient: 'h',
+      keyRoot: 0, scaleType: 'major', overlay: false,
+      sound: true, noteMode: 'off', noteAcc: 'flat', exportMenuOpen: false,
+      docTitle: '', diagrams: [this.blank()], editing: null, libOpen: false, toast: '', lib: [], zoom: 1, transpose: 0,
+      scaleLibOpen: false, libCat: 'Common', libSel: null, libFormula: '', libOverlay: null,
+      tool: 'draw', tuning: null, tuningPopoverOpen: false,
+      intervalOn: false, rootPc: null, lineFrom: null, mouse: null, barreDrag: null
+    };
+    this._toastT = null;
+    this._scrollEl = null;
+    this._undo = [];
+    this._redo = [];
+  }
+
+  blank() { return { id: 'd' + Date.now() + Math.floor(Math.random() * 1e5), title: '', markers: {}, lines: [], barres: [] }; }
+
+  // ---------- history ----------
+  pushHistory() {
+    this._undo.push(JSON.stringify(this.state.diagrams));
+    if (this._undo.length > 100) this._undo.shift();
+    this._redo = [];
+  }
+  undo() {
+    if (!this._undo.length) { this.toast('Nothing to undo'); return; }
+    this._redo.push(JSON.stringify(this.state.diagrams));
+    this.setState({ diagrams: JSON.parse(this._undo.pop()), editing: null, lineFrom: null, barreDrag: null });
+  }
+  redo() {
+    if (!this._redo.length) { this.toast('Nothing to redo'); return; }
+    this._undo.push(JSON.stringify(this.state.diagrams));
+    this.setState({ diagrams: JSON.parse(this._redo.pop()), editing: null, lineFrom: null, barreDrag: null });
+  }
+
+  adjustTuning(i, dlt) {
+    const t = this.opens().slice();
+    t[i] = Math.max(20, Math.min(84, t[i] + dlt));
+    this.setState({ tuning: t });
+  }
+  adjustAllTuning(dlt) {
+    const t = this.opens().map(v => Math.max(20, Math.min(84, v + dlt)));
+    this.setState({ tuning: t });
+  }
+
+  componentDidMount() {
+    this._onKeyDown = (e) => {
+      const tag = (e.target && e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); if (e.shiftKey) this.redo(); else this.undo(); }
+      else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); this.redo(); }
+      else if (e.key === 'Escape') this.setState({ lineFrom: null, mouse: null, barreDrag: null, tool: 'draw' });
+    };
+    window.addEventListener('keydown', this._onKeyDown);
+    this._onDocMouseDown = (e) => {
+      if (this.state.tuningPopoverOpen) {
+        const inPop = this._tuningPopEl && this._tuningPopEl.contains(e.target);
+        const inFork = this._tuningForkEl && this._tuningForkEl.contains(e.target);
+        if (!inPop && !inFork) this.setState({ tuningPopoverOpen: false });
+      }
+      if (this.state.exportMenuOpen) {
+        const inExport = this._exportWrapEl && this._exportWrapEl.contains(e.target);
+        if (!inExport) this.setState({ exportMenuOpen: false });
+      }
+    };
+    document.addEventListener('mousedown', this._onDocMouseDown);
+    this._didMountLoad();
+  }
+  componentWillUnmount() {
+    window.removeEventListener('keydown', this._onKeyDown);
+    document.removeEventListener('mousedown', this._onDocMouseDown);
+  }
+
+  _didMountLoad() {
+    try {
+      const lib = JSON.parse(localStorage.getItem('fretlab.lib') || '[]');
+      const cur = JSON.parse(localStorage.getItem('fretlab.current') || 'null');
+      const st = { lib };
+      if (cur && cur.diagrams && cur.diagrams.length) Object.assign(st, cur);
+      this.setState(st);
+    } catch (e) {}
+  }
+
+  componentDidUpdate() {
+    try { localStorage.setItem('fretlab.current', JSON.stringify(this.docSnapshot())); } catch (e) {}
+  }
+
+  docSnapshot() {
+    const s = this.state;
+    return {
+      shape: s.shape, c1: s.c1, c2: s.c2, split: s.split,
+      strings: s.strings, frets: s.frets, startFret: s.startFret, orient: s.orient,
+      keyRoot: s.keyRoot, scaleType: s.scaleType, overlay: s.overlay,
+      sound: s.sound, noteMode: s.noteMode, docTitle: s.docTitle,
+      diagrams: s.diagrams.map(d => ({ ...d, id: d.id || ('d' + Date.now() + Math.floor(Math.random() * 1e5)) })),
+      libOverlay: s.libOverlay || null,
+      tuning: s.tuning || null
+    };
+  }
+
+  toast(msg) {
+    clearTimeout(this._toastT);
+    this.setState({ toast: msg });
+    this._toastT = setTimeout(() => this.setState({ toast: '' }), 1800);
+  }
+
+  // ---------- music ----------
+  opens() {
+    const def = TUNINGS[Math.min(8, Math.max(4, this.state.strings))];
+    const t = this.state.tuning;
+    return (t && t.length === def.length) ? t : def;
+  }
+  midiAt(s, fret) { return this.opens()[s] + fret; }
+  noteAt(s, fret) { return NAMES[((this.midiAt(s, fret)) % 12 + 12) % 12]; }
+  degreeIdx(s, fret) {
+    const deg = ((this.midiAt(s, fret) - this.state.keyRoot) % 12 + 12) % 12;
+    return SCALES[this.state.scaleType].indexOf(deg);
+  }
+  labelFor(si, f) {
+    const mode = this.state.noteMode, sharp = this.state.noteAcc === 'sharp';
+    if (mode === 'name') return (sharp ? NAMES_SHARP : NAMES)[((this.midiAt(si, f)) % 12 + 12) % 12];
+    const deg = ((this.midiAt(si, f) - this.state.keyRoot) % 12 + 12) % 12;
+    if (mode === 'degree') return (sharp ? DEGREE_CHROM_SHARP : DEGREE_CHROM)[deg];
+    if (mode === 'solfege') return (sharp ? SOLFEGE_CHROM_SHARP : SOLFEGE_CHROM)[deg];
+    return '';
+  }
+  inScale(s, fret) {
+    const deg = ((this.midiAt(s, fret) - this.state.keyRoot) % 12 + 12) % 12;
+    const set = SCALES[this.state.scaleType];
+    return set.includes(deg) ? (deg === 0 ? 2 : 1) : 0;
+  }
+  // Natural (non-sharp/flat) whole notes only — ignores key/scale entirely
+  isNaturalNote(s, fret) {
+    const semitone = ((this.midiAt(s, fret)) % 12 + 12) % 12;
+    return NATURAL_SEMITONES.has(semitone);
+  }
+  // Karplus-Strong plucked-string synthesis — sounds like an acoustic guitar
+  pluck(midi, when, vol) {
+    try {
+      this._ac = this._ac || new (window.AudioContext || window.webkitAudioContext)();
+      const ac = this._ac;
+      if (ac.state === 'suspended') ac.resume();
+      const t = ac.currentTime + (when || 0);
+      const freq = 440 * Math.pow(2, (midi - 69) / 12);
+      const sr = ac.sampleRate;
+      const dur = 2.2;
+      const N = Math.max(2, Math.round(sr / freq));
+      const buf = ac.createBuffer(1, Math.round(sr * dur), sr);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < N; i++) data[i] = Math.random() * 2 - 1;
+      const damp = 0.996;
+      for (let i = N; i < data.length; i++) data[i] = damp * 0.5 * (data[i - N] + data[i - N + 1]);
+      const src = ac.createBufferSource();
+      src.buffer = buf;
+      const lp = ac.createBiquadFilter();
+      lp.type = 'lowpass'; lp.frequency.value = 4200; lp.Q.value = 0.4;
+      const g = ac.createGain();
+      g.gain.setValueAtTime(vol ?? 0.5, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      src.connect(lp); lp.connect(g); g.connect(ac.destination);
+      src.start(t); src.stop(t + dur);
+      (this._live = this._live || []).push(src);
+    } catch (e) {}
+  }
+  midisOf(d) {
+    const g = this.geo();
+    const s = this.state;
+    const out = [];
+    for (const key of Object.keys(d.markers)) {
+      const [si, f] = key.split(':').map(Number);
+      const fi = f - s.startFret;
+      if (si >= g.N || (f !== 0 && (fi < 0 || fi >= g.F))) continue;
+      if (d.markers[key].shape === 'x') continue;
+      out.push({ key, midi: this.midiAt(si, f) });
+    }
+    return out.sort((a, b) => a.midi - b.midi);
+  }
+  // Groups notes by string, playing every note on one string (low fret to high) before
+  // moving to the next string — rather than interleaving by absolute pitch.
+  // dir 'desc' starts at the highest string (si=0) and works down; 'asc' starts at the
+  // lowest string and works up to the highest.
+  midisByString(d, dir) {
+    const g = this.geo();
+    const s = this.state;
+    const bySi = {};
+    for (const key of Object.keys(d.markers)) {
+      const [si, f] = key.split(':').map(Number);
+      const fi = f - s.startFret;
+      if (si >= g.N || (f !== 0 && (fi < 0 || fi >= g.F))) continue;
+      if (d.markers[key].shape === 'x') continue;
+      (bySi[si] = bySi[si] || []).push({ key, midi: this.midiAt(si, f), f });
+    }
+    const sis = Object.keys(bySi).map(Number).sort((a, b) => dir === 'desc' ? a - b : b - a);
+    const out = [];
+    for (const si of sis) {
+      const arr = bySi[si].sort((a, b) => dir === 'desc' ? b.f - a.f : a.f - b.f);
+      out.push(...arr);
+    }
+    return out.map(o => ({ key: o.key, midi: o.midi }));
+  }
+  flashNote(id, key, when, dur) {
+    this._flashT = this._flashT || [];
+    this._flashT.push(setTimeout(() => {
+      this.setState(st => ({ flash: { ...(st.flash || {}), [id + '|' + key]: true } }));
+      this._flashT.push(setTimeout(() => {
+        this.setState(st => {
+          const f = { ...(st.flash || {}) };
+          delete f[id + '|' + key];
+          return { flash: f };
+        });
+      }, dur));
+    }, Math.max(0, when * 1000)));
+  }
+  stopPlayback() {
+    (this._live || []).forEach(src => { try { src.stop(); } catch (e) {} });
+    this._live = [];
+    (this._flashT || []).forEach(clearTimeout);
+    this._flashT = [];
+    clearTimeout(this._playEndT);
+    this.setState({ playing: null, flash: {} });
+  }
+  playHarmonic(d) {
+    this.stopPlayback();
+    const ms = this.midisOf(d);
+    if (!ms.length) return;
+    this._live = [];
+    ms.forEach((n, i) => {
+      this.pluck(n.midi, i * 0.035, Math.min(0.45, 1.4 / Math.max(1, ms.length)));
+      this.flashNote(d.id, n.key, i * 0.035, 600);
+    });
+    this.setState({ playing: { id: d.id, kind: 'chord' } });
+    this._playEndT = setTimeout(() => this.setState({ playing: null }), (ms.length * 35) + 650);
+  }
+  playMelodic(d, dir) {
+    this.stopPlayback();
+    const ms = this.midisByString(d, dir || 'asc');
+    if (!ms.length) return;
+    this._live = [];
+    ms.forEach((n, i) => {
+      this.pluck(n.midi, i * 0.45, 0.5);
+      this.flashNote(d.id, n.key, i * 0.45, 380);
+    });
+    this.setState({ playing: { id: d.id, kind: dir === 'desc' ? 'desc' : 'melody' } });
+    this._playEndT = setTimeout(() => this.setState({ playing: null }), ((ms.length - 1) * 450) + 550);
+  }
+
+  // ---------- scale library ----------
+  libSelected() {
+    const s = this.state;
+    if (!s.libSel) return null;
+    if (s.libSel.custom) {
+      const iv = parseFormula(s.libFormula);
+      return iv ? { name: 'Custom Scale', formula: s.libFormula.trim(), iv } : null;
+    }
+    const e = (LIB[s.libSel.cat] || [])[s.libSel.i];
+    return e ? { name: e[0], formula: e[1], iv: parseFormula(e[1]) } : null;
+  }
+  // The five CAGED windows for the current key: find the root fret r on the lowest
+  // string, anchor each shape's 4-5 fret window relative to r, shift each window down
+  // an octave when it fits, then sort ascending — so the lowest shape comes first
+  // regardless of key (it won't always start with the C shape).
+  cagedWindows() {
+    const low = this.opens()[this.state.strings - 1];
+    const r = ((this.state.keyRoot - low) % 12 + 12) % 12;
+    const defs = [['E', -1, 3], ['D', 2, 6], ['C', 4, 8], ['A', 7, 11], ['G', 9, 13]];
+    const wins = defs.map(([nm, a0, b0]) => {
+      let a = a0 + r, b = b0 + r;
+      while (a - 12 >= 0) { a -= 12; b -= 12; }
+      return { nm, a: Math.max(0, a), b };
+    });
+    return wins.sort((x, y) => x.a - y.a || x.b - y.b);
+  }
+  scaleMarkers(iv, a, b) {
+    const root = this.state.keyRoot;
+    const mk = {};
+    for (let si = 0; si < this.state.strings; si++) {
+      for (let f = a; f <= b; f++) {
+        const deg = ((this.midiAt(si, f) - root) % 12 + 12) % 12;
+        if (!iv.includes(deg)) continue;
+        const isR = deg === 0;
+        mk[si + ':' + f] = { shape: 'circle', c1: isR ? '#E94040' : '#2F7DE1', c2: '#2F7DE1', split: false, label: '' };
+      }
+    }
+    return mk;
+  }
+  // Retargets the hand-tuned CAGED_TEMPLATE reference shape onto the current scale/key —
+  // shifts each templated dot by the semitone delta between the new scale's degree and
+  // major's, and drops any dot whose degree number isn't present in this scale (so a
+  // 5-note pentatonic just shows fewer, cleanly-placed dots, no duplicate/blind fills).
+  // Returns null (caller falls back to the blind scaleMarkers scan) when the template
+  // doesn't apply: non-6-string tunings, or formulas with a repeated degree number
+  // (e.g. bebop/diminished scales with both a natural and altered 3rd).
+  cagedShapeMarkers(sel, win) {
+    if (this.state.strings !== 6) return null;
+    const tmpl = CAGED_TEMPLATE[win.nm];
+    if (!tmpl) return null;
+    const { map, dup } = formulaDegreeMap(sel.formula);
+    if (dup) return null;
+    const mk = {};
+    for (let si = 0; si < 6; si++) {
+      for (const [offset, degNum] of (tmpl[si] || [])) {
+        const target = map[degNum];
+        if (target === undefined) continue;
+        const delta = target - SCALES.major[degNum - 1];
+        const f = win.a + offset + delta;
+        if (f < 0) continue;
+        const isR = degNum === 1;
+        mk[si + ':' + f] = { shape: 'circle', c1: isR ? '#E94040' : '#2F7DE1', c2: '#2F7DE1', split: false, label: '' };
+      }
+    }
+    return this.dedupeAsc(mk);
+  }
+  // Ascending dedup: keep only one occurrence of each pitch, scanning from the
+  // lowest string upward, so playing the box up the neck never repeats a note.
+  // Template shapes already have no dupes (no-op there); chromatic scales rely on it.
+  dedupeAsc(mk) {
+    const used = new Set();
+    const out = {};
+    const keys = Object.keys(mk).sort((k1, k2) => {
+      const [s1, f1] = k1.split(':').map(Number);
+      const [s2, f2] = k2.split(':').map(Number);
+      return (s2 - s1) || (f1 - f2);   // lowest string first, then lowest fret
+    });
+    for (const k of keys) {
+      const [si, f] = k.split(':').map(Number);
+      const midi = this.midiAt(si, f);
+      if (used.has(midi)) continue;
+      used.add(midi);
+      out[k] = mk[k];
+    }
+    return out;
+  }
+  // Clean CAGED box for scales the degree-mapped template can't handle — chromatic
+  // scales whose formula repeats a degree number (blues b5, bebop, diminished) and
+  // non-6-string tunings. Scans the shape window, then drops the B/G-string unison
+  // overlap via dedupeAsc so the box has no duplicate notes going up the scale.
+  cagedBoxScan(iv, a, b) {
+    const root = this.state.keyRoot;
+    const mk = {};
+    for (let si = 0; si < this.state.strings; si++) {
+      for (let f = a; f <= b; f++) {
+        const deg = ((this.midiAt(si, f) - root) % 12 + 12) % 12;
+        if (!iv.includes(deg)) continue;
+        const isR = deg === 0;
+        mk[si + ':' + f] = { shape: 'circle', c1: isR ? '#E94040' : '#2F7DE1', c2: '#2F7DE1', split: false, label: '' };
+      }
+    }
+    return this.dedupeAsc(mk);
+  }
+  stampWhole() {
+    const sel = this.libSelected();
+    if (!sel || !sel.iv) { this.toast('Pick a scale first'); return; }
+    this.pushHistory();
+    const d = { ...this.blank(), markers: this.scaleMarkers(sel.iv, 0, 12) };
+    this.setState({
+      diagrams: [d], startFret: 1, frets: 12, libOverlay: null, editing: null,
+      docTitle: NAMES[this.state.keyRoot] + ' ' + sel.name
+    });
+    this.toast('Loaded ' + NAMES[this.state.keyRoot] + ' ' + sel.name);
+    setTimeout(() => this.fitZoom(), 0);
+  }
+  stampCAGED() {
+    const sel = this.libSelected();
+    if (!sel || !sel.iv) { this.toast('Pick a scale first'); return; }
+    // If this exact key+scale CAGED layout was saved to the library, load that saved
+    // version instead of recomputing — lets a hand-tuned CAGED set stick every time.
+    const title = NAMES[this.state.keyRoot] + ' ' + sel.name + ' — CAGED';
+    const saved = this.state.lib.find(x => x.id === title);
+    if (saved) {
+      this.pushHistory();
+      const loaded = {
+        ...saved.doc,
+        diagrams: (saved.doc.diagrams || []).map(d => ({ ...d, id: d.id || ('d' + Date.now() + Math.floor(Math.random() * 1e5)) })),
+        libOverlay: null, editing: null
+      };
+      this.setState(loaded);
+      this.toast('Loaded saved “' + title + '”');
+      setTimeout(() => this.fitZoom(), 0);
+      return;
+    }
+    this.pushHistory();
+    const wins = this.cagedWindows();
+    const maxB = Math.min(24, Math.max(...wins.map(w => w.b)));
+    const diagrams = wins.map((w, i) => ({
+      ...this.blank(),
+      title: `Position ${i + 1} · ${w.nm} shape`,
+      markers: this.cagedShapeMarkers(sel, w) || this.cagedBoxScan(sel.iv, w.a, Math.min(w.b, maxB)),
+      ghost: { intervals: sel.iv, root: this.state.keyRoot }
+    }));
+    this.setState({
+      diagrams, startFret: 1, frets: maxB, libOverlay: null, editing: null,
+      docTitle: NAMES[this.state.keyRoot] + ' ' + sel.name + ' — CAGED'
+    });
+    this.toast('5 CAGED shapes loaded');
+    setTimeout(() => this.fitZoom(), 0);
+  }
+
+  // ---------- geometry ----------
+  geo() {
+    const s = this.state;
+    const ms = this.props.markerSize ?? 32;
+    const N = s.strings, F = s.frets, h = s.orient === 'h';
+    const fw = h ? 76 : 68, sw = 38;
+    const pad = 30, nums = 38, og = 44;
+    const bw = h ? F * fw : (N - 1) * sw;
+    const bh = h ? (N - 1) * sw : F * fw;
+    const x0 = pad + (h ? og : nums), y0 = pad + (h ? 0 : og);
+    const W = pad * 2 + bw + (h ? og : nums);
+    const H = pad * 2 + bh + (h ? nums : og);
+    const pos = (si, fi) => {
+      if (fi < 0) return h
+        ? { x: x0 - og / 2 - 4, y: y0 + si * sw }
+        : { x: x0 + (N - 1 - si) * sw, y: y0 - og / 2 - 4 };
+      return h
+        ? { x: x0 + (fi + 0.5) * fw, y: y0 + si * sw }
+        : { x: x0 + (N - 1 - si) * sw, y: y0 + (fi + 0.5) * fw };
+    };
+    const pick = (x, y) => {
+      if (h) {
+        if (x < x0 - og || x > x0 + bw || y < y0 - 16 || y > y0 + bh + 16) return null;
+        const fi = x < x0 ? -1 : Math.min(F - 1, Math.max(0, Math.floor((x - x0) / fw)));
+        const si = Math.min(N - 1, Math.max(0, Math.round((y - y0) / sw)));
+        return { si, fi };
+      }
+      if (y < y0 - og || y > y0 + bh || x < x0 - 16 || x > x0 + bw + 16) return null;
+      const fi = y < y0 ? -1 : Math.min(F - 1, Math.max(0, Math.floor((y - y0) / fw)));
+      const r = Math.min(N - 1, Math.max(0, Math.round((x - x0) / sw)));
+      return { si: N - 1 - r, fi };
+    };
+    return { ms, N, F, h, fw, sw, pad, nums, og, bw, bh, x0, y0, W, H, pos, pick };
+  }
+
+  // ---------- zoom / rows ----------
+  setZoom(z) { this.setState({ zoom: Math.max(this.fitLevel(), Math.min(2, Math.round(z * 100) / 100)) }); }
+  fitLevel() {
+    const el = this._scrollEl;
+    if (!el) return 0.25;
+    const g = this.geo();
+    const contentH = this.state.diagrams.length * (g.H + 56) + 60;
+    const rowExtra = this.state.diagrams.length > 1 ? 220 : 0;
+    const contentW = g.W + rowExtra + 40;
+    return Math.min(1, Math.round(Math.min((el.clientHeight - 100) / contentH, (el.clientWidth - 96) / contentW) * 100) / 100);
+  }
+  scrollRef = (el) => {
+    if (!el || this._scrollEl === el) return;
+    this._scrollEl = el;
+    el.addEventListener('wheel', (e) => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      this.setZoom(this.state.zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1));
+    }, { passive: false });
+  };
+  fitZoom() { this.setZoom(this.fitLevel()); }
+  refitWidth() {
+    setTimeout(() => {
+      const el = this._scrollEl;
+      if (!el) return;
+      if (el.scrollWidth > el.clientWidth + 4) this.fitZoom();
+    }, 0);
+  }
+  setRows(n) {
+    n = Math.max(1, Math.min(6, n));
+    this.setState(st => {
+      const d = st.diagrams.slice(0, n);
+      while (d.length < n) d.push(this.blank());
+      return { diagrams: d, editing: null };
+    });
+    setTimeout(() => this.fitZoom(), 0);
+  }
+
+  // ---------- marker ops ----------
+  transposeBy(n) {
+    const s = this.state;
+    let any = false;
+    for (const d of s.diagrams) for (const key of Object.keys(d.markers)) {
+      any = true;
+      const f = Number(key.split(':')[1]);
+      const nf = f + n;
+      if (nf < 0 || nf > 24) { this.toast(n < 0 ? 'Can’t transpose any lower' : 'Can’t transpose any higher'); return; }
+    }
+    if (!any) { this.toast('Nothing to transpose'); return; }
+    this.pushHistory();
+    this.setState(st => ({
+      transpose: (st.transpose || 0) + n,
+      editing: null,
+      diagrams: st.diagrams.map(d => {
+        const mk = {};
+        for (const key of Object.keys(d.markers)) {
+          const [si, f] = key.split(':').map(Number);
+          mk[si + ':' + (f + n)] = d.markers[key];
+        }
+        const shiftKey = (k) => { const [si2, f2] = k.split(':').map(Number); return si2 + ':' + (f2 + n); };
+        return {
+          ...d, markers: mk,
+          lines: (d.lines || []).map(l => ({ ...l, a: shiftKey(l.a), b: shiftKey(l.b) })),
+          barres: (d.barres || []).map(b => ({ ...b, f: b.f + n }))
+        };
+      })
+    }));
+  }
+  updDiagram(id, fn) {
+    this.setState(s => ({ diagrams: s.diagrams.map(d => d.id === id ? fn(d) : d) }));
+  }
+  placeAt(d, si, f, isX) {
+    this.pushHistory();
+    const s = this.state;
+    const key = si + ':' + f;
+    const activeColor = s.slot === 1 ? s.c1 : s.c2;
+    const m = isX
+      ? { shape: 'x', c1: activeColor, c2: s.c2, split: false, label: '' }
+      : { shape: s.shape, c1: s.split ? s.c1 : activeColor, c2: s.c2, split: s.split, label: '' };
+    this.updDiagram(d.id, dd => ({ ...dd, markers: { ...dd.markers, [key]: m } }));
+    if (s.sound && !isX) this.pluck(this.midiAt(si, f));
+  }
+  removeAt(d, key) {
+    this.pushHistory();
+    this.updDiagram(d.id, dd => {
+      const mk = { ...dd.markers }; delete mk[key];
+      return { ...dd, markers: mk, lines: (dd.lines || []).filter(l => l.a !== key && l.b !== key) };
+    });
+  }
+  commitEdit(val) {
+    const ed = this.state.editing;
+    if (!ed) return;
+    this.pushHistory();
+    this.updDiagram(ed.id, dd => {
+      if (!dd.markers[ed.key]) return dd;
+      return { ...dd, markers: { ...dd.markers, [ed.key]: { ...dd.markers[ed.key], label: String(val).trim().slice(0, 6) } } };
+    });
+    this.setState({ editing: null });
+  }
+
+  // Stroke-only (hollow) marker shape for open strings — real SVG stroke, no clip-path carving
+  hollowSvg(m) {
+    const p = { fill: '#FFFFFF', stroke: m.c1, strokeWidth: 8, strokeLinejoin: 'round', strokeLinecap: 'round' };
+    let el;
+    if (m.shape === 'circle') el = React.createElement('circle', { cx: 50, cy: 50, r: 44, ...p });
+    else if (m.shape === 'square') el = React.createElement('rect', { x: 8, y: 8, width: 84, height: 84, rx: 14, ...p });
+    else if (m.shape === 'triangle') el = React.createElement('polygon', { points: '50,6 94,94 6,94', ...p });
+    else if (m.shape === 'star') el = React.createElement('polygon', { points: STAR_PTS.map(q => q.join(',')).join(' '), ...p });
+    else el = React.createElement('polygon', { points: HEART_PTS.map(q => q.join(',')).join(' '), ...p });
+    return React.createElement('svg', {
+      viewBox: '0 0 100 100',
+      style: { position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'visible', pointerEvents: 'none' }
+    }, el);
+  }
+
+  // ---------- export ----------
+  svgMarker(m, x, y, ms, seed, text, open) {
+    let out = '';
+    const half = `hf${seed}`;
+    const adj = shapeAdjust(m.shape);
+    const sz = ms * adj.scale;
+    const shape = (fill, clip) => {
+      const cl = (clip ? ` clip-path="url(#${half})"` : '') + (open ? ` stroke="${m.c1}" stroke-width="2.5"` : '');
+      if (m.shape === 'circle') return `<circle cx="${x}" cy="${y}" r="${sz / 2}" fill="${fill}"${cl}/>`;
+      if (m.shape === 'square') return `<rect x="${x - sz / 2}" y="${y - sz / 2}" width="${sz}" height="${sz}" rx="5" fill="${fill}"${cl}/>`;
+      if (m.shape === 'triangle') return `<polygon points="${x},${y - sz / 2} ${x + sz / 2},${y + sz / 2} ${x - sz / 2},${y + sz / 2}" fill="${fill}"${cl}/>`;
+      if (m.shape === 'heart') {
+        const pts = HEART_PTS.map(p => (x - sz / 2 + p[0] * sz / 100) + ',' + (y - sz / 2 + p[1] * sz / 100)).join(' ');
+        return `<polygon points="${pts}" fill="${fill}"${cl}/>`;
+      }
+      const pts = STAR_PTS
+        .map(p => (x - sz / 2 + p[0] * sz / 100) + ',' + (y - sz / 2 + p[1] * sz / 100)).join(' ');
+      return `<polygon points="${pts}" fill="${fill}"${cl}/>`;
+    };
+    if (m.shape === 'x') {
+      const r = ms * 0.30;
+      if (text) {
+        out += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="700" fill="${m.c1}">${esc(text)}</text>`;
+      } else {
+        out += `<line x1="${x - r}" y1="${y - r}" x2="${x + r}" y2="${y + r}" stroke="${m.c1}" stroke-width="6" stroke-linecap="round"/>`;
+        out += `<line x1="${x - r}" y1="${y + r}" x2="${x + r}" y2="${y - r}" stroke="${m.c1}" stroke-width="6" stroke-linecap="round"/>`;
+      }
+      return out;
+    }
+    if (m.split) out += `<defs><clipPath id="${half}"><rect x="${x}" y="${y - sz / 2}" width="${sz / 2}" height="${sz}"/></clipPath></defs>`;
+    out += shape(open ? '#FFFFFF' : m.c1, false);
+    if (m.split && !open) out += shape(m.c2, true);
+    if (text) {
+      const dy = adj.dy ? sz * adj.dy : 0;
+      out += `<text x="${x}" y="${y + dy}" text-anchor="middle" dominant-baseline="central" font-size="${m.shape === 'star' ? 11 : 12}" font-weight="700" fill="${open ? m.c1 : '#fff'}">${esc(text)}</text>`;
+    }
+    return out;
+  }
+
+  buildSVG() {
+    const s = this.state;
+    const g = this.geo();
+    const lc = this.props.lineColor ?? '#9AA5B1';
+    const showInlays = this.props.showInlays ?? true;
+    const multi = s.diagrams.length > 1;
+    const headH = s.docTitle ? 46 : 0;
+    const titleH = multi ? 24 : 0, gap = 26;
+    const totalH = headH + s.diagrams.length * (g.H + titleH) + (s.diagrams.length - 1) * gap + 20;
+    let body = '';
+    if (s.docTitle) body += `<text x="${g.W / 2}" y="36" text-anchor="middle" font-size="20" font-weight="600" fill="#1A1A1A">${esc(s.docTitle)}</text>`;
+    let oy = 10 + headH;
+    let seed = 0;
+    for (const d of s.diagrams) {
+      if (multi && d.title) body += `<text x="${g.x0}" y="${oy + 14}" font-size="14" font-weight="600" fill="#55554F">${esc(d.title)}</text>`;
+      const Y = oy + titleH;
+      for (let i = 0; i < g.N; i++) {
+        const a = g.h ? { x1: g.x0, y1: g.y0 + i * g.sw, x2: g.x0 + g.bw, y2: g.y0 + i * g.sw }
+                      : { x1: g.x0 + i * g.sw, y1: g.y0, x2: g.x0 + i * g.sw, y2: g.y0 + g.bh };
+        body += `<line x1="${a.x1}" y1="${a.y1 + Y}" x2="${a.x2}" y2="${a.y2 + Y}" stroke="${lc}" stroke-width="2"/>`;
+      }
+      for (let j = 0; j <= g.F; j++) {
+        const a = g.h ? { x1: g.x0 + j * g.fw, y1: g.y0, x2: g.x0 + j * g.fw, y2: g.y0 + g.bh }
+                      : { x1: g.x0, y1: g.y0 + j * g.fw, x2: g.x0 + g.bw, y2: g.y0 + j * g.fw };
+        body += `<line x1="${a.x1}" y1="${a.y1 + Y}" x2="${a.x2}" y2="${a.y2 + Y}" stroke="${lc}" stroke-width="2"/>`;
+      }
+      if (s.startFret === 1) {
+        body += g.h
+          ? `<rect x="${g.x0 - 7}" y="${g.y0 - 1 + Y}" width="7" height="${g.bh + 2}" fill="#111"/>`
+          : `<rect x="${g.x0 - 1}" y="${g.y0 - 7 + Y}" width="${g.bw + 2}" height="7" fill="#111"/>`;
+      }
+      if (showInlays) {
+        for (let fi = 0; fi < g.F; fi++) {
+          const fret = s.startFret + fi;
+          const single = INLAY1.includes(fret), dbl = INLAY2.includes(fret);
+          if (!single && !dbl) continue;
+          const c = g.h ? { x: g.x0 + (fi + 0.5) * g.fw, y: g.y0 + g.bh / 2 } : { x: g.x0 + g.bw / 2, y: g.y0 + (fi + 0.5) * g.fw };
+          const offs = dbl ? [-g.sw, g.sw] : [0];
+          for (const o of offs) body += `<circle cx="${c.x + (g.h ? 0 : o)}" cy="${c.y + (g.h ? o : 0) + Y}" r="7" fill="#E3E3E1"/>`;
+        }
+      }
+      if (s.overlay) {
+        for (let si = 0; si < g.N; si++) for (let fi = 0; fi < g.F; fi++) {
+          if (d.markers[si + ':' + (s.startFret + fi)]) continue;
+          if (!this.isNaturalNote(si, s.startFret + fi)) continue;
+          const p = g.pos(si, fi);
+          body += `<circle cx="${p.x}" cy="${p.y + Y}" r="11" fill="#DCEAFB" stroke="#9CC2F2" stroke-width="1.5"/>`;
+        }
+      }
+      const ov = s.libOverlay
+        ? { iv: s.libOverlay.intervals, root: s.keyRoot, live: true }
+        : (d.ghost ? { iv: d.ghost.intervals, root: d.ghost.root, live: false } : null);
+      if (ov && ov.iv) {
+        for (let si = 0; si < g.N; si++) for (let fi = (s.startFret === 1 ? -1 : 0); fi < g.F; fi++) {
+          const f = fi < 0 ? 0 : s.startFret + fi;
+          if (d.markers[si + ':' + f]) continue;
+          const deg = ((this.midiAt(si, f) - ov.root) % 12 + 12) % 12;
+          if (!ov.iv.includes(deg)) continue;
+          const p = g.pos(si, fi);
+          const isRoot = deg === 0;
+          const fill = ov.live ? (isRoot ? '#F6D7D7' : '#DCEAFB') : (isRoot ? '#F0E4E4' : '#EFEFED');
+          const str = ov.live ? (isRoot ? '#E06666' : '#9CC2F2') : (isRoot ? '#D8B8B8' : '#D9D9D4');
+          body += `<circle cx="${p.x}" cy="${p.y + Y}" r="11" fill="${fill}" stroke="${str}" stroke-width="1.5"/>`;
+        }
+      }
+      for (let fi = 0; fi < g.F; fi++) {
+        const p = g.h ? { x: g.x0 + (fi + 0.5) * g.fw, y: g.y0 + g.bh + 30 } : { x: g.x0 - 27, y: g.y0 + (fi + 0.5) * g.fw };
+        body += `<text x="${p.x}" y="${p.y + Y}" text-anchor="middle" dominant-baseline="central" font-size="15" font-weight="600" fill="#64748B">${s.startFret + fi}</text>`;
+      }
+      for (const b of (d.barres || [])) {
+        const fi = b.f - s.startFret;
+        if (fi < 0 || fi >= g.F) continue;
+        const p1 = g.pos(Math.min(b.a, b.b), fi), p2 = g.pos(Math.max(b.a, b.b), fi);
+        body += `<line x1="${p1.x}" y1="${p1.y + Y}" x2="${p2.x}" y2="${p2.y + Y}" stroke="${b.color}" stroke-width="${g.ms}" stroke-linecap="round" opacity="1"/>`;
+      }
+      for (const l of (d.lines || [])) {
+        const pk = (k) => {
+          const [si2, f2] = k.split(':').map(Number);
+          const fi2 = f2 === 0 ? -1 : f2 - s.startFret;
+          if (si2 >= g.N || (f2 !== 0 && (fi2 < 0 || fi2 >= g.F))) return null;
+          return g.pos(si2, fi2);
+        };
+        const pa = pk(l.a), pb = pk(l.b);
+        if (!pa || !pb) continue;
+        body += `<line x1="${pa.x}" y1="${pa.y + Y}" x2="${pb.x}" y2="${pb.y + Y}" stroke="${l.color}" stroke-width="4" stroke-linecap="round" opacity="0.85"/>`;
+      }
+      for (const key of Object.keys(d.markers)) {
+        const [si, f] = key.split(':').map(Number);
+        const open = f === 0;
+        const fi = open ? -1 : f - s.startFret;
+        if (si >= g.N || (!open && (fi < 0 || fi >= g.F))) continue;
+        const m = d.markers[key];
+        const p = g.pos(si, fi);
+        const text = m.shape === 'x' ? '' : (m.label || this.labelFor(si, f));
+        body += this.svgMarker(m, p.x, p.y + Y, g.ms, seed++, text, open);
+      }
+      oy += g.H + titleH + gap;
+    }
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${g.W}" height="${totalH}" viewBox="0 0 ${g.W} ${totalH}" font-family="Instrument Sans, -apple-system, sans-serif"><rect width="100%" height="100%" fill="#FFFFFF"/>${body}</svg>`;
+  }
+
+  fileName() { return (this.state.docTitle || 'fretlab-diagram').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').toLowerCase() || 'fretlab-diagram'; }
+
+  download(blob, name) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+
+  toPNG(cb) {
+    const svg = this.buildSVG();
+    const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = img.width * 2; c.height = img.height * 2;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+      ctx.scale(2, 2); ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      c.toBlob(cb, 'image/png');
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); this.toast('Export failed'); };
+    img.src = url;
+  }
+
+  // ---------- render ----------
+  renderVals() {
+    const s = this.state;
+    const g = this.geo();
+    const lc = this.props.lineColor ?? '#9AA5B1';
+    const showInlays = this.props.showInlays ?? true;
+    const btn = (active, extra) => `width:30px;height:30px;border:none;border-radius:7px;background:${active ? '#EAEAE7' : 'transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer;color:#333;padding:0;flex:none;${active ? 'box-shadow:inset 0 0 0 1.5px #141414;' : ''}${extra || ''}`;
+
+    // tuning fork sits above the nut, aligned with the high e string (string index 0)
+    const forkX = g.h ? g.x0 : g.x0 + (g.N - 1) * g.sw;
+    const forkNutTop = g.h ? g.y0 - 1 : g.y0 - 7;
+    const forkCY = forkNutTop - 19;
+    const tuningForkStyle = `position:absolute;left:${forkX}px;top:${forkCY}px;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;border:1px solid #E0E0DC;background:#FFFFFF;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#55554F;z-index:4;padding:0;box-shadow:0 1px 3px rgba(0,0,0,0.1)`;
+    const tuningPopStyle = `position:absolute;left:${forkX}px;top:${forkCY + 20}px;transform:translateX(-50%);background:#FFFFFF;border:1px solid #E6E6E2;border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,0.14);padding:10px;z-index:6;display:flex;flex-direction:column;gap:5px;width:118px`;
+    const allTuneWrapStyle = `display:flex;align-items:stretch;border:1px solid #E0E0DC;border-radius:8px;overflow:hidden;background:#fff;align-self:center;margin-bottom:3px`;
+    const allTuneBtnStyle = `width:50%;height:26px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#333;padding:0`;
+    const allTuneBtnStyleR = allTuneBtnStyle + ';border-left:1px solid #E0E0DC';
+    const tuningRows = this.opens().map((midi, i) => ({
+      n: i + 1,
+      name: NAMES[((midi % 12) + 12) % 12],
+      pillStyle: TUNE_PILL,
+      colStyle: TUNE_COL,
+      upBtnStyle: TUNE_BTN_UP,
+      downBtnStyle: TUNE_BTN_DOWN,
+      upTip: `String ${i + 1} up 1 semitone`,
+      downTip: `String ${i + 1} down 1 semitone`,
+      onUp: () => this.adjustTuning(i, 1),
+      onDown: () => this.adjustTuning(i, -1)
+    }));
+
+    const playBtn = (on) => `width:30px;height:30px;border:1px solid ${on ? '#E94040' : '#E6E6E2'};border-radius:50%;background:${on ? '#FBEAEA' : '#FFFFFF'};display:flex;align-items:center;justify-content:center;cursor:pointer;color:${on ? '#D23434' : '#55554F'};padding:0;flex:none`;
+    const activeColor = s.slot === 1 ? s.c1 : s.c2;
+    const shapeBtns = SHAPES.map(k => ({
+      tip: k === 'x' ? 'X marker (also: right-click any empty spot)' : k.charAt(0).toUpperCase() + k.slice(1),
+      onClick: () => this.setState({ shape: k }),
+      style: btn(s.shape === k),
+      inner: k === 'x'
+        ? `color:${activeColor};font-weight:800;font-size:14px;line-height:1`
+        : `width:14px;height:14px;background:${activeColor};${shapeCss(k)}`,
+      txt: k === 'x' ? '✕' : ''
+    }));
+
+    const sw = (n) => {
+      const active = s.slot === n;
+      const pos = n === 1 ? 'left:0;top:0;z-index:2' : 'right:0;bottom:0;z-index:1';
+      return `position:absolute;${pos};width:21px;height:21px;border-radius:6px;background:${n === 1 ? s.c1 : s.c2};border:2px solid #fff;box-shadow:0 0 0 ${active ? '2px #141414' : '1px #D6D6D2'};cursor:pointer;padding:0`;
+    };
+
+    const palette = PAL.map(p => ({
+      name: p.n,
+      onClick: () => this.setState(s.slot === 1 ? { c1: p.c } : { c2: p.c }),
+      style: `width:16px;height:16px;border-radius:50%;border:none;background:${p.c};cursor:pointer;padding:0;flex:none;${(s.slot === 1 ? s.c1 : s.c2) === p.c ? 'box-shadow:0 0 0 2px #fff, 0 0 0 3.5px #141414;' : ''}`
+    }));
+
+    const diagrams = s.diagrams.map((d, di) => {
+      // Grid as one SVG — vector lines stay uniformly thick at any zoom (divs round to whole pixels)
+      const gridKids = [];
+      for (let i = 0; i < g.N; i++) {
+        gridKids.push(React.createElement('line', g.h
+          ? { key: 's' + i, x1: g.x0, y1: g.y0 + i * g.sw, x2: g.x0 + g.bw, y2: g.y0 + i * g.sw, stroke: lc, strokeWidth: 2 }
+          : { key: 's' + i, x1: g.x0 + i * g.sw, y1: g.y0, x2: g.x0 + i * g.sw, y2: g.y0 + g.bh, stroke: lc, strokeWidth: 2 }));
+      }
+      for (let j = 0; j <= g.F; j++) {
+        gridKids.push(React.createElement('line', g.h
+          ? { key: 'f' + j, x1: g.x0 + j * g.fw, y1: g.y0, x2: g.x0 + j * g.fw, y2: g.y0 + g.bh, stroke: lc, strokeWidth: 2 }
+          : { key: 'f' + j, x1: g.x0, y1: g.y0 + j * g.fw, x2: g.x0 + g.bw, y2: g.y0 + j * g.fw, stroke: lc, strokeWidth: 2 }));
+      }
+      if (s.startFret === 1) {
+        gridKids.push(React.createElement('rect', g.h
+          ? { key: 'nut', x: g.x0 - 7, y: g.y0 - 1, width: 7, height: g.bh + 2, fill: '#111' }
+          : { key: 'nut', x: g.x0 - 1, y: g.y0 - 7, width: g.bw + 2, height: 7, fill: '#111' }));
+      }
+      if (showInlays) {
+        for (let fi = 0; fi < g.F; fi++) {
+          const fret = s.startFret + fi;
+          const single = INLAY1.includes(fret), dbl = INLAY2.includes(fret);
+          if (!single && !dbl) continue;
+          const c = g.h ? { x: g.x0 + (fi + 0.5) * g.fw, y: g.y0 + g.bh / 2 } : { x: g.x0 + g.bw / 2, y: g.y0 + (fi + 0.5) * g.fw };
+          for (const o of (dbl ? [-g.sw, g.sw] : [0])) {
+            gridKids.push(React.createElement('circle', { key: 'i' + fi + '_' + o, cx: c.x + (g.h ? 0 : o), cy: c.y + (g.h ? o : 0), r: 7, fill: '#E3E3E1' }));
+          }
+        }
+      }
+      const gridEl = React.createElement('svg', {
+        width: g.W, height: g.H, viewBox: `0 0 ${g.W} ${g.H}`,
+        style: { position: 'absolute', inset: 0, pointerEvents: 'none' }
+      }, gridKids);
+
+      const ghosts = [];
+      if (s.overlay) {
+        for (let si = 0; si < g.N; si++) for (let fi = 0; fi < g.F; fi++) {
+          if (d.markers[si + ':' + (s.startFret + fi)]) continue;
+          if (!this.isNaturalNote(si, s.startFret + fi)) continue;
+          const p = g.pos(si, fi);
+          ghosts.push(`position:absolute;left:${p.x}px;top:${p.y}px;width:22px;height:22px;border-radius:50%;background:#DCEAFB;box-shadow:0 0 0 1.5px #9CC2F2;transform:translate(-50%,-50%);z-index:1;pointer-events:none`);
+        }
+      }
+      const ov = s.libOverlay
+        ? { iv: s.libOverlay.intervals, root: s.keyRoot, live: true }
+        : (d.ghost ? { iv: d.ghost.intervals, root: d.ghost.root, live: false } : null);
+      if (ov && ov.iv) {
+        for (let si = 0; si < g.N; si++) for (let fi = (s.startFret === 1 ? -1 : 0); fi < g.F; fi++) {
+          const f = fi < 0 ? 0 : s.startFret + fi;
+          if (d.markers[si + ':' + f]) continue;
+          const deg = ((this.midiAt(si, f) - ov.root) % 12 + 12) % 12;
+          if (!ov.iv.includes(deg)) continue;
+          const p = g.pos(si, fi);
+          const isRoot = deg === 0;
+          const look = ov.live
+            ? (isRoot ? 'background:#F6D7D7;box-shadow:0 0 0 1.8px #E06666' : 'background:#DCEAFB;box-shadow:0 0 0 1.5px #9CC2F2')
+            : (isRoot ? 'background:#F0E4E4;box-shadow:0 0 0 1.5px #D8B8B8' : 'background:#EFEFED;box-shadow:0 0 0 1.5px #D9D9D4');
+          ghosts.push(`position:absolute;left:${p.x}px;top:${p.y}px;width:22px;height:22px;border-radius:50%;${look};transform:translate(-50%,-50%);z-index:1;pointer-events:none`);
+        }
+      }
+
+      const nums = [];
+      for (let fi = 0; fi < g.F; fi++) {
+        const p = g.h ? { x: g.x0 + (fi + 0.5) * g.fw, y: g.y0 + g.bh + 30 } : { x: g.x0 - 27, y: g.y0 + (fi + 0.5) * g.fw };
+        nums.push({
+          t: String(s.startFret + fi),
+          style: `position:absolute;left:${p.x}px;top:${p.y}px;transform:translate(-50%,-50%);font-size:15px;font-weight:600;color:#64748B;pointer-events:none;user-select:none`
+        });
+      }
+
+      const markers = [];
+      for (const key of Object.keys(d.markers)) {
+        const [si, f] = key.split(':').map(Number);
+        const open = f === 0;
+        const fi = open ? -1 : f - s.startFret;
+        if (si >= g.N || (!open && (fi < 0 || fi >= g.F))) continue;
+        const m = d.markers[key];
+        const p = g.pos(si, fi);
+        const isX = m.shape === 'x';
+        const hollow = open && !isX;
+        const ivDeg = (s.intervalOn && s.rootPc != null && !isX) ? ((this.midiAt(si, f) - s.rootPc) % 12 + 12) % 12 : null;
+        const ivColor = ivDeg != null ? INTERVAL_COLORS[ivDeg] : null;
+        const mc1 = ivColor || m.c1;
+        const bg = (isX || hollow) ? 'transparent' : (ivColor ? ivColor : (m.split ? `linear-gradient(90deg, ${m.c1} 50%, ${m.c2} 50%)` : m.c1));
+        const text = isX ? '✕' : (ivDeg != null ? INTERVAL_NAMES[ivDeg] : (m.label || this.labelFor(si, f)));
+        const isLineFrom = s.lineFrom && s.lineFrom.id === d.id && s.lineFrom.key === key;
+        const ringCss = (ivDeg === 0 || isLineFrom) ? `box-shadow:0 0 0 2.5px #fff, 0 0 0 4.5px ${ivDeg === 0 ? '#1C1C1E' : mc1};` : '';
+        const adj = shapeAdjust(m.shape);
+        const sz = Math.round(g.ms * adj.scale);
+        const flashing = s.flash && s.flash[d.id + '|' + key];
+        markers.push({
+          style: `position:absolute;left:${p.x}px;top:${p.y}px;width:${sz}px;height:${sz}px;transform:translate(-50%,-50%) ${flashing ? 'scale(1.18)' : ''};display:flex;align-items:center;justify-content:center;z-index:3;cursor:pointer;background:${bg};${ringCss}${(isX || hollow) ? '' : shapeCss(m.shape)}${flashing ? `;filter:brightness(1.35) drop-shadow(0 0 8px ${m.c1});` : ''}transition:transform 0.12s ease, filter 0.12s ease`,
+          svgEl: hollow ? this.hollowSvg(ivColor ? { ...m, c1: ivColor } : m) : null,
+          textStyle: isX
+            ? `color:${m.c1};font-size:${Math.round(g.ms * 0.62)}px;font-weight:900;-webkit-text-stroke:1.5px ${m.c1};line-height:1;user-select:none`
+            : `color:${open ? mc1 : '#fff'};font-size:${m.shape === 'star' ? 11 : 12}px;font-weight:700;line-height:1;user-select:none;position:relative;${adj.dy ? `margin-top:${Math.round(sz * adj.dy)}px;` : ''}`,
+          text,
+          tip: isX
+            ? `${this.noteAt(si, f)} — click to remove`
+            : `${this.noteAt(si, f)} — click to restyle with current tool, click again to remove · right-click to label`,
+          onClick: (e) => {
+            e.stopPropagation();
+            if (s.tool === 'line') {
+              if (isX) return;
+              if (!s.lineFrom || s.lineFrom.id !== d.id) { this.setState({ lineFrom: { id: d.id, key }, mouse: null }); return; }
+              if (s.lineFrom.key === key) { this.setState({ lineFrom: null, mouse: null }); return; }
+              this.pushHistory();
+              const ln = { a: s.lineFrom.key, b: key, color: s.slot === 1 ? s.c1 : s.c2 };
+              this.updDiagram(d.id, dd => ({ ...dd, lines: [...(dd.lines || []), ln] }));
+              this.setState({ lineFrom: { id: d.id, key } });
+              return;
+            }
+            if (s.intervalOn && !isX) {
+              const pc = ((this.midiAt(si, f)) % 12 + 12) % 12;
+              this.setState({ rootPc: s.rootPc === pc ? null : pc });
+              return;
+            }
+            if (isX) { this.removeAt(d, key); return; }
+            const cur = s.slot === 1 ? s.c1 : s.c2;
+            const same = m.shape === s.shape && m.split === s.split &&
+              (s.split ? (m.c1 === s.c1 && m.c2 === s.c2) : m.c1 === cur);
+            if (same) { this.removeAt(d, key); return; }
+            this.pushHistory();
+            this.updDiagram(d.id, dd => ({ ...dd, markers: { ...dd.markers, [key]: {
+              ...dd.markers[key], shape: s.shape, split: s.split,
+              c1: s.split ? s.c1 : cur, c2: s.c2
+            } } }));
+          },
+          onCtx: (e) => { e.preventDefault(); e.stopPropagation(); if (!isX) this.setState({ editing: { id: d.id, key } }); }
+        });
+      }
+
+      const ed = s.editing && s.editing.id === d.id ? s.editing : null;
+      let editOn = false, editBoxStyle = '';
+      if (ed && d.markers[ed.key]) {
+        const [si, f] = ed.key.split(':').map(Number);
+        const fi = f === 0 ? -1 : f - s.startFret;
+        if (si < g.N && (f === 0 || (fi >= 0 && fi < g.F))) {
+          const p = g.pos(si, fi);
+          editOn = true;
+          editBoxStyle = `position:absolute;left:${p.x}px;top:${p.y - g.ms / 2 - 8}px;transform:translate(-50%,-100%);background:#2B2B2E;border-radius:8px;padding:5px 6px;box-shadow:0 0 0 2px #6FA7F0, 0 8px 20px rgba(0,0,0,0.25);z-index:5`;
+        }
+      }
+
+      return {
+        label: d.title || `Diagram ${di + 1}`,
+        title: d.title,
+        onTitle: (e) => this.updDiagram(d.id, dd => ({ ...dd, title: e.target.value })),
+        onClearRow: () => { this.pushHistory(); this.updDiagram(d.id, dd => ({ ...dd, markers: {}, lines: [], barres: [], ghost: null })); this.setState({ editing: null, lineFrom: null }); },
+        onPlayChord: () => (s.playing && s.playing.id === d.id && s.playing.kind === 'chord') ? this.stopPlayback() : this.playHarmonic(d),
+        onPlayMelody: () => (s.playing && s.playing.id === d.id && s.playing.kind === 'melody') ? this.stopPlayback() : this.playMelodic(d, 'asc'),
+        onPlayDescending: () => (s.playing && s.playing.id === d.id && s.playing.kind === 'desc') ? this.stopPlayback() : this.playMelodic(d, 'desc'),
+        chordBtnStyle: playBtn(!!(s.playing && s.playing.id === d.id && s.playing.kind === 'chord')),
+        melodyBtnStyle: playBtn(!!(s.playing && s.playing.id === d.id && s.playing.kind === 'melody')),
+        descBtnStyle: playBtn(!!(s.playing && s.playing.id === d.id && s.playing.kind === 'desc')),
+        chordPlaying: !!(s.playing && s.playing.id === d.id && s.playing.kind === 'chord'),
+        chordIdle: !(s.playing && s.playing.id === d.id && s.playing.kind === 'chord'),
+        melodyPlaying: !!(s.playing && s.playing.id === d.id && s.playing.kind === 'melody'),
+        melodyIdle: !(s.playing && s.playing.id === d.id && s.playing.kind === 'melody'),
+        descPlaying: !!(s.playing && s.playing.id === d.id && s.playing.kind === 'desc'),
+        descIdle: !(s.playing && s.playing.id === d.id && s.playing.kind === 'desc'),
+        wrapStyle: `position:relative;width:${g.W}px;height:${g.H}px;cursor:crosshair;user-select:none;-webkit-user-select:none`,
+        onBoard: (e) => {
+          if (this._squelchClick) { this._squelchClick = false; return; }
+          if (s.tool === 'line') { this.setState({ lineFrom: null, mouse: null, tool: 'draw' }); return; }
+          const r = e.currentTarget.getBoundingClientRect();
+          const z = s.zoom || 1;
+          const hit = g.pick((e.clientX - r.left) / z, (e.clientY - r.top) / z);
+          if (!hit) return;
+          const f = hit.fi < 0 ? 0 : s.startFret + hit.fi;
+          const key = hit.si + ':' + f;
+          if (d.markers[key]) return;
+          this.placeAt(d, hit.si, f, false);
+        },
+        onDown: (e) => {
+          if (s.tool === 'line') return;
+          const r = e.currentTarget.getBoundingClientRect();
+          const z = s.zoom || 1;
+          const hit = g.pick((e.clientX - r.left) / z, (e.clientY - r.top) / z);
+          if (!hit || hit.fi < 0) return;
+          e.preventDefault();
+          this.setState({ barreDrag: { id: d.id, f: s.startFret + hit.fi, a: hit.si, b: hit.si, moved: false } });
+        },
+        onMove: (e) => {
+          if (!s.barreDrag && !s.lineFrom) return;
+          const r = e.currentTarget.getBoundingClientRect();
+          const z = s.zoom || 1;
+          const x = (e.clientX - r.left) / z, y = (e.clientY - r.top) / z;
+          if (s.barreDrag && s.barreDrag.id === d.id) {
+            const hit = g.pick(x, y);
+            if (hit && hit.fi >= 0 && hit.si !== s.barreDrag.b) this.setState({ barreDrag: { ...s.barreDrag, b: hit.si, moved: true } });
+          } else if (s.lineFrom && s.lineFrom.id === d.id) {
+            this.setState({ mouse: { id: d.id, x, y } });
+          }
+        },
+        onUp: () => {
+          const bd = s.barreDrag;
+          if (!bd || bd.id !== d.id) return;
+          if (bd.moved) this._squelchClick = true;
+          if (bd.a !== bd.b) {
+            this.pushHistory();
+            const nb = { f: bd.f, a: Math.min(bd.a, bd.b), b: Math.max(bd.a, bd.b), color: s.slot === 1 ? s.c1 : s.c2 };
+            this.updDiagram(d.id, dd => ({ ...dd, barres: [...(dd.barres || []), nb] }));
+            if (s.sound) this.pluck(this.midiAt(nb.b, bd.f));
+          }
+          this.setState({ barreDrag: null });
+        },
+        onLeave: () => {
+          if (s.barreDrag || s.mouse) this.setState({ barreDrag: null, mouse: null });
+        },
+        linesEl: (() => {
+          const posOfKey = (k) => {
+            const [si2, f2] = k.split(':').map(Number);
+            const fi2 = f2 === 0 ? -1 : f2 - s.startFret;
+            if (si2 >= g.N || (f2 !== 0 && (fi2 < 0 || fi2 >= g.F))) return null;
+            return g.pos(si2, fi2);
+          };
+          const kids = [];
+          (d.lines || []).forEach((l, li) => {
+            const pa = posOfKey(l.a), pb = posOfKey(l.b);
+            if (!pa || !pb) return;
+            kids.push(React.createElement('line', {
+              key: 'l' + li, x1: pa.x, y1: pa.y, x2: pb.x, y2: pb.y,
+              stroke: l.color, strokeWidth: 4, strokeLinecap: 'round', opacity: 0.85,
+              style: { pointerEvents: 'stroke', cursor: 'pointer' },
+              onClick: (e) => {
+                e.stopPropagation();
+                this.pushHistory();
+                this.updDiagram(d.id, dd => ({ ...dd, lines: (dd.lines || []).filter((_, i2) => i2 !== li) }));
+              }
+            }));
+          });
+          if (s.tool === 'line' && s.lineFrom && s.lineFrom.id === d.id && s.mouse && s.mouse.id === d.id) {
+            const pa = posOfKey(s.lineFrom.key);
+            if (pa) kids.push(React.createElement('line', {
+              key: 'pv', x1: pa.x, y1: pa.y, x2: s.mouse.x, y2: s.mouse.y,
+              stroke: s.slot === 1 ? s.c1 : s.c2, strokeWidth: 4, strokeLinecap: 'round',
+              opacity: 0.45, strokeDasharray: '1 9', style: { pointerEvents: 'none' }
+            }));
+          }
+          return React.createElement('svg', {
+            width: g.W, height: g.H, viewBox: `0 0 ${g.W} ${g.H}`,
+            style: { position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none', overflow: 'visible' }
+          }, kids);
+        })(),
+        barres: (() => {
+          const bd = s.barreDrag && s.barreDrag.id === d.id
+            ? [{ ...s.barreDrag, color: s.slot === 1 ? s.c1 : s.c2, preview: true }] : [];
+          return (d.barres || []).concat(bd).map((b, bi) => {
+            const fi = b.f - s.startFret;
+            if (fi < 0 || fi >= g.F) return null;
+            const p1 = g.pos(Math.min(b.a, b.b), fi), p2 = g.pos(Math.max(b.a, b.b), fi);
+            const w = Math.round(g.ms);
+            let pos;
+            if (g.h) pos = `left:${p1.x - w / 2}px;top:${Math.min(p1.y, p2.y) - w / 2}px;width:${w}px;height:${Math.abs(p2.y - p1.y) + w}px;`;
+            else pos = `left:${Math.min(p1.x, p2.x) - w / 2}px;top:${p1.y - w / 2}px;width:${Math.abs(p2.x - p1.x) + w}px;height:${w}px;`;
+            return {
+              style: `position:absolute;${pos}border-radius:${w}px;background:${b.color};opacity:${b.preview ? 0.85 : 1};z-index:2;cursor:pointer;${b.preview ? 'pointer-events:none;' : ''}`,
+              onClick: b.preview ? null : (e) => {
+                e.stopPropagation();
+                this.pushHistory();
+                this.updDiagram(d.id, dd => ({ ...dd, barres: (dd.barres || []).filter((_, i2) => i2 !== bi) }));
+              }
+            };
+          }).filter(Boolean);
+        })(),
+        onBoardCtx: (e) => {
+          e.preventDefault();
+          const r = e.currentTarget.getBoundingClientRect();
+          const z = s.zoom || 1;
+          const hit = g.pick((e.clientX - r.left) / z, (e.clientY - r.top) / z);
+          if (!hit) return;
+          const f = hit.fi < 0 ? 0 : s.startFret + hit.fi;
+          const key = hit.si + ':' + f;
+          if (d.markers[key]) return;
+          this.placeAt(d, hit.si, f, true);
+        },
+        gridEl, ghosts, nums, markers,
+        editOn, editBoxStyle,
+        showTuningFork: di === 0
+      };
+    });
+
+    const edMarker = (() => {
+      const ed = s.editing;
+      if (!ed) return null;
+      const d = s.diagrams.find(x => x.id === ed.id);
+      return d ? d.markers[ed.key] : null;
+    })();
+
+    const lib = s.lib.map(en => ({
+      name: en.name, date: en.date,
+      onLoad: () => { 
+        const loaded = { ...en.doc, diagrams: (en.doc.diagrams || []).map(d => ({ ...d, id: d.id || ('d' + Date.now() + Math.floor(Math.random() * 1e5)) })), editing: null };
+        this.setState(loaded); 
+        this.toast('Loaded "' + en.name + '"'); 
+      },
+      onDel: (e) => {
+        e.stopPropagation();
+        const lib2 = this.state.lib.filter(x => x.id !== en.id);
+        this.setState({ lib: lib2 });
+        try { localStorage.setItem('fretlab.lib', JSON.stringify(lib2)); } catch (er) {}
+      }
+    }));
+
+    return {
+      // toolbar
+      shapeBtns, palette,
+      btnPlain: btn(false),
+      btnScaleType: 'height:28px;border:1px solid #E0E0DC;border-radius:7px;background:#fff;padding:0 10px;font-size:11.5px;font-weight:700;cursor:pointer;color:#1A1A1A;flex:none',
+      sw1Style: sw(1), sw2Style: sw(2),
+      stepWrapStyle: STEP_WRAP, stepLabelStyle: STEP_LABEL, stepUnitStyle: STEP_UNIT,
+      stepColStyle: STEP_COL, stepBtnUpStyle: STEP_BTN_UP, stepBtnDownStyle: STEP_BTN_DOWN,
+      pick1: () => this.setState({ slot: 1 }),
+      pick2: () => this.setState({ slot: 2 }),
+      toggleSplit: () => this.setState({ split: !s.split }),
+      splitBtnStyle: btn(s.split),
+      splitIconStyle: `width:16px;height:16px;border-radius:50%;background:linear-gradient(90deg, ${s.c1} 50%, ${s.c2} 50%)`,
+      strings: s.strings, frets: s.frets, startFret: s.startFret,
+      decStrings: () => this.setState({ strings: Math.max(4, s.strings - 1) }),
+      incStrings: () => this.setState({ strings: Math.min(8, s.strings + 1) }),
+      decFrets: () => this.setState({ frets: Math.max(3, s.frets - 1) }),
+      incFrets: () => this.setState({ frets: Math.min(24, s.frets + 1) }),
+      decStart: () => this.setState({ startFret: Math.max(1, s.startFret - 1) }),
+      incStart: () => this.setState({ startFret: Math.min(15, s.startFret + 1) }),
+      setOrientH: () => this.setState({ orient: 'h' }),
+      setOrientV: () => this.setState({ orient: 'v' }),
+      orientHStyle: btn(s.orient === 'h'),
+      orientVStyle: btn(s.orient === 'v'),
+      rows: s.diagrams.length,
+      incRows: () => this.setRows(s.diagrams.length + 1),
+      decRows: () => this.setRows(s.diagrams.length - 1),
+      transpose: (s.transpose || 0) > 0 ? '+' + s.transpose : String(s.transpose || 0),
+      incTrans: () => this.transposeBy(1),
+      decTrans: () => this.transposeBy(-1),
+      scrollRef: this.scrollRef,
+      zoomStyle: `zoom:${s.zoom};width:max-content;margin:0 auto`,
+      zoomPct: Math.round(s.zoom * 100) + '%',
+      zoomIn: () => this.setZoom(s.zoom + 0.1),
+      zoomOut: () => this.setZoom(s.zoom - 0.1),
+      zoomInt: Math.round(s.zoom * 100),
+      zoomMinInt: Math.round(this.fitLevel() * 100),
+      onZoomSlide: (e) => this.setZoom(Number(e.target.value) / 100),
+      zoomFit: () => this.fitZoom(),
+      zoom100: () => this.setZoom(1),
+      keys: NAMES, keyName: NAMES[s.keyRoot],
+      onKey: (e) => this.setState({ keyRoot: NAMES.indexOf(e.target.value) }),
+      scaleTypeLabel: s.scaleType === 'major' ? 'maj' : 'min',
+      toggleScaleType: () => this.setState({ scaleType: s.scaleType === 'major' ? 'minor' : 'major' }),
+      toggleOverlay: () => this.setState({ overlay: !s.overlay }),
+      overlayBtnStyle: btn(s.overlay),
+      setModeName: () => {
+        if (s.noteMode !== 'name') this.setState({ noteMode: 'name', noteAcc: 'flat' });
+        else if (s.noteAcc !== 'sharp') this.setState({ noteAcc: 'sharp' });
+        else this.setState({ noteMode: 'off', noteAcc: 'flat' });
+      },
+      setModeDegree: () => {
+        if (s.noteMode !== 'degree') this.setState({ noteMode: 'degree', noteAcc: 'flat' });
+        else if (s.noteAcc !== 'sharp') this.setState({ noteAcc: 'sharp' });
+        else this.setState({ noteMode: 'off', noteAcc: 'flat' });
+      },
+      setModeSolfege: () => {
+        if (s.noteMode !== 'solfege') this.setState({ noteMode: 'solfege', noteAcc: 'flat' });
+        else if (s.noteAcc !== 'sharp') this.setState({ noteAcc: 'sharp' });
+        else this.setState({ noteMode: 'off', noteAcc: 'flat' });
+      },
+      modeNameStyle: btn(s.noteMode === 'name', 'width:38px;padding:0 2px;'),
+      modeDegreeStyle: btn(s.noteMode === 'degree', 'width:38px;padding:0 2px;'),
+      modeSolfegeStyle: btn(s.noteMode === 'solfege', 'width:38px;padding:0 2px;'),
+      modeNameText: (s.noteMode === 'name' && s.noteAcc === 'sharp') ? 'Aa♯' : (s.noteMode === 'name' ? 'Aa♭' : 'Aa'),
+      modeDegreeText: (s.noteMode === 'degree' && s.noteAcc === 'sharp') ? '1♯' : (s.noteMode === 'degree' ? '1♭' : '1'),
+      modeSolfegeText: (s.noteMode === 'solfege' && s.noteAcc === 'sharp') ? 'Si' : (s.noteMode === 'solfege' ? 'Se' : 'Sol'),
+      toggleSound: () => this.setState({ sound: !s.sound }),
+      soundBtnStyle: btn(s.sound),
+      topOnPlayChord: () => { const d0 = s.diagrams[0]; if (!d0) return; (s.playing && s.playing.id === d0.id && s.playing.kind === 'chord') ? this.stopPlayback() : this.playHarmonic(d0); },
+      topOnPlayMelody: () => { const d0 = s.diagrams[0]; if (!d0) return; (s.playing && s.playing.id === d0.id && s.playing.kind === 'melody') ? this.stopPlayback() : this.playMelodic(d0, 'asc'); },
+      topOnPlayDescending: () => { const d0 = s.diagrams[0]; if (!d0) return; (s.playing && s.playing.id === d0.id && s.playing.kind === 'desc') ? this.stopPlayback() : this.playMelodic(d0, 'desc'); },
+      topChordBtnStyle: playBtn(!!(s.playing && s.diagrams[0] && s.playing.id === s.diagrams[0].id && s.playing.kind === 'chord')),
+      topMelodyBtnStyle: playBtn(!!(s.playing && s.diagrams[0] && s.playing.id === s.diagrams[0].id && s.playing.kind === 'melody')),
+      topDescBtnStyle: playBtn(!!(s.playing && s.diagrams[0] && s.playing.id === s.diagrams[0].id && s.playing.kind === 'desc')),
+      topChordPlaying: !!(s.playing && s.diagrams[0] && s.playing.id === s.diagrams[0].id && s.playing.kind === 'chord'),
+      topChordIdle: !(s.playing && s.diagrams[0] && s.playing.id === s.diagrams[0].id && s.playing.kind === 'chord'),
+      topMelodyPlaying: !!(s.playing && s.diagrams[0] && s.playing.id === s.diagrams[0].id && s.playing.kind === 'melody'),
+      topMelodyIdle: !(s.playing && s.diagrams[0] && s.playing.id === s.diagrams[0].id && s.playing.kind === 'melody'),
+      topDescPlaying: !!(s.playing && s.diagrams[0] && s.playing.id === s.diagrams[0].id && s.playing.kind === 'desc'),
+      topDescIdle: !(s.playing && s.diagrams[0] && s.playing.id === s.diagrams[0].id && s.playing.kind === 'desc'),
+
+      // line tool (toggle) — draws connecting lines, auto-exits back to the default tool on an empty click
+      toggleLine: () => this.setState(st => ({ tool: st.tool === 'line' ? 'draw' : 'line', lineFrom: null, mouse: null, barreDrag: null })),
+      toolLineStyle: btn(s.tool === 'line'),
+      toggleInterval: () => {
+        if (!s.intervalOn) this.toast('Interval mode — click a marker to set the root');
+        this.setState({ intervalOn: !s.intervalOn, rootPc: null });
+      },
+      intervalBtnStyle: btn(!!s.intervalOn),
+      undoDoc: () => this.undo(),
+      redoDoc: () => this.redo(),
+
+      // tuning
+      tuningForkStyle, tuningForkRef: (el) => { this._tuningForkEl = el; },
+      toggleTuningPopover: () => this.setState({ tuningPopoverOpen: !s.tuningPopoverOpen }),
+      tuningPopoverOpen: s.tuningPopoverOpen,
+      tuningPopRef: (el) => { this._tuningPopEl = el; },
+      tuningPopStyle,
+      allTuneWrapStyle, allTuneBtnStyle, allTuneBtnStyleR,
+      allTuneDown: () => this.adjustAllTuning(-1),
+      allTuneUp: () => this.adjustAllTuning(1),
+      tuningRows,
+
+      // canvas
+      diagrams,
+      docTitle: s.docTitle,
+      onDocTitle: (e) => this.setState({ docTitle: e.target.value }),
+      stopProp: (e) => e.stopPropagation(),
+      editVal: edMarker ? edMarker.label : '',
+      editRef: (el) => { if (el && document.activeElement !== el) { el.focus(); el.select(); } },
+      onEditKey: (e) => {
+        if (e.key === 'Enter') this.commitEdit(e.target.value);
+        if (e.key === 'Escape') this.setState({ editing: null });
+      },
+      onEditBlur: (e) => this.commitEdit(e.target.value),
+
+      // library
+      libOpen: s.libOpen, lib, libEmpty: s.lib.length === 0,
+      libBtnStyle: btn(s.libOpen),
+      toggleLib: () => { this.setState({ libOpen: !s.libOpen, scaleLibOpen: false }); this.refitWidth(); },
+
+      // scale library
+      scaleLibOpen: s.scaleLibOpen,
+      scaleLibBtnStyle: btn(s.scaleLibOpen),
+      toggleScaleLib: () => { this.setState({ scaleLibOpen: !s.scaleLibOpen, libOpen: false }); this.refitWidth(); },
+      libCats: LIB_CATS.map(c => ({
+        name: c,
+        onClick: () => this.setState({ libCat: c }),
+        style: `flex:1;height:26px;border:none;border-radius:7px;background:${s.libCat === c ? '#EAEAE7' : 'transparent'};font-size:11.5px;font-weight:700;cursor:pointer;color:#333;padding:0;${s.libCat === c ? 'box-shadow:inset 0 0 0 1.5px #141414;' : ''}`
+      })),
+      libCustomOn: s.libCat === 'Custom',
+      libFormula: s.libFormula,
+      onFormula: (e) => this.setState({ libFormula: e.target.value }),
+      onFormulaKey: (e) => {
+        if (e.key !== 'Enter') return;
+        const iv = parseFormula(e.target.value);
+        if (!iv || iv.length < 2) { this.toast('Couldn’t read that formula'); return; }
+        this.setState({ libFormula: e.target.value, libSel: { custom: true }, libOverlay: { name: 'Custom Scale', intervals: iv } });
+      },
+      applyFormula: () => {
+        const iv = parseFormula(s.libFormula);
+        if (!iv || iv.length < 2) { this.toast('Couldn’t read that formula'); return; }
+        this.setState({ libSel: { custom: true }, libOverlay: { name: 'Custom Scale', intervals: iv } });
+      },
+      scaleItems: (s.libCat === 'Custom' ? [] : (LIB[s.libCat] || [])).map((e, i) => {
+        const selOn = s.libSel && !s.libSel.custom && s.libSel.cat === s.libCat && s.libSel.i === i;
+        return {
+          name: e[0], formula: e[1],
+          onClick: () => this.setState({ libSel: { cat: s.libCat, i }, libOverlay: { name: e[0], intervals: parseFormula(e[1]) } }),
+          style: `display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:8px 10px;border:1px solid ${selOn ? '#141414' : '#ECECE8'};border-radius:9px;background:${selOn ? '#F7F7F5' : '#fff'};cursor:pointer;text-align:left;flex:none`
+        };
+      }),
+      libSelName: (() => { const sel = this.libSelected(); return sel ? sel.name : ''; })(),
+      libSelTitle: (() => { const sel = this.libSelected(); return sel ? `${NAMES[s.keyRoot]} ${sel.name} · ${sel.formula}` : ''; })(),
+      loadWhole: () => this.stampWhole(),
+      loadCaged: () => this.stampCAGED(),
+      clearScaleOverlay: () => this.setState({ libOverlay: null, libSel: null }),
+      saveDoc: () => {
+        const name = s.docTitle || 'Untitled';
+        const exists = s.lib.some(x => x.id === name);
+        if (exists && !window.confirm('A save named “' + name + '” already exists. Overwrite it?')) return;
+        const entry = { id: name, name, date: new Date().toISOString().slice(0, 10), doc: this.docSnapshot() };
+        const lib2 = [entry, ...s.lib.filter(x => x.id !== name)];
+        this.setState({ lib: lib2 });
+        try { localStorage.setItem('fretlab.lib', JSON.stringify(lib2)); } catch (e) {}
+        this.toast('Saved “' + name + '”');
+      },
+      clearAll: () => { this.pushHistory(); this.setState(st => ({ diagrams: st.diagrams.map(d => ({ ...d, markers: {}, lines: [], barres: [], ghost: null })), editing: null, lineFrom: null, rootPc: null, libOverlay: null })); this.toast('Fretboard cleared'); },
+
+      // export
+      exportMenuOpen: s.exportMenuOpen,
+      exportWrapRef: (el) => { this._exportWrapEl = el; },
+      toggleExportMenu: () => this.setState({ exportMenuOpen: !s.exportMenuOpen }),
+      exportSVG: () => {
+        this.download(new Blob([this.buildSVG()], { type: 'image/svg+xml' }), this.fileName() + '.svg');
+        this.toast('SVG downloaded');
+        this.setState({ exportMenuOpen: false });
+      },
+      exportPNG: () => this.toPNG(b => {
+        if (b) { this.download(b, this.fileName() + '.png'); this.toast('PNG downloaded'); }
+        this.setState({ exportMenuOpen: false });
+      }),
+
+      toast: s.toast
+    };
+  }
+}
+</script>
+</body>
+</html>
