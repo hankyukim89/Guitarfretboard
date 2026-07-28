@@ -126,19 +126,25 @@
     <span style="width:1px; align-self:stretch; background:#E6E6E2; margin:2px 5px"></span>
 
     <div style="display:flex; flex-direction:column; align-items:flex-start; gap:3px">
-      <span style="font-size:9px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#9A9A95; user-select:none">KEY&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; SCALE&nbsp; &nbsp; &nbsp;OVERLAY&nbsp; &nbsp; &nbsp;ROOT</span>
+      <span style="font-size:9px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#9A9A95; user-select:none">Key</span>
       <div style="display:flex; align-items:center; gap:5px">
-    <select value="{{ keyName }}" onChange="{{ onKey }}" title="Key" style="height:28px; border:1px solid #E0E0DC; border-radius:7px; background:#fff; font-size:12.5px; font-weight:600; padding:0 4px; cursor:pointer; outline:none">
-      <sc-for list="{{ keys }}" as="k" hint-placeholder-count="12">
-        <option value="{{ k }}">{{ k }}</option>
-      </sc-for>
-    </select>
-    <button title="Major / minor" onClick="{{ toggleScaleType }}" style="{{ btnScaleType }}" style-hover="background:#F0F0EE">{{ scaleTypeLabel }}</button>
-    <button title="Show Notes" onClick="{{ toggleOverlay }}" style="{{ overlayBtnStyle }}" style-hover="background:#F0F0EE">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-    </button>
-    <button title="Interval highlighting — click a marker to set the root; every marker recolors by interval from it" onClick="{{ toggleInterval }}" style="{{ intervalBtnStyle }}" style-hover="background:#F0F0EE"><span style="font-size:11px; font-weight:800">R</span></button>
+        <select value="{{ keyName }}" onChange="{{ onKey }}" title="Key — drives the scale library and note labels" style="height:28px; border:1px solid #E0E0DC; border-radius:7px; background:#fff; font-size:12.5px; font-weight:600; padding:0 4px; cursor:pointer; outline:none">
+          <sc-for list="{{ keys }}" as="k" hint-placeholder-count="15">
+            <option value="{{ k }}">{{ k }}</option>
+          </sc-for>
+        </select>
+        
+        
       </div>
+    </div>
+
+    <span style="width:1px; align-self:stretch; background:#E6E6E2; margin:2px 5px"></span>
+
+    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:3px">
+      <span style="font-size:9px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#9A9A95; user-select:none">Highlight root</span>
+      <button title="Highlight root — colors every marker by its interval from the key" onClick="{{ toggleInterval }}" style="{{ intervalBtnStyle }}" style-hover="background:#F0F0EE">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="4.5"></circle><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"></circle></svg>
+      </button>
     </div>
 
     <span style="width:1px; align-self:stretch; background:#E6E6E2; margin:2px 5px"></span>
@@ -148,7 +154,7 @@
       <div style="display:flex; align-items:center; gap:5px">
         <button title="Note names — click again for flat/sharp" onClick="{{ setModeName }}" style="{{ modeNameStyle }}" style-hover="background:#F0F0EE"><span style="font-size:12px; font-weight:700; white-space:nowrap">{{ modeNameText }}</span></button>
         <button title="Scale degree numbers — click again for flat/sharp" onClick="{{ setModeDegree }}" style="{{ modeDegreeStyle }}" style-hover="background:#F0F0EE"><span style="font-size:12px; font-weight:700; white-space:nowrap">{{ modeDegreeText }}</span></button>
-        <button title="Solfège (do re mi) — click again for flat/sharp" onClick="{{ setModeSolfege }}" style="{{ modeSolfegeStyle }}" style-hover="background:#F0F0EE"><span style="font-size:11px; font-weight:700; white-space:nowrap">{{ modeSolfegeText }}</span></button>
+        <button title="Solfège (do re mi) — click again for flat/sharp" onClick="{{ setModeSolfege }}" style="{{ modeSolfegeStyle }}" style-hover="background:#F0F0EE"><span style="font-size:12px; font-weight:700; white-space:nowrap">{{ modeSolfegeText }}</span></button>
       </div>
     </div>
 
@@ -166,36 +172,6 @@
       <button title="Sound on placing" onClick="{{ toggleSound }}" style="{{ soundBtnStyle }}" style-hover="background:#F0F0EE">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.5 8.5a5 5 0 0 1 0 7"></path></svg>
       </button>
-    </div>
-
-    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:3px">
-      <span style="font-size:9px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#9A9A95; user-select:none">Play</span>
-      <div style="display:flex; gap:4px; border:1px solid #ECECE8; background:#FFFFFF; border-radius:999px; padding:4px 8px">
-        <button title="Play together (harmonic) — click again to stop" onClick="{{ topOnPlayChord }}" style="{{ topChordBtnStyle }}" style-hover="background:#F0F0EE">
-          <sc-if value="{{ topChordPlaying }}" hint-placeholder-val="{{ false }}">
-            <svg width="10" height="10" viewBox="0 0 10 10"><rect width="10" height="10" rx="2" fill="currentColor"></rect></svg>
-          </sc-if>
-          <sc-if value="{{ topChordIdle }}" hint-placeholder-val="{{ true }}">
-            <svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="2.5" r="2" fill="currentColor"></circle><circle cx="7" cy="7" r="2" fill="currentColor"></circle><circle cx="7" cy="11.5" r="2" fill="currentColor"></circle></svg>
-          </sc-if>
-        </button>
-        <button title="Play one at a time, ascending — click again to stop" onClick="{{ topOnPlayMelody }}" style="{{ topMelodyBtnStyle }}" style-hover="background:#F0F0EE">
-          <sc-if value="{{ topMelodyPlaying }}" hint-placeholder-val="{{ false }}">
-            <svg width="10" height="10" viewBox="0 0 10 10"><rect width="10" height="10" rx="2" fill="currentColor"></rect></svg>
-          </sc-if>
-          <sc-if value="{{ topMelodyIdle }}" hint-placeholder-val="{{ true }}">
-            <svg width="14" height="14" viewBox="0 0 14 14"><circle cx="2.5" cy="2.5" r="2" fill="currentColor"></circle><circle cx="7" cy="7" r="2" fill="currentColor"></circle><circle cx="11.5" cy="11.5" r="2" fill="currentColor"></circle></svg>
-          </sc-if>
-        </button>
-        <button title="Play one at a time, string by string, highest string first, from the highest note to the lowest note on each string — click again to stop" onClick="{{ topOnPlayDescending }}" style="{{ topDescBtnStyle }}" style-hover="background:#F0F0EE">
-          <sc-if value="{{ topDescPlaying }}" hint-placeholder-val="{{ false }}">
-            <svg width="10" height="10" viewBox="0 0 10 10"><rect width="10" height="10" rx="2" fill="currentColor"></rect></svg>
-          </sc-if>
-          <sc-if value="{{ topDescIdle }}" hint-placeholder-val="{{ true }}">
-            <svg width="14" height="14" viewBox="0 0 14 14"><circle cx="11.5" cy="2.5" r="2" fill="currentColor"></circle><circle cx="7" cy="7" r="2" fill="currentColor"></circle><circle cx="2.5" cy="11.5" r="2" fill="currentColor"></circle></svg>
-          </sc-if>
-        </button>
-      </div>
     </div>
 
     <div style="display:flex; flex-direction:column; align-items:flex-start; gap:3px; margin-left:auto">
@@ -245,14 +221,14 @@
     <span style="width:1px; height:16px; background:#E6E6E2; margin:0 2px"></span>
     <button title="Fit to page" onClick="{{ zoomFit }}" style="border:none; background:transparent; height:26px; border-radius:99px; cursor:pointer; font-size:11px; font-weight:700; color:#55554F; padding:0 8px; flex:none" style-hover="background:#F0F0EE">Fit</button>
   </div>
-  <div ref="{{ scrollRef }}" style="flex: 1; overflow: auto; padding: 64px 24px 90px; background-color: #FFFFFF">
+  <div ref="{{ scrollRef }}" style="flex: 1; overflow: auto; padding: 44px 12px 16px; background-color: #FFFFFF">
     <div style="{{ zoomStyle }}">
-    <div style="position:relative; display:flex; align-items:center; gap:8px; width:max-content; margin:0 auto 10px">
-      <input value="{{ docTitle }}" onChange="{{ onDocTitle }}" placeholder="Click to Edit" style="border: 1px solid #ECECE8; background: #FFFFFF; border-radius: 8px; outline: none; text-align: center; font-size: 19px; font-weight: 600; color: #1A1A1A; width: 320px; padding: 5px 10px; border-color: #000000" style-focus="border-color:#C9C9C4">
+    <div style="position:relative; display:flex; align-items:center; gap:8px; width:max-content; margin:0 auto 10px; padding-left:174px">
+      
       <button title="Clear all — removes markers, lines, and barres from every row" onClick="{{ clearAll }}" style="position:absolute; left:100%; margin-left:8px; display:flex; align-items:center; gap:5px; border:1px solid #ECECE8; background:#FFFFFF; color:#C43D3D; font-size:12px; font-weight:600; cursor:pointer; padding:8px 12px; border-radius:8px; white-space:nowrap" style-hover="background:#FBEAEA">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
         Clear all
-      </button>
+      </button><input value="{{ docTitle }}" onChange="{{ onDocTitle }}" placeholder="Click to Edit" style="border: 1px solid #ECECE8; background: #FFFFFF; border-radius: 8px; outline: none; text-align: center; font-size: 19px; font-weight: 600; color: #1A1A1A; width: 320px; padding: 5px 10px; border-color: #000000" style-focus="border-color:#C9C9C4">
     </div>
     <sc-for list="{{ diagrams }}" as="d" hint-placeholder-count="1">
       <div data-screen-label="{{ d.label }}" style="display:flex; align-items:center; gap:4px; width:max-content; margin:0 auto 14px">
@@ -262,12 +238,42 @@
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
             Clear row
           </button>
+          <div style="display:flex; align-items:center; gap:4px; border:1px solid #ECECE8; background:#FFFFFF; border-radius:999px; padding:4px 7px 4px 8px" title="Play this fretboard">
+            <span style="display:flex; align-items:center; gap:4px; color:#9A9A95; padding-right:3px; margin-right:1px; border-right:1px solid #ECECE8; user-select:none">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M19 5a9 9 0 0 1 0 14"></path></svg>
+              <span style="font-size:9px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase">Play</span>
+            </span>
+            <button title="Play together (harmonic) — click again to stop" onClick="{{ d.onPlayChord }}" style="{{ d.chordBtnStyle }}" style-hover="background:#F0F0EE">
+              <sc-if value="{{ d.chordPlaying }}" hint-placeholder-val="{{ false }}">
+                <svg width="10" height="10" viewBox="0 0 10 10"><rect width="10" height="10" rx="2" fill="currentColor"></rect></svg>
+              </sc-if>
+              <sc-if value="{{ d.chordIdle }}" hint-placeholder-val="{{ true }}">
+                <svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="2.5" r="2" fill="currentColor"></circle><circle cx="7" cy="7" r="2" fill="currentColor"></circle><circle cx="7" cy="11.5" r="2" fill="currentColor"></circle></svg>
+              </sc-if>
+            </button>
+            <button title="Play one at a time, ascending — click again to stop" onClick="{{ d.onPlayMelody }}" style="{{ d.melodyBtnStyle }}" style-hover="background:#F0F0EE">
+              <sc-if value="{{ d.melodyPlaying }}" hint-placeholder-val="{{ false }}">
+                <svg width="10" height="10" viewBox="0 0 10 10"><rect width="10" height="10" rx="2" fill="currentColor"></rect></svg>
+              </sc-if>
+              <sc-if value="{{ d.melodyIdle }}" hint-placeholder-val="{{ true }}">
+                <svg width="14" height="14" viewBox="0 0 14 14"><circle cx="2.5" cy="2.5" r="2" fill="currentColor"></circle><circle cx="7" cy="7" r="2" fill="currentColor"></circle><circle cx="11.5" cy="11.5" r="2" fill="currentColor"></circle></svg>
+              </sc-if>
+            </button>
+            <button title="Play one at a time, string by string, highest string first — click again to stop" onClick="{{ d.onPlayDescending }}" style="{{ d.descBtnStyle }}" style-hover="background:#F0F0EE">
+              <sc-if value="{{ d.descPlaying }}" hint-placeholder-val="{{ false }}">
+                <svg width="10" height="10" viewBox="0 0 10 10"><rect width="10" height="10" rx="2" fill="currentColor"></rect></svg>
+              </sc-if>
+              <sc-if value="{{ d.descIdle }}" hint-placeholder-val="{{ true }}">
+                <svg width="14" height="14" viewBox="0 0 14 14"><circle cx="11.5" cy="2.5" r="2" fill="currentColor"></circle><circle cx="7" cy="7" r="2" fill="currentColor"></circle><circle cx="2.5" cy="11.5" r="2" fill="currentColor"></circle></svg>
+              </sc-if>
+            </button>
+          </div>
         </div>
 
         <div style="{{ d.wrapStyle }}" onClick="{{ d.onBoard }}" onContextMenu="{{ d.onBoardCtx }}" onMouseDown="{{ d.onDown }}" onMouseMove="{{ d.onMove }}" onMouseUp="{{ d.onUp }}" onMouseLeave="{{ d.onLeave }}">
           {{ d.gridEl }}
           <sc-for list="{{ d.barres }}" as="bar" hint-placeholder-count="0">
-            <div title="Barre — click to remove" onClick="{{ bar.onClick }}" style="{{ bar.style }}"></div>
+            <div data-barre="1" title="Barre — click to remove" onClick="{{ bar.onClick }}" style="{{ bar.style }}"></div>
           </sc-for>
           {{ d.linesEl }}
           <sc-for list="{{ d.ghosts }}" as="g" hint-placeholder-count="0">
@@ -281,6 +287,9 @@
               {{ m.svgEl }}
               <span style="{{ m.textStyle }}">{{ m.text }}</span>
             </div>
+          </sc-for>
+          <sc-for list="{{ d.barreLabels }}" as="bl" hint-placeholder-count="0">
+            <div style="{{ bl.style }}">{{ bl.t }}</div>
           </sc-for>
           <sc-if value="{{ d.editOn }}" hint-placeholder-val="{{ false }}">
             <div onClick="{{ stopProp }}" style="{{ d.editBoxStyle }}">
@@ -336,12 +345,17 @@
         <div style="font-size:15px; font-weight:700">Scale Library</div>
         <button onClick="{{ toggleScaleLib }}" style="border:none; background:transparent; color:#8A8A85; cursor:pointer; font-size:14px; padding:4px" style-hover="color:#1A1A1A">✕</button>
       </div>
-      <div style="font-size:11px; color:#9A9A95; margin-bottom:10px">Pick a scale to preview it on the boards, then load it</div>
-      <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px">
-        <span style="font-size:11px; font-weight:700; color:#9A9A95; text-transform:uppercase; letter-spacing:0.05em">Root</span>
-        <select value="{{ keyName }}" onChange="{{ onKey }}" style="flex:1; height:30px; border:1px solid #E0E0DC; border-radius:7px; background:#fff; font-size:12.5px; font-weight:600; padding:0 6px; cursor:pointer; outline:none">
-          <sc-for list="{{ keys }}" as="k" hint-placeholder-count="12"><option value="{{ k }}">{{ k }}</option></sc-for>
-        </select>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px">
+        <div style="font-size:11px; color:#9A9A95">Click a scale — it loads instantly</div>
+        <div title="Set in the top bar" style="flex:none; background:#EAF1FC; color:#2F5FBF; font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:99px; white-space:nowrap">Key: {{ keyName }}</div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px">
+        <span style="font-size:9px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#9A9A95">Load as</span>
+        <div style="display:flex; gap:5px">
+          <sc-for list="{{ loadModes }}" as="lm" hint-placeholder-count="2">
+            <button title="{{ lm.tip }}" onClick="{{ lm.onClick }}" style="{{ lm.style }}" style-hover="background:#F0F0EE">{{ lm.name }}</button>
+          </sc-for>
+        </div>
       </div>
       <div style="display:flex; gap:4px; margin-bottom:10px">
         <sc-for list="{{ libCats }}" as="c" hint-placeholder-count="4">
@@ -351,11 +365,11 @@
       <sc-if value="{{ libCustomOn }}" hint-placeholder-val="{{ false }}">
         <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px">
           <input value="{{ libFormula }}" onChange="{{ onFormula }}" onKeyDown="{{ onFormulaKey }}" placeholder="e.g. 1 b3 4 b5 5 b7" style="height:34px; border:1px solid #E0E0DC; border-radius:8px; padding:0 10px; font-size:13px; font-weight:600; outline:none" style-focus="border-color:#141414">
-          <button onClick="{{ applyFormula }}" style="height:32px; border:none; border-radius:8px; background:#1C1C1E; color:#fff; font-size:12.5px; font-weight:700; cursor:pointer">Use formula</button>
+          <button onClick="{{ applyFormula }}" style="height:32px; border:none; border-radius:8px; background:#1C1C1E; color:#fff; font-size:12.5px; font-weight:700; cursor:pointer">Load formula</button>
           <div style="font-size:11px; color:#9A9A95">Degrees 1–7 with b / # (e.g. 1 2 b3 #4 5 b6 7)</div>
         </div>
       </sc-if>
-      <div style="flex:1; overflow:auto; display:flex; flex-direction:column; gap:4px; margin-bottom:10px">
+      <div style="flex:1; overflow:auto; display:flex; flex-direction:column; gap:4px">
         <sc-for list="{{ scaleItems }}" as="sc" hint-placeholder-count="6">
           <button onClick="{{ sc.onClick }}" style="{{ sc.style }}" style-hover="background:#F7F7F5">
             <span style="font-size:12.5px; font-weight:600; color:#1A1A1A">{{ sc.name }}</span>
@@ -363,14 +377,6 @@
           </button>
         </sc-for>
       </div>
-      <sc-if value="{{ libSelName }}" hint-placeholder-val="{{ false }}">
-        <div style="border-top:1px solid #ECECE8; padding-top:10px; display:flex; flex-direction:column; gap:6px">
-          <div style="font-size:12px; font-weight:700">{{ libSelTitle }}</div>
-          <button onClick="{{ loadWhole }}" style="height:34px; border:none; border-radius:8px; background:#1C1C1E; color:#fff; font-size:12.5px; font-weight:700; cursor:pointer">Load — whole neck</button>
-          <button onClick="{{ loadCaged }}" style="height:34px; border:1px solid #1C1C1E; border-radius:8px; background:#fff; color:#1C1C1E; font-size:12.5px; font-weight:700; cursor:pointer" style-hover="background:#F0F0EE">Load — CAGED · 5 shapes</button>
-          <button onClick="{{ clearScaleOverlay }}" style="height:30px; border:none; border-radius:8px; background:transparent; color:#8A8A85; font-size:12px; font-weight:600; cursor:pointer" style-hover="background:#F0F0EE">Clear preview</button>
-        </div>
-      </sc-if>
     </div>
   </sc-if>
 
@@ -407,26 +413,28 @@
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;markerSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:32,&quot;min&quot;:24,&quot;max&quot;:42,&quot;step&quot;:2,&quot;unit&quot;:&quot;px&quot;,&quot;section&quot;:&quot;Board&quot;},&quot;lineColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#9AA5B1&quot;,&quot;options&quot;:[&quot;#9AA5B1&quot;,&quot;#26303B&quot;,&quot;#B9A88F&quot;],&quot;section&quot;:&quot;Board&quot;},&quot;showInlays&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;section&quot;:&quot;Board&quot;}}">
-const NAMES = ['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
-const NAMES_SHARP = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+const NAMES = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
+const NAMES_SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const KEY_LIST = [['C',0],['G',7],['D',2],['A',9],['E',4],['B',11],['F#',6],['C#',1],['F',5],['Bb',10],['Eb',3],['Ab',8],['Db',1],['Gb',6],['Cb',11]];
+const KEY_ENHARMONIC = { 1: { sharp: 'C#', flat: 'Db' }, 6: { sharp: 'F#', flat: 'Gb' }, 11: { sharp: 'B', flat: 'Cb' } };
 const TUNINGS = { 4:[43,38,33,28], 5:[43,38,33,28,23], 6:[64,59,55,50,45,40], 7:[64,59,55,50,45,40,35], 8:[64,59,55,50,45,40,35,30] };
 const SCALES = { major:[0,2,4,5,7,9,11], minor:[0,2,3,5,7,8,10] };
 const TUNE_PILL = 'flex:1;height:24px;border:1px solid #E0E0DC;border-radius:6px;background:#F7F7F5;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:#1A1A1A';
 const TUNE_COL = 'display:flex;flex-direction:column;border:1px solid #E0E0DC;border-radius:6px;width:16px;height:24px;overflow:hidden;flex:none;background:#fff';
 const TUNE_BTN_UP = 'flex:1;border:none;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;color:#8A8A85';
 const TUNE_BTN_DOWN = 'flex:1;border:none;border-top:1px solid #E0E0DC;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;color:#8A8A85';
-const INTERVAL_NAMES = ['R','♭2','2','♭3','3','4','♭5','5','♭6','6','♭7','7'];
+const INTERVAL_NAMES = ['R','b2','2','b3','3','4','b5','5','b6','6','b7','7'];
 const INTERVAL_COLORS = ['#E94040','#E05299','#F2743A','#8B5CF6','#F0B429','#2E9E5B','#8E8E93','#2F7DE1','#B45309','#0EA5A4','#7A4A32','#1C1C1E'];
 const LIB = {
   'Common': [
-    ['Major (Ionian)', '1 2 3 4 5 6 7'],
+    ['Major ', '1 2 3 4 5 6 7'],
     ['Natural Minor', '1 2 b3 4 5 b6 b7'],
     ['Harmonic Minor', '1 2 b3 4 5 b6 7'],
     ['Melodic Minor', '1 2 b3 4 5 6 7'],
     ['Major Pentatonic', '1 2 3 5 6'],
     ['Minor Pentatonic', '1 b3 4 5 b7'],
-    ['Blues (Minor)', '1 b3 4 b5 5 b7'],
-    ['Blues (Major)', '1 2 b3 3 5 6']
+    ['Minor Blues', '1 b3 4 b5 5 b7'],
+    ['Major Blues', '1 2 b3 3 5 6']
   ],
   'Modes': [
     ['Ionian', '1 2 3 4 5 6 7'],
@@ -523,8 +531,8 @@ const STAR_PTS = [[50,0],[61,35],[98,35],[68,57],[79,91],[50,70],[21,91],[32,57]
 const HEART_PTS = [[50,15],[61,0],[75,0],[87,8],[94,20],[94,35],[85,55],[50,85],[15,55],[6,35],[6,20],[13,8],[25,0],[39,0]];
 const SOLFEGE_CHROM = ['Do','Ra','Re','Me','Mi','Fa','Se','Sol','Le','La','Te','Ti'];
 const SOLFEGE_CHROM_SHARP = ['Do','Di','Re','Ri','Mi','Fa','Fi','Sol','Si','La','Li','Ti'];
-const DEGREE_CHROM = ['1','2♭','2','3♭','3','4','5♭','5','6♭','6','7♭','7'];
-const DEGREE_CHROM_SHARP = ['1','1♯','2','2♯','3','4','4♯','5','5♯','6','6♯','7'];
+const DEGREE_CHROM = ['1','2b','2','3b','3','4','5b','5','6b','6','7b','7'];
+const DEGREE_CHROM_SHARP = ['1','1#','2','2#','3','4','4#','5','5#','6','6#','7'];
 const STEP_WRAP = 'display:flex;align-items:stretch;border:1px solid #E0E0DC;border-radius:7px;background:#fff;height:28px;overflow:hidden;flex:none';
 const STEP_LABEL = 'font-size:12.5px;font-weight:600;padding:0 5px 0 9px;white-space:nowrap;color:#1A1A1A;display:flex;align-items:center';
 const STEP_UNIT = 'color:#9A9A95;font-weight:500';
@@ -561,12 +569,12 @@ class Component extends DCLogic {
     this.state = {
       shape: 'circle', c1: '#E94040', c2: '#2F7DE1', slot: 1, split: false,
       strings: 6, frets: 12, startFret: 1, orient: 'h',
-      keyRoot: 0, scaleType: 'major', overlay: false,
+      keyRoot: 0, keySharp: true, scaleType: 'major', overlay: false,
       sound: true, noteMode: 'off', noteAcc: 'flat', exportMenuOpen: false,
       docTitle: '', diagrams: [this.blank()], editing: null, libOpen: false, toast: '', lib: [], zoom: 1, transpose: 0,
-      scaleLibOpen: false, libCat: 'Common', libSel: null, libFormula: '', libOverlay: null,
+      scaleLibOpen: false, libCat: 'Common', libSel: null, libFormula: '', libOverlay: null, loadMode: 'whole',
       tool: 'draw', tuning: null, tuningPopoverOpen: false,
-      intervalOn: false, rootPc: null, lineFrom: null, mouse: null, barreDrag: null
+      intervalOn: false, lineFrom: null, mouse: null, barreDrag: null
     };
     this._toastT = null;
     this._scrollEl = null;
@@ -624,10 +632,14 @@ class Component extends DCLogic {
       }
     };
     document.addEventListener('mousedown', this._onDocMouseDown);
+    this._onResize = () => this.fitZoom();
+    window.addEventListener('resize', this._onResize);
     this._didMountLoad();
+    setTimeout(() => this.fitZoom(), 80);
   }
   componentWillUnmount() {
     window.removeEventListener('keydown', this._onKeyDown);
+    window.removeEventListener('resize', this._onResize);
     document.removeEventListener('mousedown', this._onDocMouseDown);
   }
 
@@ -676,6 +688,56 @@ class Component extends DCLogic {
     const deg = ((this.midiAt(s, fret) - this.state.keyRoot) % 12 + 12) % 12;
     return SCALES[this.state.scaleType].indexOf(deg);
   }
+  // Barres only: a dot under a barre held at a higher fret never sounds, so it loses
+  // its name. Plain dots never silence each other (scale boxes keep every name).
+  isPlayed(d, si, f) {
+    for (const b of (d.barres || [])) {
+      if (b.f > f && Math.min(b.a, b.b) <= si && si <= Math.max(b.a, b.b)) return false;
+    }
+    return true;
+  }
+  // Which strings a barre actually sounds on: the ones with nothing fretted ahead of it.
+  barreStrings(d, b) {
+    const lo = Math.min(b.a, b.b), hi = Math.max(b.a, b.b), out = [];
+    for (let si = lo; si <= hi; si++) {
+      let ok = true;
+      for (const k of Object.keys(d.markers || {})) {
+        const [si2, f2] = k.split(':').map(Number);
+        if (si2 !== si) continue;
+        if (d.markers[k].shape === 'x') { ok = false; break; }
+        if (f2 >= b.f) { ok = false; break; }
+      }
+      if (ok) for (const b2 of (d.barres || [])) {
+        if (b2 === b) continue;
+        if (b2.f > b.f && Math.min(b2.a, b2.b) <= si && si <= Math.max(b2.a, b2.b)) { ok = false; break; }
+      }
+      if (ok) out.push(si);
+    }
+    return out;
+  }
+  // You can't barre across a string that's already fretted behind the barre — the drag
+  // stops at the last string a real finger could hold.
+  clampBarreEnd(d, f, a, b) {
+    const step = b >= a ? 1 : -1;
+    let last = a;
+    for (let si = a + step; step > 0 ? si <= b : si >= b; si += step) {
+      let blocked = false;
+      for (const k of Object.keys(d.markers || {})) {
+        const [si2, f2] = k.split(':').map(Number);
+        if (si2 === si && f2 !== 0 && f2 < f && d.markers[k].shape !== 'x') { blocked = true; break; }
+      }
+      if (blocked) break;
+      last = si;
+    }
+    return last;
+  }
+  barreLabel(si, f) {
+    if (this.state.intervalOn) {
+      const deg = ((this.midiAt(si, f) - this.state.keyRoot) % 12 + 12) % 12;
+      return INTERVAL_NAMES[deg];
+    }
+    return this.labelFor(si, f);
+  }
   labelFor(si, f) {
     const mode = this.state.noteMode, sharp = this.state.noteAcc === 'sharp';
     if (mode === 'name') return (sharp ? NAMES_SHARP : NAMES)[((this.midiAt(si, f)) % 12 + 12) % 12];
@@ -708,14 +770,18 @@ class Component extends DCLogic {
       const buf = ac.createBuffer(1, Math.round(sr * dur), sr);
       const data = buf.getChannelData(0);
       for (let i = 0; i < N; i++) data[i] = Math.random() * 2 - 1;
-      const damp = 0.996;
+      // Loop decay must be per-second, not per-period: a fixed damping makes high
+      // notes (many periods/sec) die almost instantly and read as much quieter.
+      const damp = Math.min(0.9975, Math.pow(0.03, 1 / freq));
       for (let i = N; i < data.length; i++) data[i] = damp * 0.5 * (data[i - N] + data[i - N + 1]);
       const src = ac.createBufferSource();
       src.buffer = buf;
       const lp = ac.createBiquadFilter();
       lp.type = 'lowpass'; lp.frequency.value = 4200; lp.Q.value = 0.4;
       const g = ac.createGain();
-      g.gain.setValueAtTime(vol ?? 0.5, t);
+      // Slight tilt: short strings carry less energy, so lift the top end a touch.
+      const tilt = 1 + 0.4 * Math.min(1, Math.max(0, (freq - 180) / 700));
+      g.gain.setValueAtTime((vol ?? 0.5) * tilt, t);
       g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
       src.connect(lp); lp.connect(g); g.connect(ac.destination);
       src.start(t); src.stop(t + dur);
@@ -731,9 +797,24 @@ class Component extends DCLogic {
       const fi = f - s.startFret;
       if (si >= g.N || (f !== 0 && (fi < 0 || fi >= g.F))) continue;
       if (d.markers[key].shape === 'x') continue;
+      if (!this.isPlayed(d, si, f)) continue;
       out.push({ key, midi: this.midiAt(si, f) });
     }
+    for (const n of this.barreNotes(d)) out.push({ key: n.key, midi: n.midi });
     return out.sort((a, b) => a.midi - b.midi);
+  }
+  // Notes the barres themselves sound: the strings with nothing fretted ahead of them.
+  barreNotes(d) {
+    const g = this.geo(), s = this.state, out = [];
+    for (const b of (d.barres || [])) {
+      const fi = b.f - s.startFret;
+      if (fi < 0 || fi >= g.F) continue;
+      for (const si of this.barreStrings(d, b)) {
+        if (si >= g.N) continue;
+        out.push({ key: 'b' + si + ':' + b.f, midi: this.midiAt(si, b.f), f: b.f, si });
+      }
+    }
+    return out;
   }
   // Groups notes by string, playing every note on one string (low fret to high) before
   // moving to the next string — rather than interleaving by absolute pitch.
@@ -748,8 +829,10 @@ class Component extends DCLogic {
       const fi = f - s.startFret;
       if (si >= g.N || (f !== 0 && (fi < 0 || fi >= g.F))) continue;
       if (d.markers[key].shape === 'x') continue;
+      if (!this.isPlayed(d, si, f)) continue;
       (bySi[si] = bySi[si] || []).push({ key, midi: this.midiAt(si, f), f });
     }
+    for (const n of this.barreNotes(d)) (bySi[n.si] = bySi[n.si] || []).push({ key: n.key, midi: n.midi, f: n.f });
     const sis = Object.keys(bySi).map(Number).sort((a, b) => dir === 'desc' ? a - b : b - a);
     const out = [];
     for (const si of sis) {
@@ -819,14 +902,17 @@ class Component extends DCLogic {
   // string, anchor each shape's 4-5 fret window relative to r, shift each window down
   // an octave when it fits, then sort ascending — so the lowest shape comes first
   // regardless of key (it won't always start with the C shape).
-  cagedWindows() {
+  cagedWindows(root) {
     const low = this.opens()[this.state.strings - 1];
-    const r = ((this.state.keyRoot - low) % 12 + 12) % 12;
+    const r = (((root === undefined ? this.state.keyRoot : root) - low) % 12 + 12) % 12;
     const defs = [['E', -1, 3], ['D', 2, 6], ['C', 4, 8], ['A', 7, 11], ['G', 9, 13]];
     const wins = defs.map(([nm, a0, b0]) => {
       let a = a0 + r, b = b0 + r;
       while (a - 12 >= 0) { a -= 12; b -= 12; }
-      return { nm, a: Math.max(0, a), b };
+      // a may be -1 (shape hanging below the nut, e.g. key E's E shape): keep it —
+      // template offsets are relative to the true window start; sub-zero frets are
+      // dropped per-dot instead, so the rest of the shape stays put.
+      return { nm, a, b };
     });
     return wins.sort((x, y) => x.a - y.a || x.b - y.b);
   }
@@ -850,22 +936,76 @@ class Component extends DCLogic {
   // Returns null (caller falls back to the blind scaleMarkers scan) when the template
   // doesn't apply: non-6-string tunings, or formulas with a repeated degree number
   // (e.g. bebop/diminished scales with both a natural and altered 3rd).
+  // If the scale is a mode/subset of the major scale (natural minor, Dorian,
+  // pentatonics…), it shares the relative major's notes exactly — return that
+  // relative major: k = semitones up to its root, iv = intervals from it.
+  relativeMajor(iv) {
+    if (!iv) return null;
+    for (const k of iv) {
+      const shifted = iv.map(x => ((x - k) % 12 + 12) % 12).sort((a, b) => a - b);
+      if (shifted.every(x => SCALES.major.includes(x))) return { k, iv: shifted };
+    }
+    return null;
+  }
   cagedShapeMarkers(sel, win) {
     if (this.state.strings !== 6) return null;
     const tmpl = CAGED_TEMPLATE[win.nm];
     if (!tmpl) return null;
-    const { map, dup } = formulaDegreeMap(sel.formula);
-    if (dup) return null;
+    // Modes/subsets of major: use the relative major's degree map verbatim, so the
+    // five shapes are literally the C-major-form CAGED boxes (windows are anchored
+    // on the relative major root by the caller); only the red root marker moves.
+    let map, dup = false;
+    const rel = this.relativeMajor(sel.iv);
+    if (rel) {
+      map = {};
+      for (const semi of rel.iv) map[SCALES.major.indexOf(semi) + 1] = semi;
+    } else {
+      ({ map, dup } = formulaDegreeMap(sel.formula));
+      if (dup) return null;
+    }
+    // Nearest-note retarget: degrees the scale has map exactly; degrees it lacks
+    // (pentatonics etc.) fold onto the closest scale tone (ties resolve downward)
+    // instead of being dropped, so the reference hand shape stays intact.
+    // dedupeAsc then removes the pitch collisions the folding creates.
+    const avail = Object.keys(map).map(k => map[k]);
+    if (!avail.length) return null;
+    const target = {};
+    for (let dn = 1; dn <= 7; dn++) {
+      const semi = SCALES.major[dn - 1];
+      if (map[dn] !== undefined) { target[dn] = map[dn]; continue; }
+      let best = null;
+      for (const av of avail) for (const c of [av - 12, av, av + 12]) {
+        const d = c - semi;
+        if (best === null || Math.abs(d) < Math.abs(best) || (Math.abs(d) === Math.abs(best) && d < best)) best = d;
+      }
+      target[dn] = semi + best;
+    }
     const mk = {};
     for (let si = 0; si < 6; si++) {
       for (const [offset, degNum] of (tmpl[si] || [])) {
-        const target = map[degNum];
-        if (target === undefined) continue;
-        const delta = target - SCALES.major[degNum - 1];
-        const f = win.a + offset + delta;
-        if (f < 0) continue;
-        const isR = degNum === 1;
-        mk[si + ':' + f] = { shape: 'circle', c1: isR ? '#E94040' : '#2F7DE1', c2: '#2F7DE1', split: false, label: '' };
+        let sPlace = si, f = win.a + offset + (target[degNum] - SCALES.major[degNum - 1]);
+        if (f < 0) {
+          // No room below the nut: relocate this exact pitch to the nearest
+          // playable spot on another string near the window, so the shape
+          // still contains every note of the scale.
+          const midi = this.opens()[si] + f;
+          let bs = -1, bf = -1, bd = Infinity;
+          for (let sj = 0; sj < 6; sj++) {
+            if (sj === si) continue;
+            const g = midi - this.opens()[sj];
+            if (g < 0 || g > win.b + 1) continue;
+            const d = Math.abs(g - Math.max(0, win.a));
+            if (d < bd) { bd = d; bs = sj; bf = g; }
+          }
+          if (bs < 0) continue;
+          sPlace = bs; f = bf;
+        } else if (map[degNum] === undefined && (f < win.a || f > win.b)) {
+          // Folded (substituted) degrees must stay inside the shape window — a
+          // substitute that lands outside the box is noise, not a missing note.
+          continue;
+        }
+        const isR = ((this.midiAt(sPlace, f) - this.state.keyRoot) % 12 + 12) % 12 === 0;
+        mk[sPlace + ':' + f] = { shape: 'circle', c1: isR ? '#E94040' : '#2F7DE1', c2: '#2F7DE1', split: false, label: '' };
       }
     }
     return this.dedupeAsc(mk);
@@ -898,7 +1038,7 @@ class Component extends DCLogic {
     const root = this.state.keyRoot;
     const mk = {};
     for (let si = 0; si < this.state.strings; si++) {
-      for (let f = a; f <= b; f++) {
+      for (let f = Math.max(0, a); f <= b; f++) {
         const deg = ((this.midiAt(si, f) - root) % 12 + 12) % 12;
         if (!iv.includes(deg)) continue;
         const isR = deg === 0;
@@ -907,8 +1047,15 @@ class Component extends DCLogic {
     }
     return this.dedupeAsc(mk);
   }
-  stampWhole() {
-    const sel = this.libSelected();
+  // Pick a scale in the library and it loads immediately, in whichever layout
+  // "Load as" is set to. sel is passed in so it doesn't wait on setState.
+  loadScale(libSel, sel) {
+    this.setState({ libSel });
+    if (!sel || !sel.iv) { this.toast('Pick a scale first'); return; }
+    if (this.state.loadMode === 'caged') this.stampCAGED(sel); else this.stampWhole(sel);
+  }
+  stampWhole(selArg) {
+    const sel = selArg || this.libSelected();
     if (!sel || !sel.iv) { this.toast('Pick a scale first'); return; }
     this.pushHistory();
     const d = { ...this.blank(), markers: this.scaleMarkers(sel.iv, 0, 12) };
@@ -919,8 +1066,8 @@ class Component extends DCLogic {
     this.toast('Loaded ' + NAMES[this.state.keyRoot] + ' ' + sel.name);
     setTimeout(() => this.fitZoom(), 0);
   }
-  stampCAGED() {
-    const sel = this.libSelected();
+  stampCAGED(selArg) {
+    const sel = selArg || this.libSelected();
     if (!sel || !sel.iv) { this.toast('Pick a scale first'); return; }
     // If this exact key+scale CAGED layout was saved to the library, load that saved
     // version instead of recomputing — lets a hand-tuned CAGED set stick every time.
@@ -939,7 +1086,8 @@ class Component extends DCLogic {
       return;
     }
     this.pushHistory();
-    const wins = this.cagedWindows();
+    const rel = this.relativeMajor(sel.iv);
+    const wins = this.cagedWindows(rel ? (this.state.keyRoot + rel.k) % 12 : undefined);
     const maxB = Math.min(24, Math.max(...wins.map(w => w.b)));
     const diagrams = wins.map((w, i) => ({
       ...this.blank(),
@@ -991,15 +1139,19 @@ class Component extends DCLogic {
   }
 
   // ---------- zoom / rows ----------
-  setZoom(z) { this.setState({ zoom: Math.max(this.fitLevel(), Math.min(2, Math.round(z * 100) / 100)) }); }
+  setZoom(z) { this.setState({ zoom: Math.max(0.1, Math.min(2, Math.round(z * 100) / 100)) }); }
+  setBoard(patch) { this.setState(patch); setTimeout(() => this.fitZoom(), 0); }
   fitLevel() {
     const el = this._scrollEl;
-    if (!el) return 0.25;
-    const g = this.geo();
-    const contentH = this.state.diagrams.length * (g.H + 56) + 60;
-    const rowExtra = this.state.diagrams.length > 1 ? 220 : 0;
-    const contentW = g.W + rowExtra + 40;
-    return Math.min(1, Math.round(Math.min((el.clientHeight - 100) / contentH, (el.clientWidth - 96) / contentW) * 100) / 100);
+    if (!el) return 0.25;    const g = this.geo();
+    const n = this.state.diagrams.length;
+    // Every row is [170px sidebar][board], rows stacked, doc-title row on top.
+    const SIDE = 178;
+    const contentW = g.W + SIDE;
+    const contentH = 52 + n * (Math.max(g.H, 132) + 14);
+    // Fit is the default view and may exceed 100% — biggest board that still doesn't scroll.
+    const z = Math.min((el.clientHeight - 84) / contentH, (el.clientWidth - 48) / contentW);
+    return Math.max(0.1, Math.min(2, Math.floor(z * 100) / 100));
   }
   scrollRef = (el) => {
     if (!el || this._scrollEl === el) return;
@@ -1019,7 +1171,7 @@ class Component extends DCLogic {
     }, 0);
   }
   setRows(n) {
-    n = Math.max(1, Math.min(6, n));
+    n = Math.max(1, Math.min(this.state.orient === 'v' ? 16 : 6, n));
     this.setState(st => {
       const d = st.diagrams.slice(0, n);
       while (d.length < n) d.push(this.blank());
@@ -1150,30 +1302,38 @@ class Component extends DCLogic {
     const lc = this.props.lineColor ?? '#9AA5B1';
     const showInlays = this.props.showInlays ?? true;
     const multi = s.diagrams.length > 1;
+    const isV = s.orient === 'v';
+    const n = s.diagrams.length;
+    const cols = isV ? Math.min(4, n) : 1;
+    const rows = Math.ceil(n / cols);
     const headH = s.docTitle ? 46 : 0;
-    const titleH = multi ? 24 : 0, gap = 26;
-    const totalH = headH + s.diagrams.length * (g.H + titleH) + (s.diagrams.length - 1) * gap + 20;
+    const titleH = multi ? 24 : 0, gap = 26, colGap = 24;
+    const cellH = g.H + titleH;
+    const totalW = cols * g.W + (cols - 1) * colGap;
+    const totalH = headH + rows * cellH + (rows - 1) * gap + 20;
     let body = '';
-    if (s.docTitle) body += `<text x="${g.W / 2}" y="36" text-anchor="middle" font-size="20" font-weight="600" fill="#1A1A1A">${esc(s.docTitle)}</text>`;
-    let oy = 10 + headH;
+    if (s.docTitle) body += `<text x="${totalW / 2}" y="36" text-anchor="middle" font-size="20" font-weight="600" fill="#1A1A1A">${esc(s.docTitle)}</text>`;
     let seed = 0;
-    for (const d of s.diagrams) {
-      if (multi && d.title) body += `<text x="${g.x0}" y="${oy + 14}" font-size="14" font-weight="600" fill="#55554F">${esc(d.title)}</text>`;
+    s.diagrams.forEach((d, di) => {
+      const col = di % cols, row = Math.floor(di / cols);
+      const X = col * (g.W + colGap);
+      const oy = 10 + headH + row * (cellH + gap);
+      if (multi && d.title) body += `<text x="${g.x0 + X}" y="${oy + 14}" font-size="14" font-weight="600" fill="#55554F">${esc(d.title)}</text>`;
       const Y = oy + titleH;
       for (let i = 0; i < g.N; i++) {
         const a = g.h ? { x1: g.x0, y1: g.y0 + i * g.sw, x2: g.x0 + g.bw, y2: g.y0 + i * g.sw }
                       : { x1: g.x0 + i * g.sw, y1: g.y0, x2: g.x0 + i * g.sw, y2: g.y0 + g.bh };
-        body += `<line x1="${a.x1}" y1="${a.y1 + Y}" x2="${a.x2}" y2="${a.y2 + Y}" stroke="${lc}" stroke-width="2"/>`;
+        body += `<line x1="${a.x1 + X}" y1="${a.y1 + Y}" x2="${a.x2 + X}" y2="${a.y2 + Y}" stroke="${lc}" stroke-width="2"/>`;
       }
       for (let j = 0; j <= g.F; j++) {
         const a = g.h ? { x1: g.x0 + j * g.fw, y1: g.y0, x2: g.x0 + j * g.fw, y2: g.y0 + g.bh }
                       : { x1: g.x0, y1: g.y0 + j * g.fw, x2: g.x0 + g.bw, y2: g.y0 + j * g.fw };
-        body += `<line x1="${a.x1}" y1="${a.y1 + Y}" x2="${a.x2}" y2="${a.y2 + Y}" stroke="${lc}" stroke-width="2"/>`;
+        body += `<line x1="${a.x1 + X}" y1="${a.y1 + Y}" x2="${a.x2 + X}" y2="${a.y2 + Y}" stroke="${lc}" stroke-width="2"/>`;
       }
       if (s.startFret === 1) {
         body += g.h
-          ? `<rect x="${g.x0 - 7}" y="${g.y0 - 1 + Y}" width="7" height="${g.bh + 2}" fill="#111"/>`
-          : `<rect x="${g.x0 - 1}" y="${g.y0 - 7 + Y}" width="${g.bw + 2}" height="7" fill="#111"/>`;
+          ? `<rect x="${g.x0 - 7 + X}" y="${g.y0 - 1 + Y}" width="7" height="${g.bh + 2}" fill="#111"/>`
+          : `<rect x="${g.x0 - 1 + X}" y="${g.y0 - 7 + Y}" width="${g.bw + 2}" height="7" fill="#111"/>`;
       }
       if (showInlays) {
         for (let fi = 0; fi < g.F; fi++) {
@@ -1182,7 +1342,7 @@ class Component extends DCLogic {
           if (!single && !dbl) continue;
           const c = g.h ? { x: g.x0 + (fi + 0.5) * g.fw, y: g.y0 + g.bh / 2 } : { x: g.x0 + g.bw / 2, y: g.y0 + (fi + 0.5) * g.fw };
           const offs = dbl ? [-g.sw, g.sw] : [0];
-          for (const o of offs) body += `<circle cx="${c.x + (g.h ? 0 : o)}" cy="${c.y + (g.h ? o : 0) + Y}" r="7" fill="#E3E3E1"/>`;
+          for (const o of offs) body += `<circle cx="${c.x + (g.h ? 0 : o) + X}" cy="${c.y + (g.h ? o : 0) + Y}" r="7" fill="#E3E3E1"/>`;
         }
       }
       if (s.overlay) {
@@ -1190,7 +1350,7 @@ class Component extends DCLogic {
           if (d.markers[si + ':' + (s.startFret + fi)]) continue;
           if (!this.isNaturalNote(si, s.startFret + fi)) continue;
           const p = g.pos(si, fi);
-          body += `<circle cx="${p.x}" cy="${p.y + Y}" r="11" fill="#DCEAFB" stroke="#9CC2F2" stroke-width="1.5"/>`;
+          body += `<circle cx="${p.x + X}" cy="${p.y + Y}" r="11" fill="#DCEAFC" stroke="#9DC2F2" stroke-width="1.5"/>`;
         }
       }
       const ov = s.libOverlay
@@ -1204,20 +1364,24 @@ class Component extends DCLogic {
           if (!ov.iv.includes(deg)) continue;
           const p = g.pos(si, fi);
           const isRoot = deg === 0;
-          const fill = ov.live ? (isRoot ? '#F6D7D7' : '#DCEAFB') : (isRoot ? '#F0E4E4' : '#EFEFED');
-          const str = ov.live ? (isRoot ? '#E06666' : '#9CC2F2') : (isRoot ? '#D8B8B8' : '#D9D9D4');
-          body += `<circle cx="${p.x}" cy="${p.y + Y}" r="11" fill="${fill}" stroke="${str}" stroke-width="1.5"/>`;
+          const fill = isRoot ? '#F6D7D7' : '#DCEAFC';
+          const str = isRoot ? '#EDA3A3' : '#9DC2F2';
+          body += `<circle cx="${p.x + X}" cy="${p.y + Y}" r="11" fill="${fill}" stroke="${str}" stroke-width="1.5"/>`;
         }
       }
       for (let fi = 0; fi < g.F; fi++) {
         const p = g.h ? { x: g.x0 + (fi + 0.5) * g.fw, y: g.y0 + g.bh + 30 } : { x: g.x0 - 27, y: g.y0 + (fi + 0.5) * g.fw };
-        body += `<text x="${p.x}" y="${p.y + Y}" text-anchor="middle" dominant-baseline="central" font-size="15" font-weight="600" fill="#64748B">${s.startFret + fi}</text>`;
+        body += `<text x="${p.x + X}" y="${p.y + Y}" text-anchor="middle" dominant-baseline="central" font-size="15" font-weight="600" fill="#64748B">${s.startFret + fi}</text>`;
       }
       for (const b of (d.barres || [])) {
         const fi = b.f - s.startFret;
         if (fi < 0 || fi >= g.F) continue;
         const p1 = g.pos(Math.min(b.a, b.b), fi), p2 = g.pos(Math.max(b.a, b.b), fi);
-        body += `<line x1="${p1.x}" y1="${p1.y + Y}" x2="${p2.x}" y2="${p2.y + Y}" stroke="${b.color}" stroke-width="${g.ms}" stroke-linecap="round" opacity="1"/>`;
+        body += `<line x1="${p1.x + X}" y1="${p1.y + Y}" x2="${p2.x + X}" y2="${p2.y + Y}" stroke="${b.color}" stroke-width="${g.ms}" stroke-linecap="round" opacity="1"/>`;
+        for (const si of this.barreStrings(d, b)) {
+          const p = g.pos(si, fi);
+          body += `<text x="${p.x + X}" y="${p.y + Y}" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="700" fill="#fff">${esc(this.barreLabel(si, b.f))}</text>`;
+        }
       }
       for (const l of (d.lines || [])) {
         const pk = (k) => {
@@ -1228,7 +1392,7 @@ class Component extends DCLogic {
         };
         const pa = pk(l.a), pb = pk(l.b);
         if (!pa || !pb) continue;
-        body += `<line x1="${pa.x}" y1="${pa.y + Y}" x2="${pb.x}" y2="${pb.y + Y}" stroke="${l.color}" stroke-width="4" stroke-linecap="round" opacity="0.85"/>`;
+        body += `<line x1="${pa.x + X}" y1="${pa.y + Y}" x2="${pb.x + X}" y2="${pb.y + Y}" stroke="${l.color}" stroke-width="4" stroke-linecap="round" opacity="0.85"/>`;
       }
       for (const key of Object.keys(d.markers)) {
         const [si, f] = key.split(':').map(Number);
@@ -1237,12 +1401,11 @@ class Component extends DCLogic {
         if (si >= g.N || (!open && (fi < 0 || fi >= g.F))) continue;
         const m = d.markers[key];
         const p = g.pos(si, fi);
-        const text = m.shape === 'x' ? '' : (m.label || this.labelFor(si, f));
-        body += this.svgMarker(m, p.x, p.y + Y, g.ms, seed++, text, open);
+        const text = m.shape === 'x' ? '' : (this.isPlayed(d, si, f) ? (m.label || this.labelFor(si, f)) : '');
+        body += this.svgMarker(m, p.x + X, p.y + Y, g.ms, seed++, text, open);
       }
-      oy += g.H + titleH + gap;
-    }
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="${g.W}" height="${totalH}" viewBox="0 0 ${g.W} ${totalH}" font-family="Instrument Sans, -apple-system, sans-serif"><rect width="100%" height="100%" fill="#FFFFFF"/>${body}</svg>`;
+    });
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="${totalH}" viewBox="0 0 ${totalW} ${totalH}" font-family="Instrument Sans, -apple-system, sans-serif"><rect width="100%" height="100%" fill="#FFFFFF"/>${body}</svg>`;
   }
 
   fileName() { return (this.state.docTitle || 'fretlab-diagram').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').toLowerCase() || 'fretlab-diagram'; }
@@ -1278,6 +1441,24 @@ class Component extends DCLogic {
     const g = this.geo();
     const lc = this.props.lineColor ?? '#9AA5B1';
     const showInlays = this.props.showInlays ?? true;
+    const isV = s.orient === 'v';
+    const gridGap = 20;
+    const diagramsContainerStyle = isV
+      ? `display:flex;flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:26px ${gridGap}px;max-width:${4 * g.W + 3 * gridGap}px;margin:0 auto`
+      : `display:flex;flex-direction:column;align-items:center`;
+    const itemWrapStyle = isV
+      ? `display:flex;flex-direction:column;align-items:center;gap:8px;width:${g.W}px;flex:none`
+      : `display:flex;align-items:center;gap:4px;width:max-content;margin:0 auto 14px`;
+    const titleColStyle = isV
+      ? `display:flex;flex-direction:row;align-items:center;justify-content:center;gap:6px;width:${g.W}px;flex:none`
+      : `display:flex;flex-direction:column;align-items:center;gap:10px;width:170px;flex:none`;
+    const titleInputStyle = isV
+      ? `border:1px solid #ECECE8;background:#FFFFFF;border-radius:8px;outline:none;text-align:center;font-size:13px;font-weight:600;color:#1A1A1A;width:${Math.max(90, g.W - 40)}px;padding:6px 8px;border-color:#000000`
+      : `border: 1px solid #ECECE8; background: #FFFFFF; border-radius: 8px; outline: none; text-align: center; font-size: 15px; font-weight: 600; color: #1A1A1A; width: 170px; padding: 8px 10px; border-color: #000000`;
+    const clearRowBtnStyle = isV
+      ? `display:flex;align-items:center;justify-content:center;border:none;background:transparent;color:#C43D3D;cursor:pointer;padding:6px;border-radius:6px;flex:none`
+      : `display:flex;align-items:center;gap:5px;border:none;background:transparent;color:#C43D3D;font-size:12px;font-weight:600;cursor:pointer;padding:4px 8px;border-radius:6px`;
+    const showRowLabel = !isV;
     const btn = (active, extra) => `width:30px;height:30px;border:none;border-radius:7px;background:${active ? '#EAEAE7' : 'transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer;color:#333;padding:0;flex:none;${active ? 'box-shadow:inset 0 0 0 1.5px #141414;' : ''}${extra || ''}`;
 
     // tuning fork sits above the nut, aligned with the high e string (string index 0)
@@ -1366,7 +1547,7 @@ class Component extends DCLogic {
           if (d.markers[si + ':' + (s.startFret + fi)]) continue;
           if (!this.isNaturalNote(si, s.startFret + fi)) continue;
           const p = g.pos(si, fi);
-          ghosts.push(`position:absolute;left:${p.x}px;top:${p.y}px;width:22px;height:22px;border-radius:50%;background:#DCEAFB;box-shadow:0 0 0 1.5px #9CC2F2;transform:translate(-50%,-50%);z-index:1;pointer-events:none`);
+          ghosts.push(`position:absolute;left:${p.x}px;top:${p.y}px;width:22px;height:22px;border-radius:50%;background:#DCEAFC;box-shadow:0 0 0 1.5px #9DC2F2;transform:translate(-50%,-50%);z-index:1;pointer-events:none`);
         }
       }
       const ov = s.libOverlay
@@ -1380,9 +1561,9 @@ class Component extends DCLogic {
           if (!ov.iv.includes(deg)) continue;
           const p = g.pos(si, fi);
           const isRoot = deg === 0;
-          const look = ov.live
-            ? (isRoot ? 'background:#F6D7D7;box-shadow:0 0 0 1.8px #E06666' : 'background:#DCEAFB;box-shadow:0 0 0 1.5px #9CC2F2')
-            : (isRoot ? 'background:#F0E4E4;box-shadow:0 0 0 1.5px #D8B8B8' : 'background:#EFEFED;box-shadow:0 0 0 1.5px #D9D9D4');
+          const look = isRoot
+            ? 'background:#F6D7D7;box-shadow:0 0 0 1.8px #EDA3A3'
+            : 'background:#DCEAFC;box-shadow:0 0 0 1.5px #9DC2F2';
           ghosts.push(`position:absolute;left:${p.x}px;top:${p.y}px;width:22px;height:22px;border-radius:50%;${look};transform:translate(-50%,-50%);z-index:1;pointer-events:none`);
         }
       }
@@ -1406,13 +1587,13 @@ class Component extends DCLogic {
         const p = g.pos(si, fi);
         const isX = m.shape === 'x';
         const hollow = open && !isX;
-        const ivDeg = (s.intervalOn && s.rootPc != null && !isX) ? ((this.midiAt(si, f) - s.rootPc) % 12 + 12) % 12 : null;
+        const ivDeg = (s.intervalOn && !isX) ? ((this.midiAt(si, f) - s.keyRoot) % 12 + 12) % 12 : null;
         const ivColor = ivDeg != null ? INTERVAL_COLORS[ivDeg] : null;
         const mc1 = ivColor || m.c1;
         const bg = (isX || hollow) ? 'transparent' : (ivColor ? ivColor : (m.split ? `linear-gradient(90deg, ${m.c1} 50%, ${m.c2} 50%)` : m.c1));
-        const text = isX ? '✕' : (ivDeg != null ? INTERVAL_NAMES[ivDeg] : (m.label || this.labelFor(si, f)));
+        const text = isX ? '✕' : (!this.isPlayed(d, si, f) ? '' : (ivDeg != null ? INTERVAL_NAMES[ivDeg] : (m.label || this.labelFor(si, f))));
         const isLineFrom = s.lineFrom && s.lineFrom.id === d.id && s.lineFrom.key === key;
-        const ringCss = (ivDeg === 0 || isLineFrom) ? `box-shadow:0 0 0 2.5px #fff, 0 0 0 4.5px ${ivDeg === 0 ? '#1C1C1E' : mc1};` : '';
+        const ringCss = isLineFrom ? `box-shadow:0 0 0 2.5px #fff, 0 0 0 4.5px ${mc1};` : '';
         const adj = shapeAdjust(m.shape);
         const sz = Math.round(g.ms * adj.scale);
         const flashing = s.flash && s.flash[d.id + '|' + key];
@@ -1428,6 +1609,7 @@ class Component extends DCLogic {
             : `${this.noteAt(si, f)} — click to restyle with current tool, click again to remove · right-click to label`,
           onClick: (e) => {
             e.stopPropagation();
+            this._squelchClick = false;
             if (s.tool === 'line') {
               if (isX) return;
               if (!s.lineFrom || s.lineFrom.id !== d.id) { this.setState({ lineFrom: { id: d.id, key }, mouse: null }); return; }
@@ -1436,11 +1618,6 @@ class Component extends DCLogic {
               const ln = { a: s.lineFrom.key, b: key, color: s.slot === 1 ? s.c1 : s.c2 };
               this.updDiagram(d.id, dd => ({ ...dd, lines: [...(dd.lines || []), ln] }));
               this.setState({ lineFrom: { id: d.id, key } });
-              return;
-            }
-            if (s.intervalOn && !isX) {
-              const pc = ((this.midiAt(si, f)) % 12 + 12) % 12;
-              this.setState({ rootPc: s.rootPc === pc ? null : pc });
               return;
             }
             if (isX) { this.removeAt(d, key); return; }
@@ -1489,7 +1666,7 @@ class Component extends DCLogic {
         descIdle: !(s.playing && s.playing.id === d.id && s.playing.kind === 'desc'),
         wrapStyle: `position:relative;width:${g.W}px;height:${g.H}px;cursor:crosshair;user-select:none;-webkit-user-select:none`,
         onBoard: (e) => {
-          if (this._squelchClick) { this._squelchClick = false; return; }
+          if (this._placedOnPress || this._squelchClick) { this._placedOnPress = false; this._squelchClick = false; return; }
           if (s.tool === 'line') { this.setState({ lineFrom: null, mouse: null, tool: 'draw' }); return; }
           const r = e.currentTarget.getBoundingClientRect();
           const z = s.zoom || 1;
@@ -1501,40 +1678,78 @@ class Component extends DCLogic {
           this.placeAt(d, hit.si, f, false);
         },
         onDown: (e) => {
+          if (e.button !== 0) return;
+          const onBarre = !!(e.target.closest && e.target.closest('[data-barre]'));
           if (s.tool === 'line') return;
           const r = e.currentTarget.getBoundingClientRect();
           const z = s.zoom || 1;
           const hit = g.pick((e.clientX - r.left) / z, (e.clientY - r.top) / z);
           if (!hit || hit.fi < 0) return;
           e.preventDefault();
-          this.setState({ barreDrag: { id: d.id, f: s.startFret + hit.fi, a: hit.si, b: hit.si, moved: false } });
+          // preventDefault blocks the label input's blur, so close it here
+          if (s.editing) {
+            const el = document.activeElement;
+            this.commitEdit(el && el.tagName === 'INPUT' ? el.value : '');
+          }
+          // Dots land on press; if the press turns into a drag it becomes a barre instead.
+          const f = s.startFret + hit.fi;
+          const placed = !onBarre && !d.markers[hit.si + ':' + f];
+          if (placed) this.placeAt(d, hit.si, f, false);
+          this._placedOnPress = placed;
+          this.setState({ barreDrag: { id: d.id, f, a: hit.si, b: hit.si, moved: false, placed } });
         },
         onMove: (e) => {
-          if (!s.barreDrag && !s.lineFrom) return;
+          const bdNow = this.state.barreDrag;
+          if (!bdNow && !this.state.lineFrom) return;
           const r = e.currentTarget.getBoundingClientRect();
           const z = s.zoom || 1;
           const x = (e.clientX - r.left) / z, y = (e.clientY - r.top) / z;
-          if (s.barreDrag && s.barreDrag.id === d.id) {
+          if (bdNow && bdNow.id === d.id) {
             const hit = g.pick(x, y);
-            if (hit && hit.fi >= 0 && hit.si !== s.barreDrag.b) this.setState({ barreDrag: { ...s.barreDrag, b: hit.si, moved: true } });
-          } else if (s.lineFrom && s.lineFrom.id === d.id) {
+            if (hit && hit.fi >= 0 && hit.si !== bdNow.b) {
+              const end = this.clampBarreEnd(d, bdNow.f, bdNow.a, hit.si);
+              if (end !== bdNow.b) this.setState({ barreDrag: { ...bdNow, b: end, moved: true } });
+            }
+          } else if (this.state.lineFrom && this.state.lineFrom.id === d.id) {
             this.setState({ mouse: { id: d.id, x, y } });
           }
         },
         onUp: () => {
-          const bd = s.barreDrag;
-          if (!bd || bd.id !== d.id) return;
+          const bd = this.state.barreDrag;
+          if (!bd || bd.id !== d.id) { if (bd) this.setState({ barreDrag: null }); return; }
           if (bd.moved) this._squelchClick = true;
           if (bd.a !== bd.b) {
-            this.pushHistory();
+            // The press already pushed history for its dot; reuse that snapshot so the
+            // whole gesture undoes in one step.
+            if (bd.placed) this._redo = [];
+            else this.pushHistory();
             const nb = { f: bd.f, a: Math.min(bd.a, bd.b), b: Math.max(bd.a, bd.b), color: s.slot === 1 ? s.c1 : s.c2 };
-            this.updDiagram(d.id, dd => ({ ...dd, barres: [...(dd.barres || []), nb] }));
+            this.updDiagram(d.id, dd => {
+              // Any barres at this fret that touch or overlap the new one fuse into a
+              // single piece, so a barre built up in passes still deletes as one click.
+              let a = nb.a, b = nb.b;
+              let rest = (dd.barres || []), merged = true;
+              while (merged) {
+                merged = false;
+                const keep = [];
+                for (const ob of rest) {
+                  const oa = Math.min(ob.a, ob.b), obb = Math.max(ob.a, ob.b);
+                  if (ob.f === nb.f && oa <= b + 1 && obb >= a - 1) {
+                    a = Math.min(a, oa); b = Math.max(b, obb); merged = true;
+                  } else keep.push(ob);
+                }
+                rest = keep;
+              }
+              const mk = { ...dd.markers };
+              for (let si = a; si <= b; si++) delete mk[si + ':' + nb.f];
+              return { ...dd, markers: mk, barres: [...rest, { ...nb, a, b }] };
+            });
             if (s.sound) this.pluck(this.midiAt(nb.b, bd.f));
           }
           this.setState({ barreDrag: null });
         },
         onLeave: () => {
-          if (s.barreDrag || s.mouse) this.setState({ barreDrag: null, mouse: null });
+          if (this.state.barreDrag || this.state.mouse) this.setState({ barreDrag: null, mouse: null });
         },
         linesEl: (() => {
           const posOfKey = (k) => {
@@ -1571,6 +1786,22 @@ class Component extends DCLogic {
             style: { position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none', overflow: 'visible' }
           }, kids);
         })(),
+        barreLabels: (() => {
+          const out = [];
+          for (const b of (d.barres || [])) {
+            const fi = b.f - s.startFret;
+            if (fi < 0 || fi >= g.F) continue;
+            for (const si of this.barreStrings(d, b)) {
+              const p = g.pos(si, fi);
+              const fl = s.flash && s.flash[d.id + '|b' + si + ':' + b.f];
+              out.push({
+                t: this.barreLabel(si, b.f),
+                style: `position:absolute;left:${p.x}px;top:${p.y}px;transform:translate(-50%,-50%) ${fl ? 'scale(1.25)' : ''};color:#fff;font-size:12px;font-weight:700;line-height:1;pointer-events:none;user-select:none;z-index:4;${fl ? 'text-shadow:0 0 8px rgba(255,255,255,0.9);' : ''}transition:transform 0.12s ease`
+              });
+            }
+          }
+          return out;
+        })(),
         barres: (() => {
           const bd = s.barreDrag && s.barreDrag.id === d.id
             ? [{ ...s.barreDrag, color: s.slot === 1 ? s.c1 : s.c2, preview: true }] : [];
@@ -1586,6 +1817,7 @@ class Component extends DCLogic {
               style: `position:absolute;${pos}border-radius:${w}px;background:${b.color};opacity:${b.preview ? 0.85 : 1};z-index:2;cursor:pointer;${b.preview ? 'pointer-events:none;' : ''}`,
               onClick: b.preview ? null : (e) => {
                 e.stopPropagation();
+                if (this._squelchClick) { this._squelchClick = false; return; }
                 this.pushHistory();
                 this.updDiagram(d.id, dd => ({ ...dd, barres: (dd.barres || []).filter((_, i2) => i2 !== bi) }));
               }
@@ -1645,17 +1877,18 @@ class Component extends DCLogic {
       splitBtnStyle: btn(s.split),
       splitIconStyle: `width:16px;height:16px;border-radius:50%;background:linear-gradient(90deg, ${s.c1} 50%, ${s.c2} 50%)`,
       strings: s.strings, frets: s.frets, startFret: s.startFret,
-      decStrings: () => this.setState({ strings: Math.max(4, s.strings - 1) }),
-      incStrings: () => this.setState({ strings: Math.min(8, s.strings + 1) }),
-      decFrets: () => this.setState({ frets: Math.max(3, s.frets - 1) }),
-      incFrets: () => this.setState({ frets: Math.min(24, s.frets + 1) }),
+      decStrings: () => this.setBoard({ strings: Math.max(4, s.strings - 1) }),
+      incStrings: () => this.setBoard({ strings: Math.min(8, s.strings + 1) }),
+      decFrets: () => this.setBoard({ frets: Math.max(3, s.frets - 1) }),
+      incFrets: () => this.setBoard({ frets: Math.min(24, s.frets + 1) }),
       decStart: () => this.setState({ startFret: Math.max(1, s.startFret - 1) }),
       incStart: () => this.setState({ startFret: Math.min(15, s.startFret + 1) }),
-      setOrientH: () => this.setState({ orient: 'h' }),
-      setOrientV: () => this.setState({ orient: 'v' }),
+      setOrientH: () => { this.setState({ orient: 'h' }); setTimeout(() => this.fitZoom(), 0); },
+      setOrientV: () => { this.setState({ orient: 'v' }); setTimeout(() => this.fitZoom(), 0); },
       orientHStyle: btn(s.orient === 'h'),
       orientVStyle: btn(s.orient === 'v'),
       rows: s.diagrams.length,
+      rowsTip: isV ? 'Diagrams — arranged 4 across (max 16)' : 'Rows — stacked diagrams (max 6)',
       incRows: () => this.setRows(s.diagrams.length + 1),
       decRows: () => this.setRows(s.diagrams.length - 1),
       transpose: (s.transpose || 0) > 0 ? '+' + s.transpose : String(s.transpose || 0),
@@ -1667,12 +1900,24 @@ class Component extends DCLogic {
       zoomIn: () => this.setZoom(s.zoom + 0.1),
       zoomOut: () => this.setZoom(s.zoom - 0.1),
       zoomInt: Math.round(s.zoom * 100),
-      zoomMinInt: Math.round(this.fitLevel() * 100),
+      zoomMinInt: 10,
       onZoomSlide: (e) => this.setZoom(Number(e.target.value) / 100),
       zoomFit: () => this.fitZoom(),
       zoom100: () => this.setZoom(1),
-      keys: NAMES, keyName: NAMES[s.keyRoot],
-      onKey: (e) => this.setState({ keyRoot: NAMES.indexOf(e.target.value) }),
+      keys: KEY_LIST.map(([n]) => n),
+      keyName: (() => {
+        const pair = KEY_ENHARMONIC[s.keyRoot];
+        if (!pair) return KEY_LIST.find(([, r]) => r === s.keyRoot)[0];
+        return s.keySharp ? pair.sharp : pair.flat;
+      })(),
+      onKey: (e) => {
+        const entry = KEY_LIST.find(([n]) => n === e.target.value);
+        this.setState({ keyRoot: entry[1], keySharp: !entry[0].includes('b') });
+      },
+      setKeySharp: () => this.setState({ keySharp: true }),
+      setKeyFlat: () => this.setState({ keySharp: false }),
+      keySharpStyle: btn(s.keySharp),
+      keyFlatStyle: btn(!s.keySharp),
       scaleTypeLabel: s.scaleType === 'major' ? 'maj' : 'min',
       toggleScaleType: () => this.setState({ scaleType: s.scaleType === 'major' ? 'minor' : 'major' }),
       toggleOverlay: () => this.setState({ overlay: !s.overlay }),
@@ -1695,31 +1940,16 @@ class Component extends DCLogic {
       modeNameStyle: btn(s.noteMode === 'name', 'width:38px;padding:0 2px;'),
       modeDegreeStyle: btn(s.noteMode === 'degree', 'width:38px;padding:0 2px;'),
       modeSolfegeStyle: btn(s.noteMode === 'solfege', 'width:38px;padding:0 2px;'),
-      modeNameText: (s.noteMode === 'name' && s.noteAcc === 'sharp') ? 'Aa♯' : (s.noteMode === 'name' ? 'Aa♭' : 'Aa'),
-      modeDegreeText: (s.noteMode === 'degree' && s.noteAcc === 'sharp') ? '1♯' : (s.noteMode === 'degree' ? '1♭' : '1'),
+      modeNameText: (s.noteMode === 'name' && s.noteAcc === 'sharp') ? 'A#' : (s.noteMode === 'name' ? 'Ab' : 'A'),
+      modeDegreeText: (s.noteMode === 'degree' && s.noteAcc === 'sharp') ? '1#' : (s.noteMode === 'degree' ? '1b' : '1'),
       modeSolfegeText: (s.noteMode === 'solfege' && s.noteAcc === 'sharp') ? 'Si' : (s.noteMode === 'solfege' ? 'Se' : 'Sol'),
       toggleSound: () => this.setState({ sound: !s.sound }),
       soundBtnStyle: btn(s.sound),
-      topOnPlayChord: () => { const d0 = s.diagrams[0]; if (!d0) return; (s.playing && s.playing.id === d0.id && s.playing.kind === 'chord') ? this.stopPlayback() : this.playHarmonic(d0); },
-      topOnPlayMelody: () => { const d0 = s.diagrams[0]; if (!d0) return; (s.playing && s.playing.id === d0.id && s.playing.kind === 'melody') ? this.stopPlayback() : this.playMelodic(d0, 'asc'); },
-      topOnPlayDescending: () => { const d0 = s.diagrams[0]; if (!d0) return; (s.playing && s.playing.id === d0.id && s.playing.kind === 'desc') ? this.stopPlayback() : this.playMelodic(d0, 'desc'); },
-      topChordBtnStyle: playBtn(!!(s.playing && s.diagrams[0] && s.playing.id === s.diagrams[0].id && s.playing.kind === 'chord')),
-      topMelodyBtnStyle: playBtn(!!(s.playing && s.diagrams[0] && s.playing.id === s.diagrams[0].id && s.playing.kind === 'melody')),
-      topDescBtnStyle: playBtn(!!(s.playing && s.diagrams[0] && s.playing.id === s.diagrams[0].id && s.playing.kind === 'desc')),
-      topChordPlaying: !!(s.playing && s.diagrams[0] && s.playing.id === s.diagrams[0].id && s.playing.kind === 'chord'),
-      topChordIdle: !(s.playing && s.diagrams[0] && s.playing.id === s.diagrams[0].id && s.playing.kind === 'chord'),
-      topMelodyPlaying: !!(s.playing && s.diagrams[0] && s.playing.id === s.diagrams[0].id && s.playing.kind === 'melody'),
-      topMelodyIdle: !(s.playing && s.diagrams[0] && s.playing.id === s.diagrams[0].id && s.playing.kind === 'melody'),
-      topDescPlaying: !!(s.playing && s.diagrams[0] && s.playing.id === s.diagrams[0].id && s.playing.kind === 'desc'),
-      topDescIdle: !(s.playing && s.diagrams[0] && s.playing.id === s.diagrams[0].id && s.playing.kind === 'desc'),
 
       // line tool (toggle) — draws connecting lines, auto-exits back to the default tool on an empty click
       toggleLine: () => this.setState(st => ({ tool: st.tool === 'line' ? 'draw' : 'line', lineFrom: null, mouse: null, barreDrag: null })),
       toolLineStyle: btn(s.tool === 'line'),
-      toggleInterval: () => {
-        if (!s.intervalOn) this.toast('Interval mode — click a marker to set the root');
-        this.setState({ intervalOn: !s.intervalOn, rootPc: null });
-      },
+      toggleInterval: () => this.setState({ intervalOn: !s.intervalOn }),
       intervalBtnStyle: btn(!!s.intervalOn),
       undoDoc: () => this.undo(),
       redoDoc: () => this.redo(),
@@ -1737,6 +1967,7 @@ class Component extends DCLogic {
 
       // canvas
       diagrams,
+      diagramsContainerStyle, itemWrapStyle, titleColStyle, titleInputStyle, clearRowBtnStyle, showRowLabel,
       docTitle: s.docTitle,
       onDocTitle: (e) => this.setState({ docTitle: e.target.value }),
       stopProp: (e) => e.stopPropagation(),
@@ -1774,21 +2005,28 @@ class Component extends DCLogic {
       applyFormula: () => {
         const iv = parseFormula(s.libFormula);
         if (!iv || iv.length < 2) { this.toast('Couldn’t read that formula'); return; }
-        this.setState({ libSel: { custom: true }, libOverlay: { name: 'Custom Scale', intervals: iv } });
+        this.loadScale({ custom: true }, { name: 'Custom Scale', formula: s.libFormula.trim(), iv });
       },
       scaleItems: (s.libCat === 'Custom' ? [] : (LIB[s.libCat] || [])).map((e, i) => {
         const selOn = s.libSel && !s.libSel.custom && s.libSel.cat === s.libCat && s.libSel.i === i;
         return {
           name: e[0], formula: e[1],
-          onClick: () => this.setState({ libSel: { cat: s.libCat, i }, libOverlay: { name: e[0], intervals: parseFormula(e[1]) } }),
+          onClick: () => this.loadScale({ cat: s.libCat, i }, { name: e[0], formula: e[1], iv: parseFormula(e[1]) }),
           style: `display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:8px 10px;border:1px solid ${selOn ? '#141414' : '#ECECE8'};border-radius:9px;background:${selOn ? '#F7F7F5' : '#fff'};cursor:pointer;text-align:left;flex:none`
         };
       }),
-      libSelName: (() => { const sel = this.libSelected(); return sel ? sel.name : ''; })(),
-      libSelTitle: (() => { const sel = this.libSelected(); return sel ? `${NAMES[s.keyRoot]} ${sel.name} · ${sel.formula}` : ''; })(),
-      loadWhole: () => this.stampWhole(),
-      loadCaged: () => this.stampCAGED(),
-      clearScaleOverlay: () => this.setState({ libOverlay: null, libSel: null }),
+      loadModes: [
+        { k: 'whole', name: 'Whole neck', tip: 'Every note of the scale across the neck' },
+        { k: 'caged', name: 'CAGED · 5 shapes', tip: 'Five CAGED position shapes, one per row' }
+      ].map(m => ({
+        name: m.name, tip: m.tip,
+        onClick: () => {
+          this.setState({ loadMode: m.k });
+          const sel = this.libSelected();
+          if (sel && sel.iv) { if (m.k === 'caged') this.stampCAGED(sel); else this.stampWhole(sel); }
+        },
+        style: `flex:1;height:30px;border:1px solid ${s.loadMode === m.k ? '#141414' : '#E0E0DC'};border-radius:8px;background:${s.loadMode === m.k ? '#1C1C1E' : '#fff'};color:${s.loadMode === m.k ? '#fff' : '#55554F'};font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap;padding:0 8px`
+      })),
       saveDoc: () => {
         const name = s.docTitle || 'Untitled';
         const exists = s.lib.some(x => x.id === name);
@@ -1799,7 +2037,7 @@ class Component extends DCLogic {
         try { localStorage.setItem('fretlab.lib', JSON.stringify(lib2)); } catch (e) {}
         this.toast('Saved “' + name + '”');
       },
-      clearAll: () => { this.pushHistory(); this.setState(st => ({ diagrams: st.diagrams.map(d => ({ ...d, markers: {}, lines: [], barres: [], ghost: null })), editing: null, lineFrom: null, rootPc: null, libOverlay: null })); this.toast('Fretboard cleared'); },
+      clearAll: () => { this.pushHistory(); this.setState(st => ({ diagrams: st.diagrams.map(d => ({ ...d, markers: {}, lines: [], barres: [], ghost: null })), editing: null, lineFrom: null, libOverlay: null })); this.toast('Fretboard cleared'); },
 
       // export
       exportMenuOpen: s.exportMenuOpen,
